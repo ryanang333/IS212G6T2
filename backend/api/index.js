@@ -1,10 +1,31 @@
-require('dotenv').config(); //initialise env variables
+import dotenv from 'dotenv';
+import express from 'express';
+import cors from 'cors';
+import staffRoutes from './routes/staffRoutes.js';
+import connectDB from '../config/db.config.js'; 
 
-const express = require("express");
-const app = express(); //initialise express app
+dotenv.config();
 
-app.get("/", (req, res) => res.send("Hello"));
+// Connect to MongoDB
+connectDB();
 
-app.listen(process.env.PORT, () => console.log("Server ready on port " + process.env.PORT));
+const app = express();
 
-module.exports = app;
+const corsOptions = {
+  origin: process.env.ORIGIN,
+};
+
+app.use(cors(corsOptions));
+app.use(express.json());
+
+app.get("/", (req, res) => {
+  res.json({ message: "hello!" });
+});
+
+app.use('/staff', staffRoutes);
+
+app.listen(process.env.PORT, () => {
+  console.log(`Server ready on port ${process.env.PORT}`);
+});
+
+export default app;
