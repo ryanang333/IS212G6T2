@@ -12,7 +12,7 @@ export const getArrangementRequests = async (req, res) => {
 
     const arrangementRequests = await ArrangementRequest.find({
       manager_id: numericManagerId,
-      status: 'pending'
+      status: 'Pending'
     }).populate('staff');
 
     if (arrangementRequests.length === 0) {
