@@ -2,11 +2,11 @@ import dotenv from 'dotenv';
 import express from 'express';
 import cors from 'cors';
 import staffRoutes from './routes/staffRoutes.js';
+import arrangementRequestsRoutes from './routes/arrangementRequestsRoutes.js';
 import connectDB from '../config/db.config.js'; 
 
 dotenv.config();
 
-// Connect to MongoDB
 connectDB();
 
 const app = express();
@@ -23,6 +23,7 @@ app.get("/", (req, res) => {
 });
 
 app.use('/staff', staffRoutes);
+app.use('/arrangementRequests', arrangementRequestsRoutes);
 
 app.listen(process.env.PORT, () => {
   console.log(`Server ready on port ${process.env.PORT}`);
