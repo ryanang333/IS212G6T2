@@ -64,7 +64,7 @@
           </tr>
         </thead>
         <tbody>
-          <tr v-for="request in filteredRequests" :key="request._id" class="text-left">
+          <tr v-for="request in paginatedRequests" :key="request._id" class="text-left">
             <td class="border px-4 py-2">{{ request.request_id }}</td>
             <td class="border px-4 py-2">{{ request.staff_id }}</td>
             <td class="border px-4 py-2">{{ request.group_id || '-' }}</td>
@@ -75,6 +75,11 @@
           </tr>
         </tbody>
       </table>
+
+    <div v-if="totalPages > 1" class="flex justify-center mt-4">
+      <button @click="prevPage" :disabled="currentPage === 1" class="bg-blue-500 text-white px-4 py-2 rounded mr-2 hover:bg-blue-600 transition">Previous</button>
+      <button @click="nextPage" :disabled="currentPage === totalPages" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition">Next</button>
+    </div>
     </div>
   </template>  
   
@@ -92,8 +97,20 @@
           status: 'all',
           datePassed: 'all',
         },
-        filteredRequests: [],
+      filteredRequests: [],
+      currentPage: 1,
+      recordsPerPage: 20,
       };
+    },
+    computed: {
+    paginatedRequests() {
+      const start = (this.currentPage - 1) * this.recordsPerPage;
+      const end = start + this.recordsPerPage;
+      return this.filteredRequests.slice(start, end);
+    },
+    totalPages() {
+      return Math.ceil(this.filteredRequests.length / this.recordsPerPage);
+    }
     },
     created() {
       this.getSubmittedRequests();
@@ -102,7 +119,7 @@
       async getSubmittedRequests() {
         try {
           const response = await axios.get('http://localhost:3001/submittedview');
-          this.submitted_view = response.data;
+          this.submitted_view = response.data.sort((a, b) => a.request_id - b.request_id);;
           this.filteredRequests = this.submitted_view;
         } catch (error) {
           console.error('Error fetching submitted requests:', error);
@@ -160,6 +177,16 @@
         };
         this.filteredRequests = this.submitted_view;
       },
+      nextPage() {
+      if (this.currentPage < this.totalPages) {
+        this.currentPage++;
+      }
     },
-  };
-  </script>  
+    prevPage() {
+      if (this.currentPage > 1) {
+        this.currentPage--;
+      }
+    },
+  },
+};
+  </script>
