@@ -44,7 +44,41 @@ export const getStaffArrangementRequests = async (req, res) => {
       return res.status(404).json({ message: 'No arrangement requests found for this staff' });
     }
 
-    res.status(200).json(arrangementRequests);
+    const groupedData = {};
+
+    arrangementRequests.forEach(request => {
+      const { group_id, request_date } = request;
+
+      if (group_id) {
+        if (!groupedData[group_id]) {
+          groupedData[group_id] = {
+            group_id,
+            start_date: request_date,
+            end_date: request_date,
+            requests: []
+          };
+        }
+
+        groupedData[group_id].start_date = 
+          new Date(groupedData[group_id].start_date) < new Date(request_date) ?
+          groupedData[group_id].start_date : request_date;
+        groupedData[group_id].end_date = 
+          new Date(groupedData[group_id].end_date) > new Date(request_date) ?
+          groupedData[group_id].end_date : request_date;
+
+        groupedData[group_id].requests.push(request);
+      } 
+      else {
+        if (!groupedData['individuals']) {
+          groupedData['individuals'] = [];
+        }
+        groupedData['individuals'].push(request);
+      }
+    });
+
+    const groupedArrangementRequests = Object.values(groupedData);
+
+    res.status(200).json(groupedArrangementRequests);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
