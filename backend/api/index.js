@@ -25,6 +25,7 @@ app.get("/", (req, res) => {
 app.use('/staff', staffRoutes);
 app.use('/arrangementRequests', arrangementRequestsRoutes);
 
+
 app.listen(process.env.PORT, () => {
   console.log(`Server ready on port ${process.env.PORT}`);
 });

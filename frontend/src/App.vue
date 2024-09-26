@@ -12,10 +12,18 @@
           <li>
             <RouterLink to="/arrangementrequests" class="text-white font-bold hover:underline">Arrangement Requests</RouterLink>
           </li>
+          <li>
+            <RouterLink to="/submittedview" class="text-white font-bold hover:underline"> Go to submitted requests</RouterLink>
+          </li>
         </ul>
       </nav>
     </header>
     <router-view />
   </div>
+  <!-- <nav>
+    <RouterLink to="/about"> Go to about </RouterLink>
+    <RouterLink to="/"> Go to home</RouterLink>
+  </nav> -->
+  <!-- <RouterView /> -->
 </template>
 <style></style>
