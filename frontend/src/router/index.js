@@ -1,6 +1,7 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import AboutView from '../views/AboutView.vue'
 import Hello from '../views/Hello.vue'
+import ArrangementRequest from '../views/ArrangementRequests.vue'
 import SubmittedView from '../views/SubmittedView.vue'
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -14,6 +15,12 @@ const router = createRouter({
       path: '/about',
       name: 'about',
       component: AboutView
+    },
+    {
+      path: '/arrangementrequests',
+      name: 'arrangementrequests',
+      component: ArrangementRequest
+    } 
     },
     {
       path: '/submittedview',
