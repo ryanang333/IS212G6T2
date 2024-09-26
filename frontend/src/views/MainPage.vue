@@ -1,170 +1,167 @@
 <template>
-  <div class="work-from-home-page">
-    <h1>Work From Home Application</h1>
-    <!-- Form for Work from Home Application -->
-    <form @submit.prevent="submitApplication">
-      <div>
-        <label for="arrangementType">Arrangement Type:</label>
-        <select v-model="arrangementType" id="arrangementType" required>
+  <div class="flex flex-col items-center p-5">
+    <h1 class="text-2xl font-bold mb-6">Work From Home Application</h1>
+    <form @submit.prevent="submitApplication" class="w-full max-w-lg">
+      <div class="mb-4">
+        <label for="arrangementType" class="block text-sm font-medium">Arrangement Type:</label>
+        <select v-model="arrangementType" id="arrangementType" required class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500">
           <option value="Flexible">Flexible</option>
           <option value="Regular">Regular</option>
         </select>
       </div>
-      <div>
-        <label for="recurringDay">Recurring Arrangement Day:</label>
-        <select v-model="recurringDay" id="recurringDay" required>
-          <option value="Weekly">Weekly</option>
-          <option value="None">None</option>
-        </select>
+      <div class="mb-4">
+        <label for="recurringDays" class="block text-sm font-medium">Recurring Arrangement Weeks (Enter number of weeks):</label>
+        <input type="number" v-model="recurringDays" id="recurringDays" required class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500" min="1" />
       </div>
-      <div>
-        <label for="arrangementTime">Arrangement Time:</label>
-        <select v-model="arrangementTime" id="arrangementTime" required>
+      <div class="mb-4">
+        <label for="arrangementTime" class="block text-sm font-medium">Arrangement Time:</label>
+        <select v-model="arrangementTime" id="arrangementTime" required class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500">
           <option value="am">AM</option>
           <option value="pm">PM</option>
           <option value="fullday">Full Day</option>
         </select>
       </div>
-  
-      <!-- FullCalendar Component -->
-      <div>
-        <label>Select Work From Home Dates:</label>
-        <FullCalendar
-          :options="calendarOptions"
-          @select="handleDateSelect"
-        />
+      
+      <div class="mb-4">
+        <label for="reason" class="block text-sm font-medium">Reason for Work From Home:</label>
+        <textarea v-model="reason" id="reason" rows="3" required class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500"></textarea>
       </div>
 
-      <!-- Submit Button -->
-      <button type="submit">Submit Application</button>
+      <div class="mb-4">
+        <label class="block text-sm font-medium">Select Work From Home Dates:</label>
+        <FullCalendar :options="calendarOptions" @select="handleDateSelect" @dateClick="handleDateClick" />
+        <div v-if="selectedDates.length" class="mt-2">
+          <p class="text-sm">Selected Dates:</p>
+          <ul>
+            <li v-for="date in selectedDates" :key="date">{{ date }}</li>
+          </ul>
+        </div>
+      </div>
+
+      <button type="submit" class="w-full bg-blue-600 text-white font-semibold py-2 rounded hover:bg-blue-500">Submit Application</button>
     </form>
 
-    <!-- Messages -->
-    <div v-if="confirmationMessage" class="confirmation-message">{{ confirmationMessage }}</div>
-    <div v-if="errorMessage" class="error-message">{{ errorMessage }}</div>
+    <div v-if="confirmationMessage" class="text-green-600 mt-4">{{ confirmationMessage }}</div>
+    <div v-if="errorMessage" class="text-red-600 mt-4">{{ errorMessage }}</div>
   </div>
 </template>
 
 <script>
-import { defineComponent } from 'vue'
-import FullCalendar from '@fullcalendar/vue3'
-import dayGridPlugin from '@fullcalendar/daygrid'
-import timeGridPlugin from '@fullcalendar/timegrid'
-import interactionPlugin from '@fullcalendar/interaction'
+import { defineComponent } from 'vue';
+import axios from 'axios';
+import FullCalendar from '@fullcalendar/vue3';
+import dayGridPlugin from '@fullcalendar/daygrid';
+import interactionPlugin from '@fullcalendar/interaction';
 
 export default defineComponent({
   name: 'WorkFromHomeApplication',
   components: {
-    FullCalendar, // Register FullCalendar component
+    FullCalendar,
   },
   data() {
     return {
       arrangementType: 'Regular',
-      recurringDay: 'None',
+      recurringDays: 1,
       arrangementTime: '',
-      startDate: null,
-      endDate: null,
+      reason: '', // New data property for the reason
+      selectedDates: [],
       confirmationMessage: '',
       errorMessage: '',
-      calendarOptions: {
-        plugins: [dayGridPlugin, timeGridPlugin, interactionPlugin],
+    };
+  },
+  computed: {
+    calendarOptions() {
+      return {
+        plugins: [dayGridPlugin, interactionPlugin],
         headerToolbar: {
           left: 'prev,next today',
           center: 'title',
-          right: 'dayGridMonth,timeGridWeek,timeGridDay'
+          right: ''
         },
         initialView: 'dayGridMonth',
-        editable: true,
         selectable: true,
-        selectMirror: true,
-        dayMaxEvents: true,
-        weekends: true,
+        selectAllow: this.allowDateSelection,
         select: this.handleDateSelect,
-        eventsSet: this.handleEvents
-      },
-      currentEvents: [], // To store events after selection
-    };
+        events: this.getSelectedEvents(),
+        eventClick: this.handleEventClick,
+      };
+    },
   },
   methods: {
-    handleDateSelect(selectInfo) {
-      // Capture selected start and end dates from the calendar
-      this.startDate = selectInfo.startStr;
-      this.endDate = selectInfo.endStr;
-      alert(`Selected dates: From ${selectInfo.startStr} to ${selectInfo.endStr}`);
+    allowDateSelection(selectInfo) {
+      const now = new Date();
+      const today = new Date(now.setHours(0, 0, 0, 0));
+      const tomorrow = new Date(today);
+      tomorrow.setDate(today.getDate() + 1);
+      const selectableDate = new Date(tomorrow);
+      selectableDate.setHours(selectableDate.getHours() + 24);
+
+      return selectInfo.start >= selectableDate;
     },
-    submitApplication() {
-      // Check if startDate and endDate are selected
-      if (!this.startDate || !this.endDate) {
-        this.errorMessage = 'Please select a start and end date using the calendar.';
+    handleDateSelect(selectInfo) {
+      const formattedDate = selectInfo.startStr;
+
+      if (this.selectedDates.includes(formattedDate)) {
+        this.selectedDates = this.selectedDates.filter(date => date !== formattedDate);
+      } else {
+        this.selectedDates.push(formattedDate);
+
+        for (let i = 1; i < this.recurringDays; i++) {
+          const nextDate = new Date(selectInfo.start);
+          nextDate.setDate(nextDate.getDate() + (i * 7));
+          this.selectedDates.push(nextDate.toISOString().split('T')[0]);
+        }
+      }
+    },
+    handleEventClick(info) {
+      const formattedDate = info.event.startStr;
+      this.selectedDates = this.selectedDates.filter(date => date !== formattedDate);
+    },
+    getSelectedEvents() {
+      return this.selectedDates.map(date => ({
+        title: 'Selected',
+        start: date,
+        end: date,
+        allDay: true,
+      }));
+    },
+    async submitApplication() {
+      if (this.selectedDates.length === 0) {
+        this.errorMessage = 'Please select at least one date using the calendar.';
         return;
       }
 
-      // Mock application data
       const applicationData = {
         arrangementType: this.arrangementType,
-        recurringDay: this.recurringDay,
+        recurringDays: this.recurringDays,
         arrangementTime: this.arrangementTime,
-        startDate: this.startDate,
-        endDate: this.endDate,
+        reason: this.reason, // Include reason in the application data
+        selectedDates: this.selectedDates,
       };
 
-      // Mock sending the application (you could use axios to send this data to a server)
-      this.sendApplicationToManager(applicationData);
-
-      // Confirmation
-      this.confirmationMessage = 'Your work from home application has been submitted!';
-      this.resetForm();
-    },
-    sendApplicationToManager(data) {
-      // Simulate sending the application data to the manager
-      console.log('Sending application data to manager:', data);
-    },
-    handleEvents(events) {
-      this.currentEvents = events;
+      try {
+        await axios.post('https://your-backend-url/api/work-from-home', applicationData);
+        this.confirmationMessage = 'Your work from home application has been submitted!';
+      } catch (error) {
+        this.errorMessage = 'There was an error submitting your application. Please try again.';
+        console.error('Error submitting application:', error);
+      } finally {
+        this.resetForm();
+      }
     },
     resetForm() {
-      // Reset form fields after submission
       this.arrangementType = 'Regular';
-      this.recurringDay = 'None';
+      this.recurringDays = 1;
       this.arrangementTime = '';
-      this.startDate = null;
-      this.endDate = null;
+      this.reason = ''; // Reset the reason field
+      this.selectedDates = [];
       this.confirmationMessage = '';
       this.errorMessage = '';
     },
-  }
+  },
 });
 </script>
 
 <style scoped>
-.work-from-home-page {
-  text-align: center;
-  padding: 20px;
-}
-
-form div {
-  margin-bottom: 10px;
-}
-
-button {
-  padding: 10px 20px;
-  background-color: #007bff;
-  color: white;
-  border: none;
-  cursor: pointer;
-}
-
-button:hover {
-  background-color: #0056b3;
-}
-
-.confirmation-message {
-  color: green;
-  margin-top: 10px;
-}
-
-.error-message {
-  color: red;
-  margin-top: 10px;
-}
+/* Add any additional custom styles here */
 </style>
