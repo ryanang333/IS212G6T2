@@ -30,21 +30,21 @@
       <div class="mt-2 grid grid-flow-col auto-cols-max">
         <div class="flex items-center gap-x-3 me-5">
           <input
-            id="push-email"
-            name="push-notifications"
+            id="ad-hoc"
+            name="ad-hoc"
             type="radio"
             value="adHoc"
             v-model="arrangementType"
             class="h-4 w-4 border-gray-300 text-indigo-600 focus:ring-indigo-600"
           />
-          <label for="push-email" class="block text-sm font-medium leading-6 text-gray-900"
+          <label for="ad-hoc" class="block text-sm font-medium leading-6 text-gray-900"
             >Ad-Hoc</label
           >
         </div>
         <div class="flex items-center gap-x-3 ms-5">
           <input
-            id="push-nothing"
-            name="push-notifications"
+            id="regular"
+            name="regular"
             type="radio"
             value="regular"
             v-model="arrangementType"
