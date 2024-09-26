@@ -20,7 +20,6 @@ const router = createRouter({
       path: '/arrangementrequests',
       name: 'arrangementrequests',
       component: ArrangementRequest
-    } 
     },
     {
       path: '/submittedview',

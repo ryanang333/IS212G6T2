@@ -1,10 +1,27 @@
 <template>    
     <div class="p-6">
       <h1 class="text-2xl font-bold text-center mb-6">View Submitted Requests</h1>
+
+    <div class="flex flex-col items-center mb-5">
+      <input
+        v-model="staff_id"
+        placeholder="Enter Staff ID"
+        @keyup.enter="fetchArrangementRequests"
+        class="border border-gray-300 rounded-lg p-2 mb-2 w-64"
+      />
+
+      <div class="flex space-x-4">
+
+      <button @click="fetchArrangementRequests" class="bg-blue-500 text-white px-4 py-2 rounded mb-4 hover:bg-blue-600 transition">
+        Fetch Requests
+      </button>
       
       <button @click="showFilterModal = true" class="bg-blue-500 text-white px-4 py-2 rounded mb-4 hover:bg-blue-600 transition">
         Filter Requests
       </button>
+
+      </div>
+    </div>
       
       <div v-if="showFilterModal" class="fixed inset-0 flex items-center justify-center bg-gray-800 bg-opacity-75">
         <div class="bg-white p-6 rounded-lg shadow-lg">
@@ -49,7 +66,7 @@
   
     <div v-if="filteredRequests.length === 0" class="text-center text-gray-500 mt-4 font-bold">
       <h2>No submitted requests</h2>
-    </div>
+    </div>  
 
       <table v-else class="table-auto w-full mt-6">
         <thead>
@@ -90,6 +107,7 @@
     data() {
       return {
         submitted_view: [],
+        staff_id: '',
         showFilterModal: false,
         filters: {
           arrangementDate: '',
@@ -112,19 +130,39 @@
       return Math.ceil(this.filteredRequests.length / this.recordsPerPage);
     }
     },
+    watch: {
+    staff_id(newVal) {
+      if (!newVal || isNaN(newVal)) {
+        this.submitted_view = [];
+        this.filteredRequests = [];
+      }
+    }
+  },
     created() {
-      this.getSubmittedRequests();
+      this.fetchArrangementRequests();
     },
     methods: {
-      async getSubmittedRequests() {
-        try {
-          const response = await axios.get('http://localhost:3001/submittedview');
-          this.submitted_view = response.data.sort((a, b) => a.request_id - b.request_id);;
-          this.filteredRequests = this.submitted_view;
-        } catch (error) {
-          console.error('Error fetching submitted requests:', error);
-        }
-      },
+      async fetchArrangementRequests() {
+    if (!this.staff_id || isNaN(this.staff_id)) {
+        return;
+      }
+
+    try {
+      const response = await axios.get(`http://localhost:3001/arrangementRequests/staff?staff_id=${this.staff_id}`);
+      console.log('Fetched arrangement requests:', response.data);
+
+      if (response.data.length === 0) {
+        this.submitted_view = [];
+        this.filteredRequests = [];
+        alert('No requests found for the provided ID.');
+      } else {
+        this.submitted_view = response.data.sort((a, b) => a.request_id - b.request_id);
+        this.filteredRequests = this.submitted_view;
+      }
+    } catch (error) {
+      console.error('Error fetching submitted requests:', error);
+    }
+  },
       applyFilters() {
         this.filteredRequests = [];
 
