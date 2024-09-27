@@ -26,7 +26,11 @@ export const checkDatesValidity = (dates) => {
     }
 
     if (isFollowingMondayAfterFriday(today, date)) {
-      return { date: dateStr, isValid: false, reason: 'Cannot apply for Monday on a Friday' }
+      return {
+        date: dateStr,
+        isValid: false,
+        reason: 'Cannot apply for following Monday on a Friday or Weekend'
+      }
     }
 
     return { date: dateStr, isValid: true }
@@ -83,7 +87,6 @@ const isNextDay = (today, date) => {
   const daysDiff = timeDiff / (1000 * 60 * 60 * 24)
   return daysDiff === 1
 }
-
 /**
  * Check if the date falls on a weekend (Saturday or Sunday).
  * @param {Date} date - The date to check.
@@ -95,7 +98,7 @@ const isWeekend = (date) => {
 }
 
 /**
- * Check if today is Friday and the date is the following Monday.
+ * Check if today is Friday or Weekend and the date is the following Monday.
  * @param {Date} today - The current date (normalized).
  * @param {Date} date - The date to check.
  * @returns {boolean} - True if today is Friday and the date is the following Monday, false otherwise.
@@ -107,5 +110,5 @@ const isFollowingMondayAfterFriday = (today, date) => {
   const todayDay = today.getDay()
   const timeDiff = date - today
   const daysDiff = timeDiff / (1000 * 60 * 60 * 24)
-  return todayDay === 5 && daysDiff === 3 && date.getDay() === 1
+  return todayDay >= 5 && daysDiff <= 3 && date.getDay() === 1
 }

@@ -89,7 +89,6 @@ export default {
      * Makes a POST request to submit validated arrangement requests.
      * @async
      * @returns {Promise<void>}
-     * @throws {Error} Throws an error if the request fails.
      */
     async makeRequest() {
       let data = {
@@ -97,10 +96,18 @@ export default {
         arrangementRequests: this.arrangements
       }
       try {
-        const response = await axios.post('http://localhost:3001/arrangementRequests/', data)
-        console.log(response.data)
+        const response = await axios.post('http://localhost:3001/arrangementRequests/temp', data)
+        if (response.status === 201) {
+          alert(response.data.message)
+        }
       } catch (error) {
-        alert('Error making requests: ', error)
+        if (error.response) {
+          alert('Error - ' + error.response.data.message)
+        } else if (error.request) {
+          alert('Error - ' + error.request.data.message)
+        } else {
+          alert('Error - ' + error.message)
+        }
       }
     },
 
