@@ -15,6 +15,9 @@
           <li>
             <RouterLink to="/submittedview" class="text-white font-bold hover:underline"> Go to submitted requests</RouterLink>
           </li>
+          <li>
+            <RouterLink to="/viewregularsubmitted" class="text-white font-bold hover:underline">View Regular Submitted</RouterLink>
+          </li>
         </ul>
       </nav>
     </header>
