@@ -1,4 +1,0 @@
-# .env
-PORT=3001
-MONGODB_URI_PROD=mongodb+srv://admin:y30H5ArhnYtlQuxc@is212g6t2.5eniv.mongodb.net/prod?retryWrites=true&w=majority&appName=is212g6t2
-MONGODB_URI_TEST=mongodb+srv://admin:y30H5ArhnYtlQuxc@is212g6t2.5eniv.mongodb.net/test?retryWrites=true&w=majority&appName=is212g6t2
