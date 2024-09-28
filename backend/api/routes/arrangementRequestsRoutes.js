@@ -1,8 +1,10 @@
 import express from 'express';
-import { getArrangementRequests,getStaffArrangementRequests  } from '../controllers/arrangementRequestsController.js';
+import { getArrangementRequests,getStaffArrangementRequests,FlexibleArrangement  } from '../controllers/arrangementRequestsController.js';
+
 
 const router = express.Router();
 
+router.post('/apply', FlexibleArrangement);
 router.get('/', getArrangementRequests);
 router.get('/staff', getStaffArrangementRequests);
 
