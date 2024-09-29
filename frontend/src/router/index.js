@@ -3,6 +3,7 @@ import AboutView from '../views/AboutView.vue'
 import Hello from '../views/Hello.vue'
 import ArrangementRequest from '../views/ArrangementRequests.vue'
 import SubmittedView from '../views/SubmittedView.vue'
+import ApplyArrangement from '../views/ApplyArrangement.vue'
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
@@ -25,6 +26,11 @@ const router = createRouter({
       path: '/submittedview',
       name: 'submittedview',
       component: SubmittedView
+    },
+    {
+      path: '/apply',
+      name: 'apply',
+      component: ApplyArrangement
     }
   ]
 })

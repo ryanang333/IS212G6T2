@@ -1,16 +1,9 @@
 import mongoose from 'mongoose';
-import mongooseSequence from 'mongoose-sequence';
 
 const { Schema } = mongoose;
-const AutoIncrement = mongooseSequence(mongoose);
 
 const arrangementRequestSchema = new Schema(
   {
-    request_id: {
-      type: Number,
-      required: true,
-      unique: true,
-    },
     staff_id: {
       type: Number,
       required: true,
@@ -21,7 +14,7 @@ const arrangementRequestSchema = new Schema(
     },
     status: {
       type: String,
-      enum: ['pending', 'approved', 'rejected', 'canceled', 'withdrawn'],
+      enum: ['Pending', 'Approved', 'Rejected', 'Canceled', 'Withdrawn'],
       required: true,
     },
     manager_id: {
@@ -29,23 +22,24 @@ const arrangementRequestSchema = new Schema(
       required: true,
     },
     group_id: {
-      type: Number,
+      type: String,
       required: false,
     },
     request_time: {
       type: String,
-      enum: ['am', 'pm', 'full day'],
+      enum: ['AM', 'PM', 'Full Day'],
       required: true,
     },
+    reason: {
+      type: String,
+      required: true,
+    }
   },
   {
     collection: 'arrangement_requests',
     timestamps: false,
   }
 );
-
-// Add auto-increment plugin
-arrangementRequestSchema.plugin(AutoIncrement, { inc_field: 'request_id' });
 
 // Virtuals for relationships
 arrangementRequestSchema.virtual('staff', {
