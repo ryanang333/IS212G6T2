@@ -5,6 +5,31 @@ import {
   checkIfDatesOverlap,
 } from "../utils/dateChecker.js";
 import * as responseUtils from "../utils/responseUtils.js";
+import { v4 as uuidv4 } from 'uuid'; // Used to generate group_id
+
+/**
+ * Approves arrangement request instantly if staff is CEO.
+ * @param {string} staffId - The ID of the staff member.
+ * @param {Array<Object>} arrangementRequests - The array of arrangement request objects.
+ * @returns {Promise<Array|boolean>} - A promise that resolves to an array of approved requests or false if not the CEO.
+ */
+const approveIfCEO = async (staffId, arrangementRequests) => {
+  if (staffId === '00001') {
+    // Instantly approve the request if the staff is CEO
+    return await ArrangementRequest.insertMany(
+      arrangementRequests.map((req) => ({
+        staff_id: staffId,
+        request_date: new Date(req.date),
+        status: "Approved", // Instantly approve
+        manager_id: "00001", // is his own id
+        request_time: req.time,
+        group_id: req.group_id || null,
+        reason: req.reason,
+      }))
+    );
+  }
+  return false;
+};
 
 /**
  * Creates temporary arrangement requests for a staff member.
@@ -15,6 +40,16 @@ import * as responseUtils from "../utils/responseUtils.js";
 export const createTempArrangementRequests = async (req, res) => {
   try {
     const { staffId, arrangementRequests } = req.body;
+
+    // Check if the staff is CEO and approve instantly if true
+    const instantApproval = await approveIfCEO(staffId, arrangementRequests);
+    if (instantApproval) {
+      return responseUtils.handleCreatedResponse(
+        res,
+        instantApproval,
+        "Request(s) have been instantly approved!"
+      );
+    }
 
     const validationResponse = checkDatesValidity(arrangementRequests);
     if (!validationResponse.isValid) {
@@ -36,6 +71,77 @@ export const createTempArrangementRequests = async (req, res) => {
         staff.staff_id,
         staff.reporting_manager
       ),
+      "Request(s) have been submitted successfully!"
+    );
+  } catch (error) {
+    if (error.message.includes("Cannot apply")) {
+      return responseUtils.handleConflict(res, error.message);
+    }
+    return responseUtils.handleInternalServerError(res, error.message);
+  }
+};
+
+export const createRegArrangementRequests = async (req, res) => {
+  try {
+    const { staffId, arrangementRequests } = req.body;
+    const arrangementRequestsDirty = arrangementRequests[0];
+
+    // Uses UUID module to gen unique group ID - Note that it is a string
+    const groupID = uuidv4();
+
+    // Convert the recurring weeks into individual dates for arrangement requests
+    const startDate = new Date(arrangementRequestsDirty.startDate);
+    const recurringInterval = parseInt(arrangementRequestsDirty.recurringInterval.replace("week", ""), 10); // Get the interval in weeks
+    const numEvents = arrangementRequestsDirty.numEvents;
+    const newRequests = [];
+
+    for (let i = 0; i < numEvents; i++) {
+      const requestDate = new Date(startDate);
+      requestDate.setDate(requestDate.getDate() + i * recurringInterval * 7); 
+
+      newRequests.push({
+        date: requestDate,
+        time: arrangementRequestsDirty.time,
+        reason: arrangementRequestsDirty.reason,
+        group_id: groupID, 
+      });
+    }   
+
+    // Check if the staff is CEO and approve instantly if true
+    const instantApproval = await approveIfCEO(staffId, newRequests);
+    if (instantApproval) {
+      return responseUtils.handleCreatedResponse(
+        res,
+        instantApproval,
+        "Request(s) have been instantly approved!"
+      );
+    }
+    // Everything below is the same as Ang's Temp Arrangment, utilizing the makeRequest function
+    // Validate the newly created arrangement requests 
+    const validationResponse = checkDatesValidity(newRequests);
+    if (!validationResponse.isValid) {
+      return responseUtils.handleBadRequest(
+        res,
+        "Arrangement request dates are invalid!"
+      );
+    }
+
+    // Fetch staff details
+    const staff = await getStaffDetails(staffId);
+    if (!staff) {
+      return responseUtils.handleNotFound(res, "Staff does not exist!");
+    }
+
+    // Create new arrangement requests
+    const createdRequests = await createNewRequests(
+      newRequests,
+      staff.staff_id,
+      staff.reporting_manager
+    );
+
+    return responseUtils.handleCreatedResponse(
+      res,
+      createdRequests,
       "Request(s) have been submitted successfully!"
     );
   } catch (error) {
