@@ -17,7 +17,7 @@
                 <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
               </svg>
             </div>
-            <ApplyArrangementBar
+            <ApplyRegArrangementBar
               :index="index"
               :value="arrangement"
               @input="updateArrangement(index, $event)"
@@ -57,7 +57,7 @@
 </template>
 
 <script>
-import ApplyArrangementBar from '../components/ApplyArrangementBar.vue'
+import ApplyRegArrangementBar from '../components/ApplyRegArrangementBar.vue'
 import axios from 'axios'
 import { checkDatesValidity } from '../../utils/utils'
 export default {
@@ -68,7 +68,7 @@ export default {
     return {
       counter: 0, //Variable used to keep track of the unique ID of each request in the frontend
       arrangements: [],
-      staffId: '140881' //fetch from local storage after authentication is implemented
+      staffId: '00001' //fetch from local storage after authentication is implemented
     }
   },
   computed: {
@@ -89,7 +89,9 @@ export default {
     addArrangement() {
       this.arrangements.push({
         id: ++this.counter,
-        date: null,
+        startDate: null,
+        recurringWeeks: null,
+        recurringInterval: null,
         time: null,
         reason: null
       })
@@ -99,14 +101,15 @@ export default {
      * Makes a POST request to submit validated arrangement requests.
      * @async
      * @returns {Promise<void>}
+     * @throws {Error} Throws an error if the request fails.
      */
-    async makeRequest() {
+     async makeRequest() {
       let data = {
         staffId: this.staffId,
         arrangementRequests: this.arrangements
       }
       try {
-        const response = await axios.post('http://localhost:3001/arrangementRequests/temp', data)
+        const response = await axios.post('http://localhost:3001/arrangementRequests/reg', data)
         if (response.status === 201) {
           alert(response.data.message)
         }
@@ -172,7 +175,7 @@ export default {
     }
   },
   components: {
-    ApplyArrangementBar
+    ApplyRegArrangementBar
   }
 }
 </script>

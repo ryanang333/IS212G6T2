@@ -24,7 +24,7 @@ const arrangementRequestSchema = new Schema(
       required: true,
     },
     group_id: {
-      type: Number,
+      type: String,
       required: false,
     },
     request_time: {

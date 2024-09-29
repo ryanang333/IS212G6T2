@@ -64,10 +64,12 @@
     </fieldset>
   </div>
   <ApplyTempArrangement v-show="arrangementType == 'adHoc'" />
+  <ApplyRegularArrangement v-show="arrangementType == 'regular'"/>
 </template>
 
 <script>
 import ApplyTempArrangement from './ApplyTempArrangement.vue'
+import ApplyRegularArrangement from './ApplyRegularArrangement.vue';
 
 export default {
   data() {
@@ -87,7 +89,10 @@ export default {
       this.isShowHelpText = bool
     }
   },
-  components: { ApplyTempArrangement }
+  components: { 
+    ApplyTempArrangement,
+    ApplyRegularArrangement
+   }
 }
 </script>
 <style scoped></style>
