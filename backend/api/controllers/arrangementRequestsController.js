@@ -1,11 +1,16 @@
 import ArrangementRequest from "../models/arrangementRequestsModel.js";
 import { getStaffDetails } from "./staffController.js";
+import { createAuditEntry } from "./requestAuditController.js";
 import {
   checkDatesValidity,
   checkIfDatesOverlap,
 } from "../utils/dateChecker.js";
 import * as responseUtils from "../utils/responseUtils.js";
 import { v4 as uuidv4 } from 'uuid'; // Used to generate group_id
+
+export const REQUEST_STATUS_PENDING = 'Pending';
+export const REQUEST_STATUS_NONE = 'N/A';
+export const REQUEST_STATUS_APPROVED = 'Approved';
 
 /**
  * Approves arrangement request instantly if staff is CEO.
@@ -16,7 +21,7 @@ import { v4 as uuidv4 } from 'uuid'; // Used to generate group_id
 const approveIfCEO = async (staffId, arrangementRequests) => {
   if (staffId === '00001') {
     // Instantly approve the request if the staff is CEO
-    return await ArrangementRequest.insertMany(
+    const reqArr = await ArrangementRequest.insertMany(
       arrangementRequests.map((req) => ({
         staff_id: staffId,
         request_date: new Date(req.date),
@@ -27,6 +32,11 @@ const approveIfCEO = async (staffId, arrangementRequests) => {
         reason: req.reason,
       }))
     );
+    if (reqArr.length > 0){
+      await createAuditEntry(reqArr, staffId, REQUEST_STATUS_NONE , REQUEST_STATUS_APPROVED);
+    }
+    return true;
+    //Create audit logs
   }
   return false;
 };
@@ -58,8 +68,6 @@ export const createTempArrangementRequests = async (req, res) => {
         "Request(s) have been instantly approved!"
       );
     }
-
-    
 
     const staff = await getStaffDetails(staffId);
     if (!staff) {
@@ -125,7 +133,6 @@ export const createRegArrangementRequests = async (req, res) => {
       );
     }
 
-
     // Fetch staff details
     const staff = await getStaffDetails(staffId);
     if (!staff) {
@@ -171,7 +178,7 @@ const createNewRequests = async (arrangementRequests, staffId, managerId) => {
 
     checkIfDatesOverlap(existingRequests, arrangementRequests);
 
-    return await ArrangementRequest.insertMany(
+    const reqArr = await ArrangementRequest.insertMany(
       arrangementRequests.map((req) => ({
         staff_id: staffId,
         request_date: new Date(req.date),
@@ -182,6 +189,10 @@ const createNewRequests = async (arrangementRequests, staffId, managerId) => {
         reason: req.reason,
       }))
     );
+
+    if (reqArr.length > 0){
+      await createAuditEntry(reqArr, staffId, REQUEST_STATUS_NONE, REQUEST_STATUS_PENDING);
+    }
   } catch (error) {
     const msg = error.message.includes("Cannot apply")
       ? error.message

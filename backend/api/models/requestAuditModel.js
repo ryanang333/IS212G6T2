@@ -1,17 +1,12 @@
 import mongoose from 'mongoose';
-import mongooseSequence from 'mongoose-sequence';
 
 const { Schema } = mongoose;
 
 const requestAuditSchema = new Schema(
   {
-    audit_id: {
-      type: Number,
-      required: true,
-      unique: true,
-    },
     request_id: {
-      type: Number,
+      type: Schema.Types.ObjectId,
+      ref: 'ArrangementRequest',
       required: true,
     },
     changed_by: {
@@ -25,12 +20,12 @@ const requestAuditSchema = new Schema(
     },
     old_status: {
       type: String,
-      enum: ["pending", "approved", "rejected", "canceled", "withdrawn"],
+      enum: ["N/A", "Pending", "Approved", "Rejected", "Canceled", "Withdrawn"],
       required: true,
     },
     new_status: {
       type: String,
-      enum: ["pending", "approved", "rejected", "canceled", "withdrawn"],
+      enum: ["N/A", "Pending", "Approved", "Rejected", "Canceled", "Withdrawn"],
       required: true,
     },
   },
@@ -39,9 +34,6 @@ const requestAuditSchema = new Schema(
     timestamps: false,
   }
 );
-
-// Add auto-increment plugin
-requestAuditSchema.plugin(AutoIncrement, { inc_field: 'audit_id' });
 
 // virtuals for relationships
 requestAuditSchema.virtual('request', {
