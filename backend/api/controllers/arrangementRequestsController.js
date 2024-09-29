@@ -41,6 +41,14 @@ export const createTempArrangementRequests = async (req, res) => {
   try {
     const { staffId, arrangementRequests } = req.body;
 
+    const validationResponse = checkDatesValidity(arrangementRequests);
+    if (!validationResponse.isValid) {
+      return responseUtils.handleBadRequest(
+        res,
+        "Arrangement request dates are invalid!"
+      );
+    }
+
     // Check if the staff is CEO and approve instantly if true
     const instantApproval = await approveIfCEO(staffId, arrangementRequests);
     if (instantApproval) {
@@ -51,13 +59,7 @@ export const createTempArrangementRequests = async (req, res) => {
       );
     }
 
-    const validationResponse = checkDatesValidity(arrangementRequests);
-    if (!validationResponse.isValid) {
-      return responseUtils.handleBadRequest(
-        res,
-        "Arrangement request dates are invalid!"
-      );
-    }
+    
 
     const staff = await getStaffDetails(staffId);
     if (!staff) {
@@ -106,7 +108,13 @@ export const createRegArrangementRequests = async (req, res) => {
         group_id: groupID, 
       });
     }   
-
+    const validationResponse = checkDatesValidity(arrangementRequests);
+    if (!validationResponse.isValid) {
+      return responseUtils.handleBadRequest(
+        res,
+        "Arrangement request dates are invalid!"
+      );
+    }
     // Check if the staff is CEO and approve instantly if true
     const instantApproval = await approveIfCEO(staffId, newRequests);
     if (instantApproval) {
@@ -116,15 +124,7 @@ export const createRegArrangementRequests = async (req, res) => {
         "Request(s) have been instantly approved!"
       );
     }
-    // Everything below is the same as Ang's Temp Arrangment, utilizing the makeRequest function
-    // Validate the newly created arrangement requests 
-    const validationResponse = checkDatesValidity(newRequests);
-    if (!validationResponse.isValid) {
-      return responseUtils.handleBadRequest(
-        res,
-        "Arrangement request dates are invalid!"
-      );
-    }
+
 
     // Fetch staff details
     const staff = await getStaffDetails(staffId);
