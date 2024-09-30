@@ -1,5 +1,7 @@
 import Staff from "../models/staffModel.js";
 import * as responseUtils from '../utils/responseUtils.js';
+
+const REGEX_NUM = /^[0-9]+$/;
 /**
  * Get staff details by staff ID.
  *
@@ -11,8 +13,13 @@ import * as responseUtils from '../utils/responseUtils.js';
  * @returns {Promise<void>} - Sends the staff member data in JSON format if found, otherwise sends an error message.
  */
 export const getStaff = async (req, res) => {
+  const staffId = req.query.staff_id;
+  console.log(staffId);
+  if (!REGEX_NUM.test(staffId)){
+    return responseUtils.handleBadRequest(res, "Uhh.. staffId is supposed to be numbers(??)");
+  }
   try {
-    const staff = await getStaffDetails(req.query.staff_id);
+    const staff = await getStaffDetails(staffId);
     if (!staff) {
       return responseUtils.handleNotFound(res, "Staff member not found");
     }
