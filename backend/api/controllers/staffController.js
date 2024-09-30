@@ -1,5 +1,5 @@
 import Staff from "../models/staffModel.js";
-
+import * as responseUtils from '../utils/responseUtils.js';
 /**
  * Get staff details by staff ID.
  *
@@ -12,15 +12,13 @@ import Staff from "../models/staffModel.js";
  */
 export const getStaff = async (req, res) => {
   try {
-    const staff = await getStaffDetails(req.params.staff_id);
+    const staff = await getStaffDetails(req.query.staff_id);
     if (!staff) {
-      return res.status(404).json({ message: "Staff member not found" });
+      return responseUtils.handleNotFound(res, "Staff member not found");
     }
-    res.status(200).json(staff);
+    return responseUtils.handleSuccessResponse(res, staff);
   } catch (error) {
-    res
-      .status(500)
-      .json({ message: "Internal server error", error: error.message });
+    return responseUtils.handleInternalServerError(res, 'Sorry something went wrong in the backend... :(');
   }
 };
 
