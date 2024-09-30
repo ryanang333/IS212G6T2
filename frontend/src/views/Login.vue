@@ -62,6 +62,7 @@
 
 <script>
 import axios from 'axios'
+import { REGEX_NUM } from '../../utils/utils';
 import { saveInStorage } from '../../utils/localStorage'
 export default {
   data() {
@@ -70,26 +71,30 @@ export default {
     }
   },
   methods: {
+    /**
+     * Logs in the user by checking the entered staff ID,
+     * fetching user details from the backend, and saving them in local storage.
+     * Redirects to 'submittedview' upon successful login.
+     *
+     * @returns {Promise<void>} - No return value.
+     */
     async login() {
-      if (this.staffId === null || this.staffId.trim().length == 0) {
-        alert('Please enter your ID before logging in!')
-        return
+      if (this.staffId === null || this.staffId.trim().length == 0|| !REGEX_NUM.test(this.staffId)) {
+        alert('Please enter a valid ID before tryna log in!')
+        return;
       }
       try {
+        console.log(this.staffId);
         const response = await axios.get(`http://localhost:3001/staff?staff_id=${this.staffId}`)
         if (response.status === 200) {
-          saveInStorage(response.data.data)
+          const { data } = response
+          saveInStorage(data)
           alert('Successfully logged in!')
           this.$router.push('/submittedview')
         }
       } catch (error) {
-        if (error.response) {
-          alert('Error - ' + error.response.data.message)
-        } else if (error.request) {
-          alert('Error - ' + error.request.data.message)
-        } else {
-          alert('Error - ' + error.message)
-        }
+        const errorMessage = error.response?.data?.message || error.message
+        alert(`Error - ${errorMessage}`)
       }
     }
   }
