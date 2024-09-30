@@ -47,7 +47,8 @@ jobs:
         working-directory: ./backend
         run: node api/index.js
         env:
+          NODE_ENV: test
           MONGODB_URI_PROD: ${{secrets.MONGODB_URI_PROD}} 
           MONGODB_URI_TEST: ${{secrets.MONGODB_URI_TEST}} 
-          PORT: ${{secrets.PORT}}
+          PORT: ${{secrets.BACKEND_PORT}}
           ORIGIN: ${{secrets.ORIGIN}}
