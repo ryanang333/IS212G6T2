@@ -2,13 +2,14 @@
   <div>
 
     <header v-if="!$route.path.includes('/login')">
-      <NavBar :userRole="userRole" />
+      <NavBar :role="role" />
     </header>
     <router-view />
   </div>
 </template>
 <script>
 import NavBar from './components/NavBar.vue';
+import { getInStorage } from '../utils/localStorage'; // Import the method to get data from local storage
 
 export default {
   components: {
@@ -16,7 +17,7 @@ export default {
   },
   data(){
     return {
-      userRole: 'HR'
+      role: getInStorage('role') || ''
     };
   },
 };
