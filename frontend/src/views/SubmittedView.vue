@@ -44,7 +44,7 @@
           <select v-model="filters.status" class="block w-full mb-4 p-2 border rounded">
             <option value="all">All</option>
             <option value="Pending">Pending</option>
-            <option value="Approved">Approved</option>
+            <option value="Approved">Approved </option>
             <option value="Rejected">Rejected</option>
             <option value="Withdrawn">Withdrawn</option>
           </select>
@@ -88,7 +88,17 @@
             <td class="border px-4 py-2">{{ new Date(request.request_date).toLocaleString() }}</td>
             <td class="border px-4 py-2">{{ request.time }}</td>
             <td class="border px-4 py-2">{{ request.reason }}</td>
-            <td class="border px-4 py-2">{{ request.status }}</td>
+            <td class="border px-4 py-2">{{ request.status }}
+        <!-- Show the popup trigger if the status is 'Approved' -->
+        <button v-if="request.status === 'Approved'" @click="openPopup(request._id)" class="text-red-500 hover:underline ml-2">
+        Cancel Request
+        </button>
+        <Popup v-if="popupVisible && activeRequestId === request._id" :isVisible="popupVisible" @close="closePopup" @submit-reason="handleReasonSubmission" />
+
+
+            </td>
+
+            
           </tr>
         </tbody>
       </table>
@@ -102,8 +112,12 @@
   
   <script>
   import axios from 'axios';
-  
+  import Popup from '../components/Popup.vue'
   export default {
+    components:{
+      Popup
+    },
+
     data() {
       return {
         submitted_view: [],
@@ -118,6 +132,8 @@
       filteredRequests: [],
       currentPage: 1,
       recordsPerPage: 20,
+      popupVisible: false,
+      activeRequestId: null,
       };
     },
     computed: {
@@ -163,6 +179,23 @@
       console.error('Error fetching submitted requests:', error);
     }
   },
+    openPopup(requestId) {
+      this.popupVisible = true; // Show the popup
+      this.activeRequestId = requestId; // Set the active request ID
+    },
+    closePopup() {
+      this.popupVisible = false; // Close the popup
+      this.activeRequestId = null; // Reset the active request ID
+    },
+    handleReasonSubmission(reason) {
+      // Handle the submission of the reason from the popup
+      console.log('Reason submitted for request:', this.activeRequestId, 'Reason:', reason);
+      
+      // Close the popup after submission
+      this.closePopup();
+    },
+
+
       applyFilters() {
         this.filteredRequests = [];
 

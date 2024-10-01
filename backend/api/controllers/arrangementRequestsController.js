@@ -230,7 +230,7 @@ const findExistingRequests = async ({ staff_id, requestSlots }) => {
 
 export const getArrangementRequests = async (req, res) => {
   try {
-    const { manager_id } = req.query;
+    const { manager_id } = req.query.staff_id;
 
     if (!manager_id) {
       return res.status(400).json({ error: "manager_id is required" });
