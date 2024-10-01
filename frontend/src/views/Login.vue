@@ -88,7 +88,7 @@ export default {
         const response = await axios.get(`http://localhost:3001/staff?staff_id=${this.staffId}`)
         if (response.status === 200) {
           const { data } = response
-          saveInStorage(data)
+          saveInStorage(data.data)
           alert('Successfully logged in!')
           this.$router.push('/submittedview')
         }
