@@ -3,6 +3,6 @@ import { getStaff } from '../controllers/staffController.js';
 
 const router = express.Router();
 
-router.get('/:staff_id', getStaff);
+router.get('/', getStaff);
 
 export default router;

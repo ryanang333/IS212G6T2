@@ -1,3 +1,4 @@
+export const REGEX_NUM =  /^[0-9]+$/;
 /**
  * Check the validity of a list of dates based on several business rules.
  * @param {string[]} dates - Array of date strings (e.g., '2024-09-28').
