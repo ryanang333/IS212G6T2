@@ -280,3 +280,29 @@ export const getStaffArrangementRequests = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
+
+
+export const updateRequestStatus = async (req, res) => {
+  const { id } = req.params;   // Extract the request ID from URL params
+  const { status } = req.body; // Get the new status from the request body
+
+  try {
+    // Find the arrangement request by its ID and update its status
+    const updatedRequest = await ArrangementRequest.findByIdAndUpdate(
+      id,  // MongoDB ID for the request
+      { status: status },  // Update the status to 'Pending Withdrawal'
+      { new: true }  // Return the updated document
+    );
+
+    if (!updatedRequest) {
+      return res.status(404).json({ message: 'Request not found' });
+    }
+
+    // Return the updated request
+    res.status(200).json(updatedRequest);
+    
+  } catch (error) {
+    console.error('Error updating request:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+};

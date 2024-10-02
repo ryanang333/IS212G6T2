@@ -1,3 +1,4 @@
+// arrangementRequestsModel.js
 import mongoose from 'mongoose';
 
 const { Schema } = mongoose;
@@ -14,7 +15,7 @@ const arrangementRequestSchema = new Schema(
     },
     status: {
       type: String,
-      enum: ['Pending', 'Approved', 'Rejected', 'Canceled', 'Withdrawn'],
+      enum: ['Pending', 'Approved', 'Rejected', 'Canceled', 'Pending Withdrawal', 'Withdrawn'],
       required: true,
     },
     manager_id: {
@@ -33,7 +34,11 @@ const arrangementRequestSchema = new Schema(
     reason: {
       type: String,
       required: true,
-    }
+    },
+    manager_reason: {
+      type: String,
+      maxLength: 100,
+    },
   },
   {
     collection: 'arrangement_requests',

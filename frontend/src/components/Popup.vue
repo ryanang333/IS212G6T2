@@ -1,17 +1,18 @@
 <template>
-  <div v-if="isVisible" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
-    <div class="bg-white p-6 rounded-lg shadow-lg max-w-md w-full">
-      <h2 class="text-xl font-bold mb-4">Reason for Canceling Request</h2>
-      
-      <!-- Textbox for reason -->
-      <textarea v-model="reason" rows="4" class="w-full p-2 border border-gray-300 rounded" placeholder="Enter your reason..."></textarea>
+  <div>
+    <!-- Confirmation message -->
+    <div v-if="isVisible" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+      <div class="bg-white p-6 rounded-lg shadow-lg max-w-md w-full">
+        <h2 class="text-xl font-bold mb-4">Confirm Cancellation</h2>
+        <p>Are you sure you want to submit a cancellation request?</p>
 
-      <div class="flex justify-end mt-4">
-        <!-- Close button to close the popup without submitting -->
-        <button @click="closePopup" class="bg-gray-500 text-white px-4 py-2 rounded mr-2">Close</button>
+        <div class="flex justify-end mt-4">
+          <!-- Close button to close the confirmation -->
+          <button @click="closeConfirmation" class="bg-gray-500 text-white px-4 py-2 rounded mr-2">Cancel</button>
 
-        <!-- Submit button to send the reason -->
-        <button @click="submitReason" class="bg-red-500 text-white px-4 py-2 rounded">Submit</button>
+          <!-- Confirm button to submit the request -->
+          <button @click="confirmCancellation" class="bg-red-500 text-white px-4 py-2 rounded">Confirm</button>
+        </div>
       </div>
     </div>
   </div>
@@ -25,23 +26,14 @@ export default {
       default: false
     }
   },
-  data() {
-    return {
-      reason: ''  // Holds the reason for canceling
-    };
-  },
   methods: {
-    closePopup() {
+    closeConfirmation() {
       this.$emit('close');
     },
-    submitReason() {
-      if (this.reason.trim() === '') {
-        alert('Please provide a reason for canceling.');
-        return;
-      }
-      // Emit the reason back to the parent component
-      this.$emit('submit-reason', this.reason);
-      this.closePopup();  // Close popup after submitting
+    confirmCancellation() {
+      // Emit confirmation back to the parent component
+      this.$emit('confirm-cancellation');
+      this.closeConfirmation();  // Close confirmation after submitting
     }
   }
 };
