@@ -6,11 +6,11 @@ import {
   checkIfDatesOverlap,
 } from "../utils/dateChecker.js";
 import * as responseUtils from "../utils/responseUtils.js";
-import { v4 as uuidv4 } from 'uuid'; // Used to generate group_id
+import { v4 as uuidv4 } from "uuid"; // Used to generate group_id
 
-export const REQUEST_STATUS_PENDING = 'Pending';
-export const REQUEST_STATUS_NONE = 'N/A';
-export const REQUEST_STATUS_APPROVED = 'Approved';
+export const REQUEST_STATUS_PENDING = "Pending";
+export const REQUEST_STATUS_NONE = "N/A";
+export const REQUEST_STATUS_APPROVED = "Approved";
 
 /**
  * Approves arrangement request instantly if staff is CEO.
@@ -19,7 +19,7 @@ export const REQUEST_STATUS_APPROVED = 'Approved';
  * @returns {Promise<Array|boolean>} - A promise that resolves to an array of approved requests or false if not the CEO.
  */
 const approveIfCEO = async (staffId, arrangementRequests) => {
-  if (staffId === '00001') {
+  if (staffId === "00001") {
     // Instantly approve the request if the staff is CEO
     const reqArr = await ArrangementRequest.insertMany(
       arrangementRequests.map((req) => ({
@@ -32,8 +32,13 @@ const approveIfCEO = async (staffId, arrangementRequests) => {
         reason: req.reason,
       }))
     );
-    if (reqArr.length > 0){
-      await createAuditEntry(reqArr, staffId, REQUEST_STATUS_NONE , REQUEST_STATUS_APPROVED);
+    if (reqArr.length > 0) {
+      await createAuditEntry(
+        reqArr,
+        staffId,
+        REQUEST_STATUS_NONE,
+        REQUEST_STATUS_APPROVED
+      );
     }
     return true;
     //Create audit logs
@@ -90,6 +95,45 @@ export const createTempArrangementRequests = async (req, res) => {
     return responseUtils.handleInternalServerError(res, error.message);
   }
 };
+/**
+ * Retrieves the schedule of requests for a specific staff member between given dates.
+ *
+ * @async
+ * @function getOwnSchedule
+ * @param {Object} req - The request object from Express.
+ * @param {Object} res - The response object from Express.
+ * @throws {Error} Will respond with a bad request if startDate, endDate, or staff_id are not provided.
+ * @returns {Promise<void>} A promise that resolves when the response has been sent.
+ */
+export const getOwnSchedule = async (req, res) => {
+  const { startDate, endDate, staff_id } = req.query;
+  if (!startDate || !endDate) {
+    return responseUtils.handleBadRequest(
+      res,
+      "Start or end date not populated!"
+    );
+  } else if (!staff_id) {
+    return responseUtils.handleBadRequest(res, "Please provide a staff Id");
+  }
+
+  try {
+    const response = await findExistingRequestsBetweenDates(
+      staff_id,
+      startDate,
+      endDate
+    );
+    return responseUtils.handleSuccessResponse(
+      res,
+      response,
+      "Requests have been fetched successfully!"
+    );
+  } catch (error) {
+    return responseUtils.handleInternalServerError(
+      res,
+      "Not able to fetch request(s) ... :("
+    );
+  }
+};
 
 export const createRegArrangementRequests = async (req, res) => {
   try {
@@ -101,21 +145,24 @@ export const createRegArrangementRequests = async (req, res) => {
 
     // Convert the recurring weeks into individual dates for arrangement requests
     const startDate = new Date(arrangementRequestsDirty.startDate);
-    const recurringInterval = parseInt(arrangementRequestsDirty.recurringInterval.replace("week", ""), 10); // Get the interval in weeks
+    const recurringInterval = parseInt(
+      arrangementRequestsDirty.recurringInterval.replace("week", ""),
+      10
+    ); // Get the interval in weeks
     const numEvents = arrangementRequestsDirty.numEvents;
     const newRequests = [];
 
     for (let i = 0; i < numEvents; i++) {
       const requestDate = new Date(startDate);
-      requestDate.setDate(requestDate.getDate() + i * recurringInterval * 7); 
+      requestDate.setDate(requestDate.getDate() + i * recurringInterval * 7);
 
       newRequests.push({
         date: requestDate,
         time: arrangementRequestsDirty.time,
         reason: arrangementRequestsDirty.reason,
-        group_id: groupID, 
+        group_id: groupID,
       });
-    }   
+    }
     const validationResponse = checkDatesValidity(arrangementRequests);
     if (!validationResponse.isValid) {
       return responseUtils.handleBadRequest(
@@ -190,14 +237,49 @@ const createNewRequests = async (arrangementRequests, staffId, managerId) => {
       }))
     );
 
-    if (reqArr.length > 0){
-      await createAuditEntry(reqArr, staffId, REQUEST_STATUS_NONE, REQUEST_STATUS_PENDING);
+    if (reqArr.length > 0) {
+      await createAuditEntry(
+        reqArr,
+        staffId,
+        REQUEST_STATUS_NONE,
+        REQUEST_STATUS_PENDING
+      );
     }
   } catch (error) {
     const msg = error.message.includes("Cannot apply")
       ? error.message
       : "Failed to create arrangement requests";
     throw new Error(msg);
+  }
+};
+
+/**
+ * Retrieves approved arrangement requests for a specific staff member between given dates.
+ *
+ * @async
+ * @function findExistingRequestsBetweenDates
+ * @param {string} staffId - The unique identifier of the staff member.
+ * @param {string} startDate - The start date for filtering requests (inclusive).
+ * @param {string} endDate - The end date for filtering requests (inclusive).
+ * @throws {Error} Will throw an error if the request to fetch existing requests fails.
+ * @returns {Promise<Array>} A promise that resolves to an array of approved arrangement requests.
+ */
+const findExistingRequestsBetweenDates = async (
+  staffId,
+  startDate,
+  endDate
+) => {
+  try {
+    return await ArrangementRequest.find({
+      staff_id: staffId,
+      request_date: {
+        $gte: startDate,
+        $lte: endDate,
+      },
+      status: "Approved",
+    });
+  } catch (error) {
+    throw new Error("Failed to fetch existing requests");
   }
 };
 
