@@ -34,17 +34,6 @@ jobs:
         working-directory: ./frontend
         run: npm run lint
           
-      # - name: Run Tests
-        # working-directory: ./frontend
-      #   run: npm run test
-        # env:
-        # NODE_ENV: development
-        # MONGODB_URI_PROD: ${{secrets.MONGODB_URI_PROD}} 
-        # MONGODB_URI_TEST: ${{secrets.MONGODB_URI_TEST}} 
-        # MONGODB_URI_DEV: ${{secrets.MONGODB_URI_DEV}}
-        # PORT: ${{secrets.PORT}}
-        # ORIGIN: ${{secrets.ORIGIN}}
-
       - name: Build the project
         working-directory: ./frontend
         run: npm run dev
