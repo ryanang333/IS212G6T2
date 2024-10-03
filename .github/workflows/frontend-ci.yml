@@ -29,10 +29,9 @@ jobs:
         working-directory: ./frontend
         run: npm install
         
-
-      # - name: Run Linting
-      #   working-directory: ./frontend
-      #   run: npm run lint
+      - name: Run Linting
+        working-directory: ./frontend
+        run: npm run lint
           
       - name: Build the project
         working-directory: ./frontend
