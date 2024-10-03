@@ -7,6 +7,6 @@ router.get('/', getArrangementRequests);
 router.get('/staff', getStaffArrangementRequests);
 router.post('/temp', createTempArrangementRequests);
 router.post('/reg', createRegArrangementRequests);
-router.patch('/cancel/:id', updateRequestStatus);
+router.patch('/withdrawal/:id', updateRequestStatus);
 
 export default router;

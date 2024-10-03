@@ -207,7 +207,7 @@ export default {
     }
 
     try {
-      const response = await axios.patch(`http://localhost:3001/arrangementRequests/cancel/${this.activeRequestId}`, {
+      const response = await axios.patch(`http://localhost:3001/arrangementRequests/withdrawal/${this.activeRequestId}`, {
         status: 'Pending Withdrawal',
         withdraw_reason: this.withdrawlReason
       });
