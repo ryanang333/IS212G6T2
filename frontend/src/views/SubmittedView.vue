@@ -105,6 +105,10 @@
       <div class="bg-white p-6 rounded-lg shadow-lg">
         <h2 class="text-xl font-semibold mb-4">Confirm Cancellation</h2>
         <p>Are you sure you want to cancel this request?</p>
+        <label for="reason" class="block text-sm font-medium text-gray-700">Reason for cancellation:</label>
+      <textarea v-model="withdrawlReason" id="reason" rows="3" class="w-full mt-2 p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"></textarea>
+
+
         <div class="flex justify-end mt-4">
           <button @click="confirmCancellation" class="bg-red-500 text-white px-4 py-2 rounded mr-2 hover:bg-red-600 transition">Yes, Cancel</button>
           <button @click="closeConfirmation" class="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600 transition">No, Go Back</button>
@@ -134,6 +138,7 @@ export default {
       recordsPerPage: 20,
       confirmationVisible: false,
       activeRequestId: null,
+      withdrawlReason:''
     };
   },
   computed: {
@@ -204,6 +209,7 @@ export default {
     try {
       const response = await axios.patch(`http://localhost:3001/arrangementRequests/cancel/${this.activeRequestId}`, {
         status: 'Pending Withdrawal',
+        withdraw_reason: this.withdrawlReason
       });
 
       console.log('Request status updated successfully:', response.data);

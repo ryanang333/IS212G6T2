@@ -284,13 +284,15 @@ export const getStaffArrangementRequests = async (req, res) => {
 
 export const updateRequestStatus = async (req, res) => {
   const { id } = req.params;   // Extract the request ID from URL params
-  const { status } = req.body; // Get the new status from the request body
+  const { status, withdraw_reason } = req.body; // Get the new status from the request body
 
   try {
     // Find the arrangement request by its ID and update its status
     const updatedRequest = await ArrangementRequest.findByIdAndUpdate(
       id,  // MongoDB ID for the request
-      { status: status },  // Update the status to 'Pending Withdrawal'
+      { status: status,
+        withdraw_reason: withdraw_reason
+       },  // Update the status to 'Pending Withdrawal'
       { new: true }  // Return the updated document
     );
 
