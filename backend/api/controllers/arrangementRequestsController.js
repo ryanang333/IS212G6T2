@@ -285,6 +285,9 @@ export const getStaffArrangementRequests = async (req, res) => {
 export const updateRequestStatus = async (req, res) => {
   const { id } = req.params;   // Extract the request ID from URL params
   const { status, withdraw_reason } = req.body; // Get the new status from the request body
+  if (!withdraw_reason || withdraw_reason.trim() === "") {
+    return res.status(400).json({ message: 'Cancellation reason cannot be empty' });
+  }
 
   try {
     // Find the arrangement request by its ID and update its status

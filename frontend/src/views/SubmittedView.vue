@@ -106,12 +106,24 @@
         <h2 class="text-xl font-semibold mb-4">Confirm Cancellation</h2>
         <p>Are you sure you want to cancel this request?</p>
         <label for="reason" class="block text-sm font-medium text-gray-700">Reason for cancellation:</label>
-      <textarea v-model="withdrawlReason" id="reason" rows="3" class="w-full mt-2 p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"></textarea>
+      <textarea v-model="withdrawalReason" id="reason" rows="3" class="w-full mt-2 p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"></textarea>
 
 
         <div class="flex justify-end mt-4">
           <button @click="confirmCancellation" class="bg-red-500 text-white px-4 py-2 rounded mr-2 hover:bg-red-600 transition">Yes, Cancel</button>
           <button @click="closeConfirmation" class="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600 transition">No, Go Back</button>
+        </div>
+      </div>
+    </div>
+
+    <div v-if="showErrorModal" class="fixed inset-0 flex items-center justify-center bg-gray-800 bg-opacity-75">
+      <div class="bg-white p-6 rounded-lg shadow-lg max-w-sm">
+        <h2 class="text-xl font-semibold mb-4 text-red-500">Error</h2>
+        <p>{{ errorMessage }}</p>
+        <div class="flex justify-end mt-4">
+          <button @click="closeErrorModal" class="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600 transition">
+            Close
+          </button>
         </div>
       </div>
     </div>
@@ -138,7 +150,12 @@ export default {
       recordsPerPage: 20,
       confirmationVisible: false,
       activeRequestId: null,
-      withdrawlReason:''
+      withdrawalReason:'',
+      errorMessage: '',
+      showErrorModal: false, // Control the error modal visibility
+
+      
+
     };
   },
   computed: {
@@ -198,24 +215,42 @@ export default {
   closeConfirmation() {
     this.confirmationVisible = false;
     this.activeRequestId = null;
+    this.withdrawalReason = ''; // Clear reason on close
+
   },
+
+  closeErrorModal() {
+      this.showErrorModal = false;
+      this.errorMessage = ''; // Clear error message on close
+    },
 
   async confirmCancellation() {
     if (!this.activeRequestId) {
       console.error('No active request ID to cancel');
       return;
     }
+    if (!this.withdrawalReason || this.withdrawalReason.trim() === "") {
+        this.errorMessage = "Cancellation reason cannot be empty";
+        this.showErrorModal = true; // Show error modal if the reason is empty
+        return;
+      }
 
     try {
       const response = await axios.patch(`http://localhost:3001/arrangementRequests/withdrawal/${this.activeRequestId}`, {
         status: 'Pending Withdrawal',
-        withdraw_reason: this.withdrawlReason
+        withdraw_reason: this.withdrawalReason
       });
 
       console.log('Request status updated successfully:', response.data);
-      this.fetchArrangementRequests(); // Refresh the request list
+      this.fetchArrangementRequests();
+      this.closeConfirmation(); // Refresh the request list
     } catch (error) {
-      console.error('Error updating request status:', error);
+      if (error.response && error.response.data && error.response.data.message) {
+      this.errorMessage = error.response.data.message; // Capture backend error message
+      } else {
+      this.errorMessage = 'An error occurred while canceling the request'; // Fallback error message
+    }
+    this.showErrorModal = true; // Show the error modal
     }
 
     this.closeConfirmation();
