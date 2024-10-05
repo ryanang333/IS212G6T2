@@ -34,14 +34,15 @@ jobs:
         working-directory: ./backend
         run: npm run lint
           
-      # - name: Run Tests
-        # working-directory: ./backend
-      #   run: npm run test
-          # env:
-          # MONGODB_URI_PROD: ${{secrets.MONGODB_URI_PROD}} 
-          # MONGODB_URI_TEST: ${{secrets.MONGODB_URI_TEST}} 
-          # PORT: ${{secrets.PORT}}
-          # ORIGIN: ${{secrets.ORIGIN}}
+      - name: Run Tests
+        working-directory: ./backend
+        run: npm run test
+          env:
+          MONGODB_URI_PROD: ${{secrets.MONGODB_URI_PROD}} 
+          MONGODB_URI_DEV: ${{secrets.MONGODB_URI_DEV}}
+          MONGODB_URI_TEST: ${{secrets.MONGODB_URI_TEST}} 
+          PORT: ${{secrets.BACKEND_PORT}}
+          ORIGIN: ${{secrets.ORIGIN}}
 
       - name: Build the project
         working-directory: ./backend
