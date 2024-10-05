@@ -1,7 +1,7 @@
 import fs from "fs";
 import csv from "csv-parser";
-import Staff from "../api/models/staffModel.js";
-import connectDB from "../config/db.config.js";
+import Staff from "../../api/models/staffModel.js";
+import connectDB from "../../config/db.config.js";
 
 // Connect to MongoDB
 connectDB();
