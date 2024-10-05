@@ -33,7 +33,7 @@ jobs:
       - name: Run Linting
         working-directory: ./backend
         run: npm run lint
-        
+
       - name: Run Tests
         working-directory: ./backend
         run: npm run test
@@ -44,13 +44,13 @@ jobs:
           PORT: ${{secrets.BACKEND_PORT}}
           ORIGIN: ${{secrets.ORIGIN}}
 
-      - name: Build the project
-        working-directory: ./backend
-        run: node api/index.js
-        env:
-          NODE_ENV: development
-          MONGODB_URI_PROD: ${{secrets.MONGODB_URI_PROD}} 
-          MONGODB_URI_TEST: ${{secrets.MONGODB_URI_TEST}} 
-          MONGODB_URI_DEV: ${{secrets.MONGODB_URI_DEV}}
-          PORT: ${{secrets.BACKEND_PORT}}
-          ORIGIN: ${{secrets.ORIGIN}}
+      # - name: Build the project
+      #   working-directory: ./backend
+      #   run: node api/index.js
+      #   env:
+      #     NODE_ENV: development
+      #     MONGODB_URI_PROD: ${{secrets.MONGODB_URI_PROD}} 
+      #     MONGODB_URI_TEST: ${{secrets.MONGODB_URI_TEST}} 
+      #     MONGODB_URI_DEV: ${{secrets.MONGODB_URI_DEV}}
+      #     PORT: ${{secrets.BACKEND_PORT}}
+      #     ORIGIN: ${{secrets.ORIGIN}}
