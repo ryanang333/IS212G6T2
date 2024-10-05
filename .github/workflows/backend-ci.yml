@@ -32,7 +32,7 @@ jobs:
 
       - name: Run Linting
         working-directory: ./backend
-        run: npm run lint
+        run: npx eslint --ext .js,.jsx,.ts,.tsx .
           
       - name: Run Tests
         working-directory: ./backend
