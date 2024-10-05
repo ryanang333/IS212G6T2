@@ -264,7 +264,7 @@ const createNewRequests = async (arrangementRequests, staffId, managerId) => {
  * @throws {Error} Will throw an error if the request to fetch existing requests fails.
  * @returns {Promise<Array>} A promise that resolves to an array of approved arrangement requests.
  */
-const findExistingRequestsBetweenDates = async (
+export const findExistingRequestsBetweenDates = async (
   staffId,
   startDate,
   endDate
