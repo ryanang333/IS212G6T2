@@ -1,5 +1,5 @@
 import Staff from "../models/staffModel.js";
-import * as responseUtils from '../utils/responseUtils.js';
+import * as responseUtils from "../utils/responseUtils.js";
 
 const REGEX_NUM = /^[0-9]+$/;
 /**
@@ -14,9 +14,11 @@ const REGEX_NUM = /^[0-9]+$/;
  */
 export const getStaff = async (req, res) => {
   const staffId = req.query.staff_id;
-  console.log(staffId);
-  if (!REGEX_NUM.test(staffId)){
-    return responseUtils.handleBadRequest(res, "Uhh.. staffId is supposed to be numbers(??)");
+  if (!REGEX_NUM.test(staffId)) {
+    return responseUtils.handleBadRequest(
+      res,
+      "Uhh.. staffId is supposed to be numbers(??)"
+    );
   }
   try {
     const staff = await getStaffDetails(staffId);
@@ -25,10 +27,30 @@ export const getStaff = async (req, res) => {
     }
     return responseUtils.handleSuccessResponse(res, staff);
   } catch (error) {
-    return responseUtils.handleInternalServerError(res, 'Sorry something went wrong in the backend... :(');
+    return responseUtils.handleInternalServerError(
+      res,
+      "Sorry something went wrong in the backend... :("
+    );
   }
 };
 
+export const getStaffIdsByDept = async (department) => {
+  if (!department || department == null || department.trim() === "") {
+    throw new Error("Department should be a non null value");
+  }
+  try {
+    const idToNameMap = new Map();
+    const staffArray = await Staff.find({ dept: department });
+    if (staffArray.length > 0){
+      for (let staff of staffArray){
+        idToNameMap.set(staff.staff_id, staff.staff_fname + ' ' + staff.staff_lname);
+      }
+    }
+    return idToNameMap;
+  } catch (error) {
+    throw new Error("Unable to find staff by department given");
+  }
+};
 /**
  * Retrieve staff details by staff ID.
  *

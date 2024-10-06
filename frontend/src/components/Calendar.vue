@@ -101,13 +101,18 @@ export default {
           )
           this.populateEvents(response)
         }
+        else if(this.tab === 'isTeam'){
+          console.log('isTeam selected');
+        }
       } catch (error) {
         const errorMessage = error.response?.data?.message || error.message
         alert(`Error - ${errorMessage}`)
       }
     }
   },
-  mounted() {}
+  updated() {
+    this.fetchData();
+  }
 }
 </script>
 

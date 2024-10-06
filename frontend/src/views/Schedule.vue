@@ -55,6 +55,7 @@ export default {
       calendarHeight: 0,
       staffId: null,
       role: null,
+      dept: null,
     }
   },
   components: {
@@ -73,7 +74,11 @@ export default {
     this.calculateCalendarHeight()
     this.staffId = getInStorage('staff_id')
     this.role = getInStorage('role')
+    this.dept = getInStorage('dept');
     this.isDataLoaded = true 
+    console.log(this.staffId);
+    console.log(this.role);
+    console.log(this.dept)
   }
 }
 </script>

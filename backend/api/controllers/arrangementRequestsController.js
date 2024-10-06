@@ -1,12 +1,12 @@
 import ArrangementRequest from "../models/arrangementRequestsModel.js";
-import { getStaffDetails } from "./staffController.js";
+import { getStaffDetails, getStaffIdsByDept } from "./staffController.js";
 import { createAuditEntry } from "./requestAuditController.js";
 import {
   checkDatesValidity,
   checkIfDatesOverlap,
 } from "../utils/dateChecker.js";
 import * as responseUtils from "../utils/responseUtils.js";
-import { v4 as uuidv4 } from "uuid"; // Used to generate group_id 
+import { v4 as uuidv4 } from "uuid"; // Used to generate group_id
 
 export const REQUEST_STATUS_PENDING = "Pending";
 export const REQUEST_STATUS_NONE = "N/A";
@@ -95,6 +95,45 @@ export const createTempArrangementRequests = async (req, res) => {
     return responseUtils.handleInternalServerError(res, error.message);
   }
 };
+
+export const getTeamSchedule = async (req, res) => {
+  const { startDate, endDate, dept } = req.query;
+  if (!startDate || !endDate) {
+    return responseUtils.handleBadRequest(
+      res,
+      "Start or end date not populated!"
+    );
+  } else if (!dept) {
+    return responseUtils.handleBadRequest(res, "Please provide the department");
+  }
+  try {
+    const staffIdMap = await getStaffIdsByDept(dept);
+    let requestsArray = [];
+    if (staffIdMap.size > 0) {
+      requestsArray = await findExistingRequestsBetweenDates(
+        Array.from(staffIdMap.keys()),
+        startDate,
+        endDate
+      );
+    }
+    return responseUtils.handleSuccessResponse(
+      res,
+      requestsArray.map((req) => ({
+        request_time: req.request_time,
+        request_date: req.request_date,
+        name: staffIdMap.get(req.staff_id),
+      })),
+      "Requests fetched successfully!"
+    );
+  } catch (error) {
+    console.error(error);
+    return responseUtils.handleInternalServerError(
+      res,
+      "Unable to get requests by dept :("
+    );
+  }
+};
+
 /**
  * Retrieves the schedule of requests for a specific staff member between given dates.
  *
@@ -258,20 +297,20 @@ const createNewRequests = async (arrangementRequests, staffId, managerId) => {
  *
  * @async
  * @function findExistingRequestsBetweenDates
- * @param {string} staffId - The unique identifier of the staff member.
+ * @param {Array} staffIds - An array of unique identifier of the staff members.
  * @param {string} startDate - The start date for filtering requests (inclusive).
  * @param {string} endDate - The end date for filtering requests (inclusive).
  * @throws {Error} Will throw an error if the request to fetch existing requests fails.
  * @returns {Promise<Array>} A promise that resolves to an array of approved arrangement requests.
  */
 export const findExistingRequestsBetweenDates = async (
-  staffId,
+  staffIds,
   startDate,
   endDate
 ) => {
   try {
     return await ArrangementRequest.find({
-      staff_id: staffId,
+      staff_id: { $in: staffIds },
       request_date: {
         $gte: startDate,
         $lte: endDate,

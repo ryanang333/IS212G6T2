@@ -23,3 +23,39 @@ export const mockApprovedTemporaryArrangementRequest = {
   reason: "Parental leave",
   __v: 0,
 };
+
+export const mockApprovedTempArrangementRequestDept = [
+  {
+    _id: new Types.ObjectId("66fb6f630fe6d6f83a634290"),
+    staff_id: 140894,
+    request_date: new Date("2024-10-04T00:00:00.000Z"),
+    status: "Approved",
+    manager_id: 140001,
+    group_id: null,
+    request_time: "Full Day",
+    reason: "Parental leave",
+    __v: 0
+  },
+  {
+    _id: new Types.ObjectId("66fb6f630fe6d6f83a63428a"),
+    staff_id: 140001,
+    request_date: new Date("2024-10-02T00:00:00.000Z"),
+    status: "Approved",
+    manager_id: 130002,
+    group_id: null,
+    request_time: "PM",
+    reason: "Parental leave",
+    __v: 0
+  },
+  {
+    _id: new Types.ObjectId("66fb6f630fe6d6f83a634292"),
+    staff_id: 140002,
+    request_date: new Date("2024-10-08T00:00:00.000Z"),
+    status: "Approved",
+    manager_id: 140894,
+    group_id: null,
+    request_time: "AM",
+    reason: "Elderly care leave",
+    __v: 0
+  },
+]
