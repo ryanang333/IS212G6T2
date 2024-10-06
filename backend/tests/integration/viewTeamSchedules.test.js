@@ -3,27 +3,25 @@ import mongoose from "mongoose";
 import httpMocks from "node-mocks-http";
 import ArrangementRequest from "../../api/models/arrangementRequestsModel.js";
 import Staff from "../../api/models/staffModel.js";
-import dotenv from "dotenv";
+import { MongoMemoryServer } from 'mongodb-memory-server-core';
 
-dotenv.config();
-
-const mongoURI = process.env.MONGODB_URI_TEST;
+let mongoServer;
 
 beforeAll(async () => {
+  mongoServer = await MongoMemoryServer.create();
+  const mongoURI = mongoServer.getUri();
   await mongoose.connect(mongoURI);
 });
 
 afterAll(async () => {
   await mongoose.connection.dropDatabase();
   await mongoose.connection.close();
-  await delay(2000);
+  await mongoServer.stop();
 });
 
-const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 afterEach(async () => {
   await ArrangementRequest.deleteMany({});
   await Staff.deleteMany({});
-  await delay(100);
 });
 
 describe("getTeamSchedule - Integration Test with MongoDB", () => {
