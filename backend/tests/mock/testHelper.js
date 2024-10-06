@@ -1,9 +1,9 @@
-import { Types } from 'mongoose';
+import { Types } from "mongoose";
 
 export const mockApprovedRegularArrangementRequest = {
   _id: new Types.ObjectId("66fe5b8756686491085b1315"),
   staff_id: 140881,
-  request_date: new Date("2024-10-08T00:00:00.000Z"),
+  request_date: "2024-10-08T00:00:00.000Z",
   status: "Approved",
   manager_id: 140008,
   group_id: "a2e203f1-eb27-42c7-acd8-ededa216e7c8",
@@ -12,10 +12,23 @@ export const mockApprovedRegularArrangementRequest = {
   __v: 0,
 };
 
+export const mockStaff = {
+  _id: new Types.ObjectId("66fb6f630fe6d6f83a63428a"),
+  staff_id: 140001,
+  staff_fname: "Derek",
+  staff_lname: "Tan",
+  dept: "Sales",
+  position: "Director",
+  country: "Singapore",
+  email: "Derek.Tan@allinone.com.sg",
+  reporting_manager: 130002,
+  role: 1,
+};
+
 export const mockApprovedTemporaryArrangementRequest = {
   _id: new Types.ObjectId("66fe5b8756686491085b1315"),
   staff_id: 140881,
-  request_date: new Date("2024-10-05T00:00:00.000Z"),
+  request_date: "2024-10-05T00:00:00.000Z",
   status: "Approved",
   manager_id: 140008,
   group_id: null,
@@ -23,6 +36,12 @@ export const mockApprovedTemporaryArrangementRequest = {
   reason: "Parental leave",
   __v: 0,
 };
+
+export const mockStaffIdMap = new Map([
+  [140894, "George Floyd"],
+  [140001, "Mari Kita"],
+  [140002, "Dick Lee"],
+]);
 
 export const mockApprovedTempArrangementRequestDept = [
   {
@@ -34,7 +53,7 @@ export const mockApprovedTempArrangementRequestDept = [
     group_id: null,
     request_time: "Full Day",
     reason: "Parental leave",
-    __v: 0
+    __v: 0,
   },
   {
     _id: new Types.ObjectId("66fb6f630fe6d6f83a63428a"),
@@ -45,7 +64,7 @@ export const mockApprovedTempArrangementRequestDept = [
     group_id: null,
     request_time: "PM",
     reason: "Parental leave",
-    __v: 0
+    __v: 0,
   },
   {
     _id: new Types.ObjectId("66fb6f630fe6d6f83a634292"),
@@ -56,6 +75,139 @@ export const mockApprovedTempArrangementRequestDept = [
     group_id: null,
     request_time: "AM",
     reason: "Elderly care leave",
-    __v: 0
+    __v: 0,
   },
-]
+];
+
+export const mockStaffByDept = [
+  {
+    _id: new Types.ObjectId("66fb6f630fe6d6f83a6342fc"),
+    staff_id: 140903,
+    staff_fname: "Amara",
+    staff_lname: "Singh",
+    dept: "Sales",
+    position: "Account Manager",
+    country: "Malaysia",
+    email: "Amara.Singh@allinone.com.my",
+    reporting_manager: 140944,
+    role: 2,
+    __v: 0,
+  },
+  {
+    _id: new Types.ObjectId("66fb6f630fe6d6f83a6342fe"),
+    staff_id: 140904,
+    staff_fname: "Srey",
+    staff_lname: "Mao",
+    dept: "Sales",
+    position: "Account Manager",
+    country: "Malaysia",
+    email: "Srey.Mao@allinone.com.my",
+    reporting_manager: 140944,
+    role: 2,
+    __v: 0,
+  },
+  {
+    _id: new Types.ObjectId("66fb6f630fe6d6f83a634300"),
+    staff_id: 140905,
+    staff_fname: "Phuc",
+    staff_lname: "Le",
+    dept: "Sales",
+    position: "Account Manager",
+    country: "Malaysia",
+    email: "Phuc.Le@allinone.com.my",
+    reporting_manager: 140944,
+    role: 2,
+    __v: 0,
+  },
+  {
+    _id: new Types.ObjectId("66fb6f630fe6d6f83a634302"),
+    staff_id: 140908,
+    staff_fname: "Arifin",
+    staff_lname: "Saputra",
+    dept: "Sales",
+    position: "Account Manager",
+    country: "Malaysia",
+    email: "Arifin.Saputra@allinone.com.my",
+    reporting_manager: 140944,
+    role: 2,
+    __v: 0,
+  },
+  {
+    _id: new Types.ObjectId("66fb6f630fe6d6f83a634304"),
+    staff_id: 140909,
+    staff_fname: "Siti",
+    staff_lname: "Salleh",
+    dept: "Sales",
+    position: "Account Manager",
+    country: "Malaysia",
+    email: "Siti.Salleh@allinone.com.my",
+    reporting_manager: 140944,
+    role: 2,
+    __v: 0,
+  },
+  {
+    _id: new Types.ObjectId("66fb6f630fe6d6f83a634306"),
+    staff_id: 140944,
+    staff_fname: "Yee",
+    staff_lname: "Lim",
+    dept: "Sales",
+    position: "Sales Manager",
+    country: "Singapore",
+    email: "Yee.Lim@allinone.com.sg",
+    reporting_manager: 140001,
+    role: 3,
+    __v: 0,
+  },
+  {
+    _id: new Types.ObjectId("66fb6f630fe6d6f83a634308"),
+    staff_id: 140923,
+    staff_fname: "Ngoc",
+    staff_lname: "Trinh",
+    dept: "Sales",
+    position: "Account Manager",
+    country: "Vietnam",
+    email: "Ngoc.Trinh@allinone.com.vn",
+    reporting_manager: 140944,
+    role: 2,
+    __v: 0,
+  },
+  {
+    _id: new Types.ObjectId("66fb6f630fe6d6f83a63430a"),
+    staff_id: 140924,
+    staff_fname: "Manoj",
+    staff_lname: "Kumar",
+    dept: "Sales",
+    position: "Account Manager",
+    country: "Vietnam",
+    email: "Manoj.Kumar@allinone.com.vn",
+    reporting_manager: 140944,
+    role: 2,
+    __v: 0,
+  },
+  {
+    _id: new Types.ObjectId("66fb6f630fe6d6f83a63430c"),
+    staff_id: 140925,
+    staff_fname: "Anh",
+    staff_lname: "Pham",
+    dept: "Sales",
+    position: "Account Manager",
+    country: "Vietnam",
+    email: "Anh.Pham@allinone.com.vn",
+    reporting_manager: 140944,
+    role: 2,
+    __v: 0,
+  },
+  {
+    _id: new Types.ObjectId("66fb6f630fe6d6f83a63430e"),
+    staff_id: 140926,
+    staff_fname: "Somsak",
+    staff_lname: "Somsri",
+    dept: "Sales",
+    position: "Account Manager",
+    country: "Vietnam",
+    email: "Somsak.Somsri@allinone.com.vn",
+    reporting_manager: 140944,
+    role: 2,
+    __v: 0,
+  },
+];

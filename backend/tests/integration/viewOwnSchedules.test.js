@@ -1,27 +1,30 @@
-import { getOwnSchedule } from "../../../../api/controllers/arrangementRequestsController.js";
+import { getOwnSchedule } from "../../api/controllers/arrangementRequestsController.js";
 import mongoose from "mongoose";
 import httpMocks from "node-mocks-http";
-import ArrangementRequest from "../../../../api/models/arrangementRequestsModel.js";
-import dotenv from 'dotenv';
+import ArrangementRequest from "../../api/models/arrangementRequestsModel.js";
+import dotenv from "dotenv";
 
-dotenv.config()
+dotenv.config();
 
 const mongoURI = process.env.MONGODB_URI_TEST;
 
 beforeAll(async () => {
-    await mongoose.connect(mongoURI);
+  await mongoose.connect(mongoURI);
 });
 
 afterAll(async () => {
   await mongoose.connection.dropDatabase();
   await mongoose.connection.close();
+  await delay(2000);
 });
 
+const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 afterEach(async () => {
   await ArrangementRequest.deleteMany({});
+  await delay(100);
 });
 
-describe("getOwnSchedule - Integration Test with MongoDB Atlas", () => {
+describe("getOwnSchedule - Integration Test with MongoDB", () => {
   let req, res;
 
   beforeEach(() => {
@@ -45,7 +48,7 @@ describe("getOwnSchedule - Integration Test with MongoDB Atlas", () => {
       manager_id: 140008,
       group_id: null,
       request_time: "PM",
-      reason: "Child carer"
+      reason: "Child carer",
     });
     const testRequest2 = new ArrangementRequest({
       staff_id: 140881,
@@ -54,7 +57,7 @@ describe("getOwnSchedule - Integration Test with MongoDB Atlas", () => {
       manager_id: 140008,
       group_id: null,
       request_time: "PM",
-      reason: "Child carer"
+      reason: "Child carer",
     });
     await testRequest1.save();
     await testRequest2.save();
@@ -64,6 +67,26 @@ describe("getOwnSchedule - Integration Test with MongoDB Atlas", () => {
     const response = res._getJSONData();
     expect(res.statusCode).toBe(200);
     expect(response.data.length).toBe(2);
+    expect(response.data).toEqual([
+      expect.objectContaining({
+        staff_id: 140881,
+        request_date: new Date("2024-10-03T16:00:00.000Z").toISOString(),
+        status: "Approved",
+        manager_id: 140008,
+        group_id: null,
+        request_time: "PM",
+        reason: "Child carer",
+      }),
+      expect.objectContaining({
+        staff_id: 140881,
+        request_date: new Date("2024-10-08T16:00:00.000Z").toISOString(),
+        status: "Approved",
+        manager_id: 140008,
+        group_id: null,
+        request_time: "PM",
+        reason: "Child carer",
+      }),
+    ]);
   });
 
   test("should return a 500 if database error occurs", async () => {

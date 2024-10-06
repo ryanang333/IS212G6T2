@@ -126,7 +126,6 @@ export const getTeamSchedule = async (req, res) => {
       "Requests fetched successfully!"
     );
   } catch (error) {
-    console.error(error);
     return responseUtils.handleInternalServerError(
       res,
       "Unable to get requests by dept :("
@@ -157,7 +156,7 @@ export const getOwnSchedule = async (req, res) => {
 
   try {
     const response = await findExistingRequestsBetweenDates(
-      staff_id,
+      [staff_id],
       startDate,
       endDate
     );

@@ -62,12 +62,9 @@ export const getStaffIdsByDept = async (department) => {
  */
 export const getStaffDetails = async (staffId) => {
   try {
-    const staff = await Staff.findOne({ staff_id: staffId })
-      .populate("manager")
-      .populate("subordinates");
+    const staff = await Staff.findOne({ staff_id: staffId });
     return staff;
   } catch (error) {
-    console.error("Error fetching staff details:", error);
     throw error;
   }
 };
