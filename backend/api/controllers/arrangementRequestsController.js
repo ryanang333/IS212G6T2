@@ -6,7 +6,7 @@ import {
   checkIfDatesOverlap,
 } from "../utils/dateChecker.js";
 import * as responseUtils from "../utils/responseUtils.js";
-import { v4 as uuidv4 } from "uuid"; // Used to generate group_id
+import { v4 as uuidv4 } from "uuid"; // Used to generate group_id 
 
 export const REQUEST_STATUS_PENDING = "Pending";
 export const REQUEST_STATUS_NONE = "N/A";
