@@ -1,0 +1,55 @@
+name: Backend CI Pipeline
+
+on:
+  push:
+    branches:
+      - main  
+    paths:
+      - 'backend/**'
+  pull_request:
+    branches:
+      - main  
+    paths:
+      - 'backend/**'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3  
+
+      - name: Set up Node.js 20.9
+        uses: actions/setup-node@v3
+        with:
+          node-version: 20.9
+
+      - name: Install dependencies
+        working-directory: ./backend
+        run: npm install
+
+      - name: Run Linting
+        working-directory: ./backend
+        run: npm run lint
+
+      - name: Run Unit Tests
+        working-directory: ./backend
+        run: npm run test:unit
+        env:
+          NODE_ENV: test
+          MONGODB_URI_TEST: ${{secrets.MONGODB_URI_TEST}} 
+          PORT: ${{secrets.BACKEND_PORT}}
+          ORIGIN: ${{secrets.ORIGIN}}
+
+      - name: Run Integration Tests
+        working-directory: ./backend
+        run: |
+          npm start &
+          sleep 5
+          npm run test:integration
+        env:
+          NODE_ENV: test
+          MONGODB_URI_TEST: ${{secrets.MONGODB_URI_TEST}} 
+          PORT: ${{secrets.BACKEND_PORT}}
+          ORIGIN: ${{secrets.ORIGIN}}

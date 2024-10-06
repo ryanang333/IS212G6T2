@@ -1,7 +1,7 @@
 import {
   checkDatesValidity,
   checkIfDatesOverlap,
-} from "../../api/utils/dateChecker";
+} from "../../../api/utils/dateChecker.js";
 
 describe("checkDatesValidity", () => {
   beforeEach(() => {

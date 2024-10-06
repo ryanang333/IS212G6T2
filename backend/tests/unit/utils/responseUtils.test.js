@@ -10,7 +10,7 @@ import {
   handleUnprocessableEntity,
   handleInternalServerError,
   handleServiceUnavailable,
-} from "../../api/utils/responseUtils.js"; 
+} from "../../../api/utils/responseUtils.js"; 
 import httpMocks from "node-mocks-http";
 
 describe("Response Utility Functions", () => {
