@@ -1,8 +1,8 @@
-import { getOwnSchedule } from "../../../api/controllers/arrangementRequestsController.js";
-import ArrangementRequest from "../../../api/models/arrangementRequestsModel.js"; 
+import { getOwnSchedule } from "../../../../api/controllers/arrangementRequestsController.js";
+import ArrangementRequest from "../../../../api/models/arrangementRequestsModel.js"; 
 import httpMocks from "node-mocks-http";
-import { mockApprovedRegularArrangementRequest, mockApprovedTemporaryArrangementRequest } from "../../mock/testHelper.js";
-jest.mock("../../../api/models/arrangementRequestsModel.js");
+import { mockApprovedRegularArrangementRequest, mockApprovedTemporaryArrangementRequest } from "../../../mock/testHelper.js";
+jest.mock("../../../../api/models/arrangementRequestsModel.js");
 
 describe("getOwnSchedule", () => {
   let req, res;
