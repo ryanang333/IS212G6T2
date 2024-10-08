@@ -4,6 +4,7 @@
         <li><router-link to="/apply" class="text-white hover:underline">Make Request</router-link></li>
         <li><router-link to="/submittedview" class="text-white hover:underline">Submitted Requests</router-link></li>
         <li><router-link to="/schedule" class="text-white hover:underline">Schedule</router-link></li>
+        <li><router-link to="/cancel" class="text-white hover:underline">Cancelled Requests</router-link></li>
         <li><router-link to="/inbox" class="text-white hover:underline">Inbox</router-link></li>
   
         <li v-if="role === '1'">

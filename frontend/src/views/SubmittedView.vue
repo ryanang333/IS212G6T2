@@ -82,16 +82,31 @@
         </thead>
         <tbody>
           <tr v-for="request in paginatedRequests" :key="request._id" class="text-left">
-            <td class="border px-4 py-2">{{ request.request_id }}</td>
-            <td class="border px-4 py-2">{{ request.staff_id }}</td>
-            <td class="border px-4 py-2">{{ request.group_id || '-' }}</td>
-            <td class="border px-4 py-2">{{ new Date(request.request_date).toLocaleString() }}</td>
-            <td class="border px-4 py-2">{{ request.time }}</td>
-            <td class="border px-4 py-2">{{ request.reason }}</td>
-            <td class="border px-4 py-2">{{ request.status }}</td>
+            <td class="border px-4 py-2 align-middle">{{ request.request_id }}</td>
+            <td class="border px-4 py-2 align-middle">{{ request.staff_id }}</td>
+            <td class="border px-4 py-2 align-middle">{{ request.group_id || '-' }}</td>
+            <td class="border px-4 py-2 align-middle">{{ new Date(request.request_date).toLocaleDateString() }}</td>
+            <td class="border px-4 py-2 align-middle">{{ request.time }}</td>
+            <td class="border px-4 py-2 align-middle">{{ request.reason }}</td>
+            <td class="border px-4 py-2 align-middle">{{ request.status }}</td>
+            <td class="border px-4 py-2 align-middle">
+              <input 
+                  type="checkbox" 
+                  v-model="selectedRequests" 
+                  :value="request._id" 
+                  v-if="request.status === 'Pending'"
+                />
+            </td>
           </tr>
         </tbody>
       </table>
+     <!-- Cancel Selected Requests Button -->
+
+    <div class="flex justify-center mt-4">
+      <button @click="cancelSelectedRequests" class="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 transition">
+        Cancel Selected Requests
+      </button>
+    </div>
 
     <div v-if="totalPages > 1" class="flex justify-center mt-4">
       <button @click="prevPage" :disabled="currentPage === 1" class="bg-blue-500 text-white px-4 py-2 rounded mr-2 hover:bg-blue-600 transition">Previous</button>
@@ -118,6 +133,7 @@
       filteredRequests: [],
       currentPage: 1,
       recordsPerPage: 20,
+      selectedRequests: [] 
       };
     },
     computed: {
@@ -162,7 +178,44 @@
     } catch (error) {
       console.error('Error fetching submitted requests:', error);
     }
+      
   },
+    async cancelSelectedRequests() {
+  if (this.selectedRequests.length === 0) {
+    alert('Please select requests to cancel.');
+    return;
+  }
+
+
+  const firstSelectedRequest = this.paginatedRequests.find(request => this.selectedRequests.includes(request._id));
+
+  if (!firstSelectedRequest) {
+    alert('Unable to find the staff ID for the selected requests.');
+    return;
+  }
+
+  const staffId = firstSelectedRequest.staff_id; 
+  const requestIds = this.selectedRequests;
+  const cancelAll = false;
+
+  try {
+    const response = await axios.post('http://localhost:3001/arrangementRequests/cancel', {
+      staffId,
+      requestIds,
+      cancelAll
+    });
+
+    if (response.data && response.data.data.length >0) {
+      alert('Selected requests have been canceled successfully.');
+      this.fetchArrangementRequests(); 
+      this.selectedRequests = [];  
+    } else {
+      alert('Failed to cancel the requests.');
+    }
+  } catch (error) {
+    console.error('Error cancelling selected requests:', error);
+  }
+},
       applyFilters() {
         this.filteredRequests = [];
 
