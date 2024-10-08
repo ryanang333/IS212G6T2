@@ -42,10 +42,13 @@
           <th class="border border-gray-300 p-2">Staff ID</th>
           <th class="border border-gray-300 p-2">Group ID</th>
           <th class="border border-gray-300 p-2">Request Date</th>
+          <th class="border border-gray-300 p-2">Request Time</th>
           <th class="border border-gray-300 p-2">Status</th>
+          <th class="border border-gray-300 p-2">Reason</th>
         </tr>
       </thead>
       <tbody>
+
         <!-- Grouped Requests -->
         <template v-for="(groupRequests, groupId) in groupedRequests" :key="groupId">
           <!-- Group header row -->
@@ -114,6 +117,9 @@
           <td class="border border-gray-300 p-2">
             <input type="checkbox" v-model="selectedRequests" :value="request._id" />
           </td>
+
+        <tr v-for="request in paginatedRequests" :key="request._id">
+
           <td class="border border-gray-300 p-2">
             <div class="flex">
               <button 
@@ -127,11 +133,18 @@
           <td class="border border-gray-300 p-2">{{ request.request_id }}</td>
           <td class="border border-gray-300 p-2">{{ request.staff_id }}</td>
           <td class="border border-gray-300 p-2">{{ request.group_id || "-" }}</td>
+
           <td class="border border-gray-300 p-2">{{ formatDate(request.request_date) }}</td>
+
+          <-- <td class="border border-gray-300 p-2">{{ new Date(request.request_date).toLocaleString() }}</td> -->
+          <-- <td class="border border-gray-300 p-2">{{ request.time }}</td> -->
+          
           <td class="border border-gray-300 p-2">{{ request.status }}</td>
+          <td class="border border-gray-300 p-2">{{ request.reason }}</td>
         </tr>
       </tbody>
     </table>
+
 
     <p v-if="arrangementRequests.length === 0" class="text-center text-red-500">No pending requests.</p>
 
@@ -164,6 +177,23 @@
       </div>
     </div>
 
+    <div class="flex justify-center space-x-2 mt-4">
+      <button
+        @click="prevPage"
+        :disabled="currentPage === 1"
+        class="bg-gray-300 rounded px-4 py-2 hover:bg-gray-400"
+      >
+        Previous
+      </button>
+      <span>Page {{ currentPage }} of {{ totalPages }}</span>
+      <button
+        @click="nextPage"
+        :disabled="currentPage === totalPages"
+        class="bg-gray-300 rounded px-4 py-2 hover:bg-gray-400"
+      >
+        Next
+      </button>
+    </div>
   </div>
 </template>
 
@@ -186,6 +216,8 @@ export default {
       expandedGroups: new Set(),
       groupSelection: {},  // Track selected status of groups
       selectedGroupId: null, 
+      currentPage: 1,
+      itemsPerPage: 10,
     };
   },
   computed: {
@@ -259,6 +291,11 @@ export default {
 
         if (requests.length === 0) {
           this.arrangementRequests = [];
+          return;
+          alert('No requests found for the provided manager ID.');
+        } else {
+          this.arrangementRequests = response.data;
+          this.currentPage = 1;
           return;
         }
 
@@ -428,8 +465,32 @@ export default {
       this.showRejectGroupModal = false;  // Close modal if cancel is clicked
       this.rejectionReason = "";  // Clear the rejection reason
     },
-
-
-  }
+    nextPage() {
+      if (this.currentPage < this.totalPages) {
+        this.currentPage++;
+      }
+    },
+    prevPage() {
+      if (this.currentPage > 1) {
+        this.currentPage--;
+      }
+    },
+  },
+  computed: {
+    totalPages() {
+      return Math.ceil(this.arrangementRequests.length / this.itemsPerPage); 
+    },
+    paginatedRequests() {
+      const start = (this.currentPage - 1) * this.itemsPerPage;
+      return this.arrangementRequests.slice(start, start + this.itemsPerPage);
+    },
+  },
+  // mounted() {
+  //   this.fetchArrangementRequests();
+  //   this.interval = setInterval(this.fetchArrangementRequests, 1000);
+  // },
+  // beforeDestroy() {
+  //   clearInterval(this.interval);
+  // },
 };
 </script>
