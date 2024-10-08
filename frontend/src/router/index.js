@@ -1,6 +1,7 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import ArrangementRequest from '../views/ArrangementRequests.vue'
 import SubmittedView from '../views/SubmittedView.vue'
+import ViewRegularSubmitted from '../views/ViewRegularSubmitted.vue'
 import ApplyArrangement from '../views/ApplyArrangement.vue'
 import Login from '../views/Login.vue'
 import { isAuthenticated } from '../../utils/localStorage'
@@ -31,6 +32,11 @@ const router = createRouter({
       name: 'submittedview',
       component: SubmittedView,
       meta: { requiresAuth: true },
+    },
+    {
+      path: '/viewregularsubmitted',
+      name: 'viewregularsubmitted',
+      component: ViewRegularSubmitted
     },
     {
       path: '/apply',

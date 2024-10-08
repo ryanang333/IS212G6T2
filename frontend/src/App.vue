@@ -1,6 +1,5 @@
 <template>
   <div>
-
     <header v-if="!$route.path.includes('/login')">
       <NavBar :role="role" />
     </header>
