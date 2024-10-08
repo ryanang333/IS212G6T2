@@ -7,6 +7,7 @@ import {
   getOwnSchedule,
   getTeamSchedule,
   updateRequestStatus
+  cancelPendingArrangementRequests,
 } from "../controllers/arrangementRequestsController.js";
 
 const router = express.Router();
@@ -19,4 +20,5 @@ router.get("/myschedule", getOwnSchedule);
 router.get("/teamschedule", getTeamSchedule);
 router.patch('/withdrawal/:id', updateRequestStatus);
 
+router.post("/cancel", cancelPendingArrangementRequests)
 export default router;

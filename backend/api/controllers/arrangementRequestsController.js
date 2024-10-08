@@ -11,6 +11,7 @@ import { v4 as uuidv4 } from "uuid"; // Used to generate group_id
 export const REQUEST_STATUS_PENDING = "Pending";
 export const REQUEST_STATUS_NONE = "N/A";
 export const REQUEST_STATUS_APPROVED = "Approved";
+export const REQUEST_STATUS_CANCELLED = "Cancelled";
 
 /**
  * Approves arrangement request instantly if staff is CEO.
@@ -473,39 +474,89 @@ export const getStaffArrangementRequests = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
+/**
+ * Cancels pending WFH arrangement requests for a staff member.
+ * Staff can either cancel an entire regular request (parent) or individual ad-hoc requests (children).
+ * @param {Object} req - The request object.
+ * @param {Object} res - The response object.
+ * @returns {Promise<void>} - A promise that resolves when the response has been sent.
+ **/
+
+ export const cancelPendingArrangementRequests = async (req, res) => {
+  try {
+    const { staffId, requestIds, cancelAll } = req.body;
+
+    if (!requestIds || requestIds.length === 0) {
+      return responseUtils.handleBadRequest(res, "No requests selected for cancellation.");
+    }
+
+    const pendingRequests = await ArrangementRequest.find({
+      staff_id: staffId,
+      _id: { $in: requestIds },
+      status: REQUEST_STATUS_PENDING,
+    });
+
+    if (pendingRequests.length === 0) {
+      return responseUtils.handleNotFound(res, "No pending requests found for cancellation.");
+    }
+
+    if (cancelAll) {
+      const groupId = pendingRequests[0].group_id; 
+      if (groupId) {
+        await ArrangementRequest.updateMany(
+          { group_id: groupId, status: REQUEST_STATUS_PENDING },
+          { status: REQUEST_STATUS_CANCELLED }
+        );
+      }
+    } else {
+      await ArrangementRequest.updateMany(
+        { _id: { $in: requestIds }, status: REQUEST_STATUS_PENDING },
+        { status: REQUEST_STATUS_CANCELLED }
+      );
+    }
+
+    await createAuditEntry(pendingRequests, staffId, REQUEST_STATUS_PENDING, REQUEST_STATUS_CANCELLED);
+
+    return responseUtils.handleSuccessResponse(
+      res,
+      pendingRequests.map((req) => req._id),
+      "Selected request(s) have been successfully cancelled."
+    );
+  } catch (error) {
+    return responseUtils.handleInternalServerError(res, error.message);
+  }
+};
+
 
 export const updateRequestStatus = async (req, res) => {
-  const { id } = req.params;   // Extract the request ID from URL params
-  const { status, withdraw_reason, manager_reason } = req.body; // Get the new status from the request body
+  const { id } = req.params;   
+  const { status, withdraw_reason, manager_reason } = req.body; 
+  
   if ((!withdraw_reason || withdraw_reason.trim() === "") && (!manager_reason || manager_reason.trim() === "")) {
     return res.status(400).json({ message: 'Cancellation reason or manager reason cannot be empty' });
   }
   
   try {
-    // Find the arrangement request by its ID and update its status
-    const updateFields = {
-      status: status,
-    };
+    const updateFields = { status: status };
+
     if (withdraw_reason) {
-      updateFields.withdraw_reason = withdraw_reason; // Add withdraw_reason if provided
+      updateFields.withdraw_reason = withdraw_reason;
     }
     if (manager_reason) {
-      updateFields.manager_reason = manager_reason; // Add manager_reason if provided
+      updateFields.manager_reason = manager_reason;
     }
 
     const updatedRequest = await ArrangementRequest.findByIdAndUpdate(
-      id,  // MongoDB ID for the request
-      updateFields,// Update the status to 'Pending Withdrawal'
-      { new: true }  // Return the updated document
+      id,
+      updateFields,
+      { new: true }
     );
 
     if (!updatedRequest) {
       return res.status(404).json({ message: 'Request not found' });
     }
 
-    // Return the updated request
     res.status(200).json(updatedRequest);
-    
   } catch (error) {
     console.error('Error updating request:', error);
     res.status(500).json({ message: 'Internal server error' });
