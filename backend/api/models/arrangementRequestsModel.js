@@ -33,7 +33,11 @@ const arrangementRequestSchema = new Schema(
     reason: {
       type: String,
       required: true,
-    }
+    },
+    rejection_reason: {
+      type: String,
+      default: null 
+    },
   },
   {
     collection: 'arrangement_requests',
