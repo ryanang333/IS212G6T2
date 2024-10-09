@@ -1,6 +1,5 @@
 import { connectDB, currentTestDB } from "./db_test_start.js";
 import teardownDB from "./db_test_end.js";
-import ArrangementRequest from "../../api/models/arrangementRequestsModel.js";
 import Staff from "../../api/models/staffModel.js";
 import app from "./backend_start.js";
 
