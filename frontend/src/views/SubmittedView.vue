@@ -7,7 +7,6 @@
       </button>
     </div>
 
-    <!-- Filter Modal -->
     <div v-if="showFilterModal" class="fixed inset-0 flex items-center justify-center bg-gray-800 bg-opacity-75 z-50">
       <div class="bg-white p-6 rounded-lg shadow-lg w-full max-w-md">
         <h2 class="text-xl font-semibold mb-4">Filter Requests</h2>
@@ -57,24 +56,31 @@
       <thead class="bg-gray-200">
         <tr>
           <th class="px-4 py-2 border">Request Date</th>
-          <th class="px-4 py-2 border">Requested Time</th>
+          <th class="px-4 py-2 border">Request Time</th>
           <th class="px-4 py-2 border">Reason for Arrangement</th>
           <th class="px-4 py-2 border">Status</th>
         </tr>
       </thead>
       <tbody>
         <template v-for="request in paginatedRequests" :key="request._id">
-          <tr @click="request.group_id ? toggleChildren(request) : null" class="cursor-pointer" :class="{ 'bg-gray-100': request.showChildren }">
-            <td class="border px-4 py-2">{{ new Date(request.request_date).toLocaleString() }}</td>
+          <tr @click="toggleChildren(request)" class="cursor-pointer" :class="{ 'bg-gray-100': request.showChildren }" v-if="!request.isAdHoc">
+            <td class="border px-4 py-2">{{ request.summary }}</td>
             <td class="border px-4 py-2">{{ request.request_time }}</td>
             <td class="border px-4 py-2">{{ request.reason }}</td>
             <td class="border px-4 py-2">{{ request.status }}</td>
           </tr>
 
-          <!-- Child Requests -->
-          <tr v-if="request.showChildren">
-            <td colspan="4" class="border-t bg-gray-50">
+          <tr v-if="request.showChildren" class="bg-gray-50">
+            <td colspan="4">
               <table class="w-full">
+                <thead>
+                  <tr class="bg-gray-200">
+                    <th class="border px-4 py-2">Request Date</th>
+                    <th class="border px-4 py-2">Request Time</th>
+                    <th class="border px-4 py-2">Reason for Arrangement</th>
+                    <th class="border px-4 py-2">Status</th>
+                  </tr>
+                </thead>
                 <tbody>
                   <tr v-for="child in request.children" :key="child._id">
                     <td class="border px-4 py-2">{{ new Date(child.request_date).toLocaleString() }}</td>
@@ -85,6 +91,14 @@
                 </tbody>
               </table>
             </td>
+          </tr>
+
+
+          <tr v-if="request.isAdHoc" class="cursor-default">
+            <td class="border px-4 py-2">{{ request.request_date }}</td>
+            <td class="border px-4 py-2">{{ request.request_time }}</td>
+            <td class="border px-4 py-2">{{ request.reason }}</td>
+            <td class="border px-4 py-2">{{ request.status }}</td>
           </tr>
         </template>
       </tbody>
@@ -169,78 +183,85 @@ export default {
       } else {
         const groupedRequests = {};
         data.forEach(request => {
-  if (request.group_id && typeof request.group_id === 'string') {
-    if (!groupedRequests[request.group_id]) {
-      groupedRequests[request.group_id] = [];
-    }
-    groupedRequests[request.group_id].push(request);
-  }
-});
+          if (request.group_id && typeof request.group_id === 'string') {
+            if (!groupedRequests[request.group_id]) {
+              groupedRequests[request.group_id] = [];
+            }
+            groupedRequests[request.group_id].push(request);
+          } else {
+            request.isAdHoc = true;
+          }
+        });
 
-  this.filteredRequests = [];
+        this.filteredRequests = [];
+        Object.keys(groupedRequests).forEach(groupId => {
+          const sortedGroup = groupedRequests[groupId];
+          const latestDate = sortedGroup.reduce((latest, req) => {
+            return new Date(req.request_date) > new Date(latest) ? req.request_date : latest;
+          }, sortedGroup[0].request_date);
 
-  data.forEach(request => {
-    if (request.group_id && typeof request.group_id === 'string') {
-      const group = groupedRequests[request.group_id];
-      const sortedGroup = group.sort((a, b) => new Date(a.request_date) - new Date(b.request_date));
+          const parentRequest = {
+            summary: `Request Summary for ${this.staff_id} ${new Date(latestDate).toLocaleString()} (${sortedGroup.length} requests)`,
+            request_time: sortedGroup[0].request_time,
+            reason: sortedGroup[0].reason,
+            status: sortedGroup[0].status,
+            showChildren: false,
+            children: sortedGroup,
+            isAdHoc: false,
+          };
 
-      const parentRequest = sortedGroup[0];
-      parentRequest.showChildren = false;
-      parentRequest.children = sortedGroup.slice(1);
+          this.filteredRequests.push(parentRequest);
+        });
 
-      if (!this.filteredRequests.includes(parentRequest)) {
-        this.filteredRequests.push(parentRequest);
-      }
-    } 
-    else {
-      this.filteredRequests.push(request);
-    }
-  });
+        // Add ad-hoc requests
+        data.forEach(request => {
+          if (request.isAdHoc) {
+            this.filteredRequests.push({
+              summary: request.summary,
+              request_date: request.request_date,
+              request_time: request.request_time,
+              reason: request.reason,
+              status: request.status,
+              isAdHoc: true,
+            });
+          }
+        });
 
         this.applyFilters();
       }
     },
 
     handleError(error) {
-      console.error('Error fetching requests:', error);
-      this.errorMessage = 'Error loading data. Please try again later.';
+      console.error('Error fetching arrangement requests:', error);
+      this.errorMessage = 'Failed to load requests. Please try again later.';
       alert(this.errorMessage);
     },
 
     applyFilters() {
-      let filtered = [...this.filteredRequests];
+      let filtered = this.submitted_view;
 
       if (this.filters.requestType !== 'all') {
         filtered = filtered.filter(request => {
-          if (this.filters.requestType === 'Ad-hoc') {
-            return !request.group_id;
-          } else if (this.filters.requestType === 'Regular') {
-            return request.group_id;
+          if (request.children && request.children.length > 0) {
+            return request.children[0].request_type === this.filters.requestType;
           }
+          return request.isAdHoc && this.filters.requestType === 'Ad-hoc';
         });
+      } else {
+        filtered = this.filteredRequests;
       }
 
       if (this.filters.status !== 'all') {
         filtered = filtered.filter(request => request.status === this.filters.status);
       }
 
-      if (this.filters.datePassed !== 'all') {
-        const now = new Date();
-        if (this.filters.datePassed === 'upcoming') {
-          filtered = filtered.filter(request => new Date(request.request_date) >= now);
-        } else if (this.filters.datePassed === 'past') {
-          filtered = filtered.filter(request => new Date(request.request_date) < now);
-        }
-      }
-
-      if (this.filters.arrangementDate === 'asc') {
-        filtered.sort((a, b) => new Date(a.request_date) - new Date(b.request_date));
-      } else if (this.filters.arrangementDate === 'desc') {
-        filtered.sort((a, b) => new Date(b.request_date) - new Date(a.request_date));
+      if (this.filters.datePassed === 'upcoming') {
+        filtered = filtered.filter(request => new Date(request.request_date) > new Date());
+      } else if (this.filters.datePassed === 'past') {
+        filtered = filtered.filter(request => new Date(request.request_date) < new Date());
       }
 
       this.filteredRequests = filtered;
-      this.currentPage = 1;
     },
 
     resetFilters() {
@@ -253,21 +274,21 @@ export default {
       this.applyFilters();
     },
 
-    toggleChildren(request) {
-      request.showChildren = !request.showChildren;
+    nextPage() {
+      if (this.currentPage < this.totalPages) {
+        this.currentPage += 1;
+      }
     },
 
     prevPage() {
       if (this.currentPage > 1) {
-        this.currentPage--;
+        this.currentPage -= 1;
       }
     },
 
-    nextPage() {
-      if (this.currentPage < this.totalPages) {
-        this.currentPage++;
-      }
+    toggleChildren(request) {
+      request.showChildren = !request.showChildren;
     }
-  }
+  },
 };
 </script>

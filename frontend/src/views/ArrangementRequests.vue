@@ -13,7 +13,7 @@
       <thead>
         <tr class="bg-gray-100">
           <th class="border border-gray-300 px-4 py-2">Select</th>
-          <th class="border border-gray-300 px-4 py-2">Staff</th>
+          <th class="border border-gray-300 px-4 py-2">Staff ID</th>
           <th class="border border-gray-300 px-4 py-2">Request Date</th>
           <th class="border border-gray-300 px-4 py-2">Request Time</th>
           <th class="border border-gray-300 px-4 py-2">Status</th>
@@ -126,14 +126,11 @@ export default {
         return;
       }
 
-      this.loading = true;
       try {
         const response = await axios.get(`http://localhost:3001/arrangementRequests?manager_id=${this.staff_id}`);
         this.handleResponse(response.data);
       } catch (error) {
         this.handleError(error);
-      } finally {
-        this.loading = false;
       }
     },
 
@@ -146,6 +143,7 @@ export default {
         alert('No requests found for the logged-in user.');
       } else {
         const groupedRequests = {};
+        
         data.forEach(request => {
           if (request.group_id) {
             if (!groupedRequests[request.group_id]) {
@@ -159,33 +157,50 @@ export default {
           }
         });
 
+        // Process each group
         for (const group in groupedRequests) {
           const groupRequests = groupedRequests[group];
+          const latestDate = groupRequests.reduce((latest, req) => new Date(req.request_date) > new Date(latest) ? req.request_date : latest, groupRequests[0].request_date);
 
-          const parentRequest = groupRequests.reduce((earliest, request) => {
-            return !earliest || new Date(request.request_date) < new Date(earliest.request_date) ? request : earliest;
-          }, null);
+          const parentRequest = {
+            id: `${group}-summary`,
+            staff_id: groupRequests[0].staff_id,
+            request_date: `Request Summary for ${this.staff_id} ${new Date(latestDate).toLocaleString()} (${groupRequests.length} requests)`,
+            request_time: '',
+            status: "Parent Request",
+            showChildren: false,
+            children: groupRequests,
+            isAdHoc: false
+          };
 
-          if (parentRequest) {
-            parentRequest.showChildren = false;
-            parentRequest.children = groupRequests.filter(req => req !== parentRequest);
-            parentRequest.isAdHoc = false;
-            this.filteredRequests.push(parentRequest);
-          }
+          this.filteredRequests.push(parentRequest);
         }
+
+        console.log('Processed requests:', this.filteredRequests);
       }
     },
 
     handleError(error) {
-      console.error('Error fetching arrangement requests:', error);
-      this.errorMessage = 'Failed to fetch arrangement requests. Please try again later.';
+      console.error('Error fetching requests:', error);
+      this.errorMessage = error.response?.data?.message || 'An error occurred while fetching requests.';
     },
 
     handleRowClick(request) {
       if (!request.isAdHoc) {
-        // Toggle children visibility only for non-Ad Hoc (regular) requests
         request.showChildren = !request.showChildren;
       }
+    },
+
+    approveRequest(request) {
+      console.log(`Approved request: ${request.id}`);
+    },
+
+    rejectRequest(request) {
+      console.log(`Rejected request: ${request.id}`);
+    },
+
+    requestAdditionalInfo(request) {
+      console.log(`Requested additional info for: ${request.id}`);
     },
 
     acceptAll() {
@@ -195,6 +210,7 @@ export default {
         }
       });
     },
+
     rejectAll() {
       this.filteredRequests.forEach(request => {
         if (request.selected) {
@@ -202,26 +218,18 @@ export default {
         }
       });
     },
-    approveRequest(request) {
-      console.log('Approved request:', request);
-    },
-    rejectRequest(request) {
-      console.log('Rejected request:', request);
-    },
-    requestAdditionalInfo(request) {
-      console.log('Requesting additional info for:', request);
-    },
 
     prevPage() {
       if (this.currentPage > 1) {
         this.currentPage--;
       }
     },
+
     nextPage() {
       if (this.currentPage < this.totalPages) {
         this.currentPage++;
       }
-    },
-  },
+    }
+  }
 };
 </script>
