@@ -59,22 +59,11 @@ describe("getTeamSchedule", () => {
       status: "Approved",
     });
     expect(res.statusCode).toBe(200);
-    expect(res._getJSONData().data).toEqual([
-      {
-        request_time: "Full Day",
-        request_date: "2024-10-04T00:00:00.000Z",
-        name: "George Floyd",
-      },
-      {
-        request_time: "PM",
-        request_date: "2024-10-02T00:00:00.000Z",
-        name: "Mari Kita",
-      },
-      {
-        request_time: "AM",
-        request_date: "2024-10-08T00:00:00.000Z",
-        name: "Dick Lee",
-      },
+    expect(res._getJSONData().data).toEqual(      
+      [
+      { AM: 1, PM: 1, name: 'George Floyd' },
+      { AM: 0, PM: 1, name: 'Mari Kita' },
+      { AM: 1, PM: 0, name: 'Dick Lee' }
     ]);
   });
 

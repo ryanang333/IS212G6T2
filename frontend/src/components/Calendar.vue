@@ -1,5 +1,12 @@
 <template>
   <FullCalendar ref="fullCalendar" :options="calendarOptions" />
+  <ScheduleModal
+    v-if="showScheduleModal"
+    :date="dateSelected"
+    :department="dept"
+    :tabSelected="tab"
+    @closemodal="this.showScheduleModal=false;"
+  />
 </template>
 
 <script>
@@ -7,10 +14,12 @@ import FullCalendar from '@fullcalendar/vue3'
 import dayGridPlugin from '@fullcalendar/daygrid'
 import interactionPlugin from '@fullcalendar/interaction'
 import axios from 'axios'
+import ScheduleModal from './ScheduleModal.vue'
 export default {
   data() {
     return {
       events: [],
+      showScheduleModal: false,
       startDate: null,
       endDate: null,
       /**
@@ -31,15 +40,16 @@ export default {
         height: this.height,
         events: this.events,
         datesSet: this.handleDatesSet
-      }
+      },
+      dateSelected: null
     }
   },
-  props: ['tab', 'height', 'staffId', 'role'],
+  props: ['tab', 'height', 'staffId', 'dept'],
   components: {
-    FullCalendar
+    FullCalendar,
+    ScheduleModal
   },
   methods: {
-    // handleDateClick: function (arg) {},
     /**
      * Handles the date set event from the calendar.
      * Fetches the data for the given date range.
@@ -76,9 +86,12 @@ export default {
           color: color
         }
       })
-      const calendarApi = this.$refs.fullCalendar.getApi()
-      calendarApi.removeAllEvents()
-      calendarApi.addEventSource(this.events)
+    },
+    async handleDateClick(event) {
+      if (this.tab === 'isTeam') {
+        this.dateSelected = event.dateStr
+        this.showScheduleModal = true
+      }
     },
 
     /**
@@ -90,19 +103,18 @@ export default {
     async fetchData() {
       try {
         if (this.tab === 'isOwn') {
-          const response = await axios.get(
-            `http://localhost:3001/arrangementRequests/myschedule?staff_id=${this.staffId}`,
-            {
-              params: {
-                startDate: this.startDate,
-                endDate: this.endDate
-              }
+          const response = await axios.get(`http://localhost:3001/arrangementRequests/myschedule`, {
+            params: {
+              staff_id: this.staffId,
+              startDate: this.startDate,
+              endDate: this.endDate
             }
-          )
-          this.populateEvents(response)
-        }
-        else if(this.tab === 'isTeam'){
-          console.log('isTeam selected');
+          })
+          if (response.status == 200) {
+            this.populateEvents(response)
+            const calendarApi = this.$refs.fullCalendar.getApi()
+            calendarApi.addEventSource(this.events)
+          }
         }
       } catch (error) {
         const errorMessage = error.response?.data?.message || error.message
@@ -111,7 +123,11 @@ export default {
     }
   },
   updated() {
-    this.fetchData();
+    const calendarApi = this.$refs.fullCalendar.getApi()
+    calendarApi.removeAllEvents()
+    if (this.tab === 'isOwn') {
+      this.fetchData()
+    }
   }
 }
 </script>

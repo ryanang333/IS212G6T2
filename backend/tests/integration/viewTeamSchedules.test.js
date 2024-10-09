@@ -3,7 +3,7 @@ import mongoose from "mongoose";
 import httpMocks from "node-mocks-http";
 import ArrangementRequest from "../../api/models/arrangementRequestsModel.js";
 import Staff from "../../api/models/staffModel.js";
-import { MongoMemoryServer } from 'mongodb-memory-server-core';
+import { MongoMemoryServer } from "mongodb-memory-server-core";
 
 let mongoServer;
 
@@ -47,7 +47,7 @@ describe("getTeamSchedule - Integration Test with MongoDB", () => {
     expect(response.data.length).toBe(0);
   });
 
-  test("should return a 200 but return an empty array if no requests for the department", async () => {
+  test("should return a 200 but return an array of department staff even if no requests for the department", async () => {
     const staffArray = [
       {
         staff_id: 140001,
@@ -87,7 +87,7 @@ describe("getTeamSchedule - Integration Test with MongoDB", () => {
     await getTeamSchedule(req, res);
     const response = res._getJSONData();
     expect(res.statusCode).toBe(200);
-    expect(response.data.length).toBe(0);
+    expect(response.data.length).toBe(3);
   });
   test("should return a 200 and fetch request on success", async () => {
     const reqArray = [
@@ -97,7 +97,7 @@ describe("getTeamSchedule - Integration Test with MongoDB", () => {
         status: "Approved",
         manager_id: 130002,
         group_id: null,
-        request_time: "PM",
+        request_time: "AM",
         reason: "Child carer",
       },
       {
@@ -115,7 +115,7 @@ describe("getTeamSchedule - Integration Test with MongoDB", () => {
         status: "Approved",
         manager_id: 140894,
         group_id: null,
-        request_time: "PM",
+        request_time: "Full Day",
         reason: "Child carer",
       },
     ];
@@ -162,21 +162,9 @@ describe("getTeamSchedule - Integration Test with MongoDB", () => {
     expect(res.statusCode).toBe(200);
     expect(response.data.length).toBe(3);
     expect(response.data).toEqual([
-      expect.objectContaining({
-        request_time: "PM",
-        request_date: new Date("2024-10-03T16:00:00.000Z").toISOString(),
-        name: "Derek Tan",
-      }),
-      expect.objectContaining({
-        request_time: "PM",
-        request_date: new Date("2024-10-08T16:00:00.000Z").toISOString(),
-        name: "Rahim Khalid",
-      }),
-      expect.objectContaining({
-        request_time: "PM",
-        request_date: new Date("2024-10-08T16:00:00.000Z").toISOString(),
-        name: "Susan Goh",
-      }),
+      { AM: 1, PM: 0, name: "Derek Tan" },
+      { AM: 0, PM: 1, name: "Rahim Khalid" },
+      { AM: 1, PM: 1, name: "Susan Goh" },
     ]);
   });
 });

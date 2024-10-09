@@ -96,6 +96,82 @@ export const createTempArrangementRequests = async (req, res) => {
   }
 };
 
+/**
+ * Formats the schedule data for staff members based on their requests.
+ *
+ * This function creates a schedule map from a mapping of staff IDs to names
+ * and an array of requests. It populates the schedule for each staff member
+ * based on their requests.
+ *
+ * @param {Map<string, string>} staffIdMap - A map where the key is the staff ID and the value is the staff member's name.
+ * @param {Array<Object>} requestsArray - An array of request objects, each containing details about the requests made by staff members.
+ * @returns {Map<string, Object>} A map where each key is a staff ID, and the value is an object containing the AM and PM status and the staff member's name.
+ */
+const formatScheduleData = (staffIdMap, requestsArray) => {
+  const staffIdToScheduleMap = transformStaffIdToScheduleMap(staffIdMap);
+  populateScheduleMap(staffIdToScheduleMap, requestsArray);
+  return staffIdToScheduleMap;
+};
+
+/**
+ * Transforms a map of staff IDs to a schedule map.
+ *
+ * This function initializes a new map where each staff ID is mapped to an object
+ * containing the AM and PM schedule status (initialized to 0) and the staff member's name.
+ *
+ * @param {Map<string, string>} staffIdMap - A map where the key is the staff ID and the value is the staff member's name.
+ * @returns {Map<string, Object>} A map where each key is a staff ID, and the value is an object containing the AM and PM schedule status and the staff member's name.
+ */
+const transformStaffIdToScheduleMap = (staffIdMap) => {
+  const staffIdToScheduleMap = new Map();
+  for (let [staffId, name] of staffIdMap) {
+    staffIdToScheduleMap.set(staffId, {
+      AM: 0,
+      PM: 0,
+      name: name,
+    });
+  }
+  return staffIdToScheduleMap;
+};
+
+/**
+ * Populates the schedule map with request data.
+ *
+ * This function iterates over an array of requests and updates the schedule
+ * map based on the requests made by each staff member. It sets the AM and PM
+ * schedule statuses according to the request type (Full Day or Part Day).
+ *
+ * @param {Map<string, Object>} staffIdToScheduleMap - A map where each key is a staff ID, and the value is an object containing the AM and PM schedule status and the staff member's name.
+ * @param {Array<Object>} requestsArray - An array of request objects, each containing details about the requests made by staff members.
+ */
+const populateScheduleMap = (staffIdToScheduleMap, requestsArray) => {
+  for (let request of requestsArray) {
+    let schedule;
+    if (staffIdToScheduleMap.has(request.staff_id)) {
+      schedule = staffIdToScheduleMap.get(request.staff_id);
+    }
+    if (request.request_time == "Full Day") {
+      schedule["AM"] = 1;
+      schedule["PM"] = 1;
+    } else {
+      schedule[request.request_time] = 1;
+    }
+    staffIdToScheduleMap.set(request.staff_id, schedule);
+  }
+};
+
+/**
+ * Handles the GET request for fetching the team schedule.
+ *
+ * This asynchronous function retrieves the staff IDs for a specific department
+ * and finds any existing requests between the provided start and end dates.
+ * It formats the schedule data and returns it in the response.
+ *
+ * @async
+ * @param {Object} req - The request object from the client, containing query parameters for start date, end date, and department.
+ * @param {Object} res - The response object used to send back the desired HTTP response.
+ * @returns {Promise<void>} A promise that resolves when the response is sent or rejects on error.
+ */
 export const getTeamSchedule = async (req, res) => {
   const { startDate, endDate, dept } = req.query;
   if (!startDate || !endDate) {
@@ -116,13 +192,10 @@ export const getTeamSchedule = async (req, res) => {
         endDate
       );
     }
+    const formattedMap = formatScheduleData(staffIdMap, requestsArray);
     return responseUtils.handleSuccessResponse(
       res,
-      requestsArray.map((req) => ({
-        request_time: req.request_time,
-        request_date: req.request_date,
-        name: staffIdMap.get(req.staff_id),
-      })),
+      Array.from(formattedMap.values()),
       "Requests fetched successfully!"
     );
   } catch (error) {
