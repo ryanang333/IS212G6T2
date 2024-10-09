@@ -6,7 +6,12 @@
       <button @click="approveAllRequests" class="bg-blue-500 text-white rounded px-4 py-2 hover:bg-blue-600">
         Approve All
       </button>
+      <button @click="showRejectModalForAll" class="bg-red-500 text-white rounded px-4 py-2 hover:bg-red-600 ml-2">
+        Reject All
+      </button>
     </div>
+
+    <p v-if="noPendingRequestsMessage" class="text-center text-red-500">{{ noPendingRequestsMessage }}</p>
 
     <div v-if="selectedRequests.length > 0" class="flex justify-between items-center mb-4">
       <div class="flex space-x-4">
@@ -20,7 +25,7 @@
         <button 
           @click="rejectSelectedRequests" 
           class="bg-red-500 text-white px-2 py-1 mr-1 rounded hover:bg-red-600" 
-          :disabled="!rejectionReason">
+          :disabled="selectedRequests.length === 0">
           Reject Selected
         </button>
 
@@ -94,14 +99,10 @@
               <div class="flex">
                 <button 
                   @click="approveRequest(request._id)" 
-                  class="bg-green-500 text-white rounded px-2 py-1 mr-1 hover:bg-green-600">
-                  Approve
-                </button>
+                  class="bg-green-500 text-white rounded px-2 py-1 mr-1 hover:bg-green-600">Approve</button>
                 <button 
                   @click="showRejectModalForRequest(request._id)" 
-                  class="bg-red-500 text-white rounded px-2 py-1 hover:bg-red-600">
-                  Reject
-                </button>
+                  class="bg-red-500 text-white rounded px-2 py-1 hover:bg-red-600">Reject</button>
               </div>
             </td>
             <td class="border border-gray-300 p-2">{{ request.request_id }}</td>
@@ -163,7 +164,7 @@
       </div>
     </div>
     <!-- Reject Group Modal -->
-    <div v-if="showRejectGroupModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 flex justify-center items-center">
+    <div v-if="showRejectModalGroup" class="fixed inset-0 bg-gray-600 bg-opacity-50 flex justify-center items-center">
       <div class="bg-white p-6 rounded shadow-lg w-1/2">
         <h3 class="text-xl mb-4">Reason for Rejection (Group)</h3>
         <textarea 
@@ -171,8 +172,22 @@
           class="w-full p-2 border rounded mb-4" 
           placeholder="Enter the reason for rejection..."></textarea>
         <div class="flex justify-end">
-          <button @click="rejectGroupRequests(selectedGroupId)" class="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600">Reject</button>
-          <button @click="cancelRejectGroup" class="ml-2 bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600">Cancel</button>
+          <button @click="rejectGroupRequests(requestToRejectGroupId)" class="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600">Reject</button>
+          <button @click="cancelReject" class="ml-2 bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600">Cancel</button>
+        </div>
+      </div>
+    </div>
+    <!-- Reject All Modal -->
+    <div v-if="showRejectModalAll" class="fixed inset-0 bg-gray-600 bg-opacity-50 flex justify-center items-center">
+      <div class="bg-white p-6 rounded shadow-lg w-1/2">
+        <h3 class="text-xl mb-4">Reason for Rejection (All)</h3>
+        <textarea 
+          v-model="rejectionReason" 
+          class="w-full p-2 border rounded mb-4" 
+          placeholder="Enter the reason for rejection..."></textarea>
+        <div class="flex justify-end">
+          <button @click="rejectAllRequests" class="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600">Reject All</button>
+          <button @click="cancelReject" class="ml-2 bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600">Cancel</button>
         </div>
       </div>
     </div>
@@ -208,13 +223,18 @@ export default {
       manager_id: null,
       arrangementRequests: [],
       selectedRequests: [],
-      showRejectModal: false,
-      rejectionReason: "",
-      requestToRejectId: null,
       groupedRequests: {},
       nonGroupedRequests: [],
       expandedGroups: new Set(),
       groupSelection: {},  // Track selected status of groups
+      noPendingRequestsMessage: "",
+
+      requestToRejectId: null,
+      requestToRejectGroupId: null, 
+      rejectionReason: "",
+      showRejectModal: false,
+      showRejectModalGroup: false,
+      showRejectModalAll: false,
       selectedGroupId: null, 
       currentPage: 1,
       itemsPerPage: 10,
@@ -222,7 +242,9 @@ export default {
   },
   computed: {
     hasPendingRequests() {
-      return this.arrangementRequests.some(request => request.status === 'Pending');
+      const hasRequests = this.arrangementRequests.some(request => request.status === 'Pending');
+      this.noPendingRequestsMessage = hasRequests ? "" : "No Pending Requests";
+      return hasRequests;
     },
     isAllSelected() {
       return this.selectedRequests.length === this.arrangementRequests.filter(request => request.status === 'Pending').length;
@@ -273,7 +295,6 @@ export default {
       }
     },
 
-
     isGroupSelected(groupId) {
       return this.groupSelection[groupId] || false;
     },
@@ -283,32 +304,26 @@ export default {
         alert('Please enter a manager ID');
         return;
       }
-
       try {
         const response = await axios.get(`http://localhost:3001/arrangementRequests?manager_id=${this.manager_id}`);
+        //const requests = response.data;
         console.log('Fetched arrangement requests:', response.data);  // Log the fetched data
-        const requests = response.data;
 
         if (requests.length === 0) {
           this.arrangementRequests = [];
           return;
-          alert('No requests found for the provided manager ID.');
-        } else {
-          this.arrangementRequests = response.data;
-          this.currentPage = 1;
-          return;
         }
 
         // Set the arrangementRequests to the fetched data
-        this.arrangementRequests = requests;
+        this.arrangementRequests = response.data;
 
         // Split requests into groups and non-grouped requests
-        const { grouped, nonGrouped } = this.groupRequests(requests);
-
+        const { grouped, nonGrouped } = this.groupRequests(response.data);
         this.groupedRequests = grouped;
         this.nonGroupedRequests = nonGrouped;
+        this.selectedRequests = [];
       } catch (error) {
-        console.error('Error fetching arrangement requests:', error);
+        console.error('Error fetching arrangement requests:', error.response ? error.response.data : error);
       }
     },
 
@@ -332,125 +347,125 @@ export default {
       try {
         const response = await axios.post(`http://localhost:3001/arrangementRequests/approve`, { requestId });
         console.log('Request approved:', response.data);
-        this.fetchArrangementRequests(); // Refresh the data
+        await this.fetchArrangementRequests();
+        location.reload(); // Refresh the page
       } catch (error) {
-        console.error('Error approving request:', error);
+        console.log("approve error")
+        console.error('Error approving request:', error);        
       }
     },
 
-    showRejectModalForRequest(requestId) {
-      this.requestToRejectId = requestId; // Set the request ID to be rejected
-      this.rejectionReason = ""; // Clear any previous rejection reason
-      this.showRejectModal = true; // Show the modal
-    },
+     showRejectModalForRequest(requestId) {
+       this.requestToRejectId = requestId; // Set the request ID to be rejected
+       this.rejectionReason = ""; // Clear any previous rejection reason
+       this.showRejectModal = true; // Show the modal
+     },
 
-    async rejectRequest() {
-      if (!this.rejectionReason) {
-        alert('Please provide a rejection reason.');
-        return;
-      }
+     async rejectRequest() {
+       if (!this.rejectionReason) {
+         alert('Please provide a rejection reason.');
+         return;
+       }
 
-      try {
-        const response = await axios.post(`http://localhost:3001/arrangementRequests/reject`, {
-          requestId: this.requestToRejectId, // The request to reject
-          reason: this.rejectionReason // The reason provided by the user
-        });
+       try {
+         const response = await axios.post(`http://localhost:3001/arrangementRequests/reject`, {
+           requestId: this.requestToRejectId, // The request to reject
+           reason: this.rejectionReason // The reason provided by the user
+         });
 
-        console.log('Request rejected:', response.data);
-        this.fetchArrangementRequests(); // Refresh the request list
-        this.showRejectModal = false; // Close the modal after rejection
-      } catch (error) {
-        console.error('Error rejecting request:', error);
-        alert('Failed to reject the request. Please try again.');
-      }
-    },
+         console.log('Request rejected:', response.data);
+         this.showRejectModal = false; // Close the modal after rejection
+         this.fetchArrangementRequests(); // Refresh the request list
+         location.reload();
+       } catch (error) {
+         console.error('Error rejecting request:', error);
+         alert('Failed to reject the request. Please try again.');
+       }
+     },
 
-    cancelReject() {
-      this.showRejectModal = false; // Close modal if cancel is clicked
-      this.rejectionReason = ""; // Clear rejection reason
-    },
+     async approveSelectedRequests() {
+       const selectedRequestIds = this.selectedRequests;
 
-    async approveSelectedRequests() {
-      const selectedRequestIds = this.selectedRequests;
+       if (selectedRequestIds.length === 0) {
+         alert('Please select at least one request to approve.');
+         return;
+       }
 
-      if (selectedRequestIds.length === 0) {
-        alert('Please select at least one request to approve.');
-        return;
-      }
+       try {
+         const response = await axios.post(`http://localhost:3001/arrangementRequests/approveSelected`, {
+           requestIds: selectedRequestIds,
+           managerId: this.manager_id // Ensure the managerId is being sent here
+         });
 
-      try {
-        const response = await axios.post(`http://localhost:3001/arrangementRequests/approveSelected`, {
-          requestIds: selectedRequestIds,
-          managerId: this.manager_id // Ensure the managerId is being sent here
-        });
+         console.log('Selected requests approved:', response.data);
+         this.selectedRequests = []; // Clear the selected requests after approval
+         this.fetchArrangementRequests(); // Refresh the data
+         location.reload();
+       } catch (error) {
+         console.error('Error approving selected requests:', error);
+         alert('Failed to approve selected requests. Please try again.');
+       }
+     },
 
-        console.log('Selected requests approved:', response.data);
-        this.fetchArrangementRequests(); // Refresh the data
-        this.selectedRequests = []; // Clear the selected requests after approval
-      } catch (error) {
-        console.error('Error approving selected requests:', error);
-        alert('Failed to approve selected requests. Please try again.');
-      }
-    },
+     async rejectSelectedRequests() {
+       if (!this.rejectionReason) {
+         alert('Please provide a rejection reason.');
+         return;
+       }
 
-    async rejectSelectedRequests() {
-      if (!this.rejectionReason) {
-        alert("Please provide a reason for rejection.");
-        return;
-      }
+       const selectedRequestIds = this.selectedRequests;
 
-      const selectedRequestIds = this.selectedRequests;
+       try {
+         const response = await axios.post(`http://localhost:3001/arrangementRequests/rejectSelected`, {
+           requestIds: selectedRequestIds,
+           reason: this.rejectionReason
+         });
 
-      try {
-        const response = await axios.post(`http://localhost:3001/arrangementRequests/rejectSelected`, {
-          requestIds: selectedRequestIds,
-          reason: this.rejectionReason
-        });
+         console.log('Selected requests rejected:', response.data);
+         this.fetchArrangementRequests(); // Refresh the data
+         this.selectedRequests = []; // Clear the selected requests
+         location.reload();
+       } catch (error) {
+         console.error('Error rejecting selected requests:', error);
+       }
+     },
 
-        console.log('Selected requests rejected:', response.data);
-        this.fetchArrangementRequests(); // Refresh the data
-        this.selectedRequests = []; // Clear the selected requests
-      } catch (error) {
-        console.error('Error rejecting selected requests:', error);
-      }
-    },
-
-    async approveGroupRequests(groupId) {
-      const groupRequests = this.groupedRequests[groupId];
-      if (confirm(`Are you sure you want to approve all requests in this group?`)) {
-        try {
-          const response = await axios.post(`http://localhost:3001/arrangementRequests/approveGroup`, { 
-            requestIds: groupRequests.map(req => req._id) 
-          });
-          console.log('Group requests approved:', response.data);
-          this.fetchArrangementRequests(); // Refresh the data
-        } catch (error) {
-          console.error('Error approving group requests:', error);
-          alert('Failed to approve group requests. Please try again later.');
-        }
-      }
-    },
+     async approveGroupRequests(groupId) {
+       const groupRequests = this.groupedRequests[groupId];
+       if (confirm(`Are you sure you want to approve all requests in this group?`)) {
+         try {
+           const response = await axios.post(`http://localhost:3001/arrangementRequests/approveGroup`, { 
+             requestIds: groupRequests.map(req => req._id) 
+           });
+           console.log('Group requests approved:', response.data);
+           this.fetchArrangementRequests(); // Refresh the data
+           location.reload();
+         } catch (error) {
+           console.error('Error approving group requests:', error);
+           alert('Failed to approve group requests. Please try again later.');
+         }
+       }
+     },
     
-    showRejectModalForGroup(groupId) {
-      this.selectedGroupId = groupId;  // Set the group ID to be rejected
-      this.rejectionReason = "";  // Clear any previous rejection reason
-      this.showRejectGroupModal = true;  // Show the modal
-    },
+     showRejectModalForGroup(groupId) {
+       this.requestToRejectGroupId = groupId;  // Set the group ID to be rejected
+       this.rejectionReason = "";  // Clear any previous rejection reason
+       this.showRejectModalGroup = true;  // Show the modal
+     },
 
-
-    async rejectGroupRequests(groupId) {
+     async rejectGroupRequests(groupId) {
       if (!this.rejectionReason) {
-        alert("Please provide a reason for rejection.");
-        return;
-      }
+         alert('Please provide a rejection reason.');
+         return;
+       }
 
-      const groupRequests = this.groupedRequests[groupId];  // Get the requests in the selected group
+       const groupRequests = this.groupedRequests[groupId];  // Get the requests in the selected group
 
-      try {
-        const response = await axios.post(`http://localhost:3001/arrangementRequests/rejectGroup`, {
-          requestIds: groupRequests.map(req => req._id),  // Send all request IDs in the group
-          reason: this.rejectionReason  // Send the rejection reason
-        });
+       try {
+         const response = await axios.post(`http://localhost:3001/arrangementRequests/rejectGroup`, {
+           requestIds: groupRequests.map(req => req._id),  // Send all request IDs in the group
+           reason: this.rejectionReason  // Send the rejection reason
+         });
 
         console.log('Group requests rejected:', response.data);
         this.fetchArrangementRequests();  // Refresh the request list after rejection
@@ -465,32 +480,8 @@ export default {
       this.showRejectGroupModal = false;  // Close modal if cancel is clicked
       this.rejectionReason = "";  // Clear the rejection reason
     },
-    nextPage() {
-      if (this.currentPage < this.totalPages) {
-        this.currentPage++;
-      }
-    },
-    prevPage() {
-      if (this.currentPage > 1) {
-        this.currentPage--;
-      }
-    },
-  },
-  computed: {
-    totalPages() {
-      return Math.ceil(this.arrangementRequests.length / this.itemsPerPage); 
-    },
-    paginatedRequests() {
-      const start = (this.currentPage - 1) * this.itemsPerPage;
-      return this.arrangementRequests.slice(start, start + this.itemsPerPage);
-    },
-  },
-  // mounted() {
-  //   this.fetchArrangementRequests();
-  //   this.interval = setInterval(this.fetchArrangementRequests, 1000);
-  // },
-  // beforeDestroy() {
-  //   clearInterval(this.interval);
-  // },
+
+
+  }
 };
 </script>

@@ -318,7 +318,7 @@ export const getStaffArrangementRequests = async (req, res) => {
     const { staff_id } = req.query;
 
     if (!staff_id) {
-      return res.status(400).json({ error: "staff_id is required" });
+      return responseUtils.handleBadRequest(res, "staff_id is required");
     }
 
     const numericStaffID = Number(staff_id);
@@ -328,14 +328,12 @@ export const getStaffArrangementRequests = async (req, res) => {
     }).populate("staff");
 
     if (arrangementRequests.length === 0) {
-      return res
-        .status(404)
-        .json({ message: "No arrangement requests found for this staff" });
+      return responseUtils.handleNotFound(res, 'Request not found');
     }
 
     res.status(200).json(arrangementRequests);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    return responseUtils.handleInternalServerError(res, 'Server error');
   }
 };
 
@@ -344,7 +342,7 @@ export const getArrangementRequests = async (req, res) => {
     const { manager_id } = req.query;
 
     if (!manager_id) {
-      return res.status(400).json({ error: "manager_id is required" });
+      return responseUtils.handleBadRequest(res, "Manager ID is required!");
     }
 
     const numericManagerId = Number(manager_id);
@@ -355,12 +353,12 @@ export const getArrangementRequests = async (req, res) => {
     }).populate("staff");
 
     if (arrangementRequests.length === 0) {
-      return res.status(404).json({ message: "No arrangement requests found for this manager" });
+      return responseUtils.handleNotFound(res, "No arrangement requests found for this manager");
     }
-
+    
     res.status(200).json(arrangementRequests);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    return responseUtils.handleInternalServerError(res, error.message);
   }
 };
 
@@ -375,14 +373,13 @@ export const approveRequest = async (req, res) => {
     );
 
     if (!updatedRequest) {
-      return res.status(404).json({ message: 'Request not found' });
+      return responseUtils.handleNotFound(res, 'Request not found');
     }
-
-    await createAuditEntry([updatedRequest], updatedRequest.staff_id, REQUEST_STATUS_PENDING, 'Approved');
 
     res.status(200).json(updatedRequest);
   } catch (error) {
-    res.status(500).json({ message: 'Server error' });
+    console.error('Error Approving request:', error);
+    return responseUtils.handleNotFound(res, 'Request not found');
   }
 };
 
@@ -397,15 +394,13 @@ export const rejectRequest = async (req, res) => {
     );
 
     if (!updatedRequest) {
-      return res.status(404).json({ message: 'Request not found' });
+      return responseUtils.handleNotFound(res, 'Request not found');
     }
-
-    await createAuditEntry([updatedRequest], updatedRequest.staff_id, REQUEST_STATUS_PENDING, 'Rejected');
 
     res.status(200).json(updatedRequest);
   } catch (error) {
     console.error('Error rejecting request:', error);
-    res.status(500).json({ message: 'Server error' });
+    return responseUtils.handleInternalServerError(res, 'Server error');
   }
 };
 
@@ -414,7 +409,7 @@ export const approveSelectedRequests = async (req, res) => {
     const { requestIds, managerId } = req.body;
 
     if (!requestIds || requestIds.length === 0) {
-      return res.status(400).json({ message: 'No requests selected for approval' });
+      return responseUtils.handleBadRequest(res, "No Request Selected");
     }
 
     const updatedRequests = await ArrangementRequest.updateMany(
@@ -423,15 +418,13 @@ export const approveSelectedRequests = async (req, res) => {
     );
 
     if (updatedRequests.nModified === 0) {
-      return res.status(404).json({ message: 'No pending requests found for approval' });
+      return responseUtils.handleNotFound(res, 'Request not found');
     }
 
-    await createAuditEntry(updatedRequests, managerId, REQUEST_STATUS_PENDING, REQUEST_STATUS_APPROVED);
-
-    res.status(200).json({ message: 'Selected requests approved successfully!' });
+    responseUtils.handleSuccessResponse(res, null, 'Selected requests approved successfully!');
   } catch (error) {
     console.error('Error approving selected requests:', error);
-    res.status(500).json({ message: 'Server error' });
+    return responseUtils.handleInternalServerError(res, 'Server error');
   }
 };
 
@@ -439,8 +432,13 @@ export const rejectSelectedRequests = async (req, res) => {
   const { requestIds, reason } = req.body;
 
   try {
+
+    if (!reason) {
+      return responseUtils.handleBadRequest(res, "Rejection Reason Required");
+    }
+
     if (!requestIds || requestIds.length === 0) {
-      return res.status(400).json({ message: 'No requests selected for rejection' });
+      return responseUtils.handleBadRequest(res, "No Request Selected");
     }
 
     const updatedRequests = await ArrangementRequest.updateMany(
@@ -449,15 +447,13 @@ export const rejectSelectedRequests = async (req, res) => {
     );
 
     if (updatedRequests.nModified === 0) {
-      return res.status(404).json({ message: 'No pending requests found for rejection' });
+      return responseUtils.handleNotFound(res, 'Request not found');
     }
 
-    await createAuditEntry(updatedRequests, req.body.managerId, REQUEST_STATUS_PENDING, 'Rejected');
-
-    res.status(200).json({ message: 'Selected requests rejected successfully!' });
+    responseUtils.handleSuccessResponse(res, null, 'Selected requests rejected successfully!');
   } catch (error) {
     console.error('Error rejecting selected requests:', error);
-    res.status(500).json({ message: 'Server error' });
+    return responseUtils.handleInternalServerError(res, 'Server error');
   }
 };
 
@@ -465,7 +461,7 @@ export const approveGroupRequests = async (req, res) => {
   const { requestIds } = req.body;
 
   if (!requestIds || requestIds.length === 0) {
-    return res.status(400).json({ message: 'No requests selected for approval' });
+    return responseUtils.handleBadRequest(res, "No Request Selected");
   }
 
   try {
@@ -475,47 +471,49 @@ export const approveGroupRequests = async (req, res) => {
     );
 
     if (updatedRequests.nModified === 0) {
-      return res.status(404).json({ message: 'No pending requests found for approval' });
+      return responseUtils.handleNotFound(res, 'Request not found');
     }
 
-    await createAuditEntry(updatedRequests, req.body.managerId, REQUEST_STATUS_PENDING, REQUEST_STATUS_APPROVED);
+    responseUtils.handleSuccessResponse(res, null, 'Group requests approved successfully!');
 
-    res.status(200).json({ message: 'Group requests approved successfully!' });
   } catch (error) {
-    res.status(500).json({ message: 'Server error' });
+    return responseUtils.handleInternalServerError(res, 'Server error');
   }
 };
 
 export const rejectGroupRequests = async (req, res) => {
+  console.log(req.body);
   const { requestIds, reason } = req.body;
 
   try {
-    const updatedRequests = await ArrangementRequest.updateMany(
-      { _id: { $in: requestIds }, status: 'Pending' },
-      { $set: { status: 'Rejected', rejection_reason: reason } }
-    );
-    if (updatedRequests.nModified === 0) {
-      return res.status(404).json({ message: 'No pending requests found for rejection' });
+
+    if (!reason) {
+      return responseUtils.handleBadRequest(res, "Rejection Reason Required");
     }
 
-    await createAuditEntry(updatedRequests, req.body.managerId, REQUEST_STATUS_PENDING, 'Rejected');
+    const updatedRequests = await ArrangementRequest.updateMany(
+      { _id: { $in: requestIds }, status: "Pending" },
+      { $set: { status: "Rejected", rejection_reason: reason } }
+    );
+    console.log("updatedrequest => ", updatedRequests);
+    console.log("updatedrequest n modified => ", updatedRequests.nModified);
+    if (updatedRequests.modifiedCount === 0) {
+      return responseUtils.handleNotFound(res, 'Request not found');
+    }
 
-
-    // Send success response
-    res.status(200).json({ message: 'Group requests rejected successfully', updateResult });
+    responseUtils.handleSuccessResponse(res, null, 'Group requests rejected successfully!');
   } catch (error) {
-    console.error('Error rejecting group requests:', error);
-    res.status(500).json({ message: 'Failed to reject group requests' });
+    console.error("Error rejecting group requests:", error);
+    return responseUtils.handleInternalServerError(res, 'Server error');
   }
 };
-
 
 export const approveAllRequests = async (req, res) => {
   try {
     const { managerId } = req.body;
 
     if (!managerId) {
-      return res.status(400).json({ message: 'Manager ID is required!' });
+      return responseUtils.handleBadRequest(res, "Manager ID Required");
     }
 
     const pendingRequests = await ArrangementRequest.find({
@@ -524,7 +522,7 @@ export const approveAllRequests = async (req, res) => {
     });
 
     if (pendingRequests.length === 0) {
-      return res.status(404).json({ message: 'No pending requests found.' });
+      return responseUtils.handleNotFound(res, 'Request not found');
     }
 
     const updatedRequests = await ArrangementRequest.updateMany(
@@ -533,12 +531,10 @@ export const approveAllRequests = async (req, res) => {
       { new: true }
     );
 
-    await createAuditEntry(updatedRequests, managerId, REQUEST_STATUS_PENDING, REQUEST_STATUS_APPROVED);
-
     res.status(200).json({ message: 'All pending requests approved successfully!', updatedRequests });
   } catch (error) {
     console.error('Error approving all requests:', error);
-    res.status(500).json({ message: 'Server error' });
+    return responseUtils.handleInternalServerError(res, 'Server error');
   }
 };
 
@@ -547,11 +543,11 @@ export const rejectAllRequests = async (req, res) => {
 
   try {
     if (!managerId) {
-      return res.status(400).json({ message: 'Manager ID is required!' });
+      return responseUtils.handleBadRequest(res, "Manager ID Required");
     }
 
     if (!reason) {
-      return res.status(400).json({ message: 'Rejection reason is required!' });
+      return responseUtils.handleBadRequest(res, "Rejection Reason Required");
     }
 
     // Find all pending requests for the given manager
@@ -561,7 +557,7 @@ export const rejectAllRequests = async (req, res) => {
     });
 
     if (pendingRequests.length === 0) {
-      return res.status(404).json({ message: 'No pending requests found to reject.' });
+      return responseUtils.handleNotFound(res, 'Request not found');
     }
 
     // Reject all requests at once
@@ -571,12 +567,9 @@ export const rejectAllRequests = async (req, res) => {
       { new: true }
     );
 
-    // Create audit logs for all rejected requests
-    await createAuditEntry(updatedRequests, managerId, REQUEST_STATUS_PENDING, 'Rejected');
-
     res.status(200).json({ message: 'All pending requests rejected successfully!', updatedRequests });
   } catch (error) {
     console.error('Error rejecting all requests:', error);
-    res.status(500).json({ message: 'Server error' });
+    return responseUtils.handleInternalServerError(res, 'Server error');
   }
 };
