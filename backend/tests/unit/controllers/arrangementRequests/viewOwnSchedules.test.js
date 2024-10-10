@@ -44,7 +44,9 @@ describe("getOwnSchedule", () => {
     ArrangementRequest.find.mockResolvedValue(mockRequests); 
     await getOwnSchedule(req, res);
     expect(ArrangementRequest.find).toHaveBeenCalledWith({
-      staff_id: req.query.staff_id,
+      staff_id: {
+        $in: [req.query.staff_id]
+      },
       request_date: {
         $gte: req.query.startDate,
         $lte: req.query.endDate,
@@ -52,6 +54,7 @@ describe("getOwnSchedule", () => {
       status: "Approved",
     });
     expect(res.statusCode).toBe(200);
+    expect(res._getJSONData().data.length).toEqual(2);
   });
 
   test("should return a 500 if an error occurs", async () => {

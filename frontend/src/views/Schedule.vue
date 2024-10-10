@@ -25,7 +25,7 @@
           >Team Schedule</a
         >
       </li>
-      <li class="me-2" @click="loadSchedule('isOverall')">
+      <li class="me-2" @click="loadSchedule('isOverall')" v-if="role===1">
         <a
           class="inline-block text-2xl p-4 border-b-2 rounded-t-lg hover:text-blue-600 hover:border-blue-600 dark:hover:text-gray-300"
           :class="{
@@ -40,7 +40,7 @@
   </div>
 
   <div v-if="isDataLoaded" class="w-10/12" style="margin-left: auto; margin-right: auto">
-    <Calendar :staffId="staffId" :role="role" :height="calendarHeight" :tab="tabSelected" />
+    <Calendar :staffId="staffId" :dept="department" :height="calendarHeight" :tab="tabSelected" />
   </div>
 </template>
 
@@ -55,6 +55,7 @@ export default {
       calendarHeight: 0,
       staffId: null,
       role: null,
+      department: null,
     }
   },
   components: {
@@ -73,6 +74,7 @@ export default {
     this.calculateCalendarHeight()
     this.staffId = getInStorage('staff_id')
     this.role = getInStorage('role')
+    this.department = getInStorage('dept');
     this.isDataLoaded = true 
   }
 }
