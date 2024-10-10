@@ -10,8 +10,10 @@
           <router-link to="/audit-logs" class="text-white hover:underline">Audit Logs</router-link>
         </li>
         
-        <li v-if="role === 3">
-          <router-link to="/staff-requests-for-review" class="text-white hover:underline">Staff Requests for Review</router-link>
+
+
+        <li v-if="role === '3'">
+          <router-link to="/arrangementrequests" class="text-white hover:underline">Staff Requests for Review</router-link>
         </li>
       </ul>
     </nav>
