@@ -33,6 +33,13 @@ const arrangementRequestSchema = new Schema(
     reason: {
       type: String,
       required: true,
+    },   manager_reason: {
+      type: String,
+      maxLength: 100,
+    },
+    withdraw_reason: {
+      type: String,
+      maxLength: 100,
     }
   },
   {

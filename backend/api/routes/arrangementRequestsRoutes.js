@@ -6,6 +6,7 @@ import {
   createRegArrangementRequests,
   getOwnSchedule,
   getTeamSchedule,
+  updateRequestStatus
 } from "../controllers/arrangementRequestsController.js";
 
 const router = express.Router();
@@ -16,5 +17,6 @@ router.post("/temp", createTempArrangementRequests);
 router.post("/reg", createRegArrangementRequests);
 router.get("/myschedule", getOwnSchedule);
 router.get("/teamschedule", getTeamSchedule);
+router.patch('/withdrawal/:id', updateRequestStatus);
 
 export default router;
