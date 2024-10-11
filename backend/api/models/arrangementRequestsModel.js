@@ -33,7 +33,8 @@ const arrangementRequestSchema = new Schema(
     reason: {
       type: String,
       required: true,
-    },   manager_reason: {
+    },
+    manager_reason: {
       type: String,
       maxLength: 100,
     },

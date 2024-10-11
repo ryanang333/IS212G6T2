@@ -433,7 +433,7 @@ export const getArrangementRequests = async (req, res) => {
 
     const arrangementRequests = await ArrangementRequest.find({
       manager_id: numericManagerId,
-      status: "Pending",
+      status: { $in: ["Pending", "Approved"] }, // Fetch both Pending and Approved
     }).populate("staff");
 
     if (arrangementRequests.length === 0) {
@@ -476,18 +476,26 @@ export const getStaffArrangementRequests = async (req, res) => {
 
 export const updateRequestStatus = async (req, res) => {
   const { id } = req.params;   // Extract the request ID from URL params
-  const { status, withdraw_reason } = req.body; // Get the new status from the request body
-  if (!withdraw_reason || withdraw_reason.trim() === "") {
-    return res.status(400).json({ message: 'Cancellation reason cannot be empty' });
+  const { status, withdraw_reason, manager_reason } = req.body; // Get the new status from the request body
+  if ((!withdraw_reason || withdraw_reason.trim() === "") && (!manager_reason || manager_reason.trim() === "")) {
+    return res.status(400).json({ message: 'Cancellation reason or manager reason cannot be empty' });
   }
-
+  
   try {
     // Find the arrangement request by its ID and update its status
+    const updateFields = {
+      status: status,
+    };
+    if (withdraw_reason) {
+      updateFields.withdraw_reason = withdraw_reason; // Add withdraw_reason if provided
+    }
+    if (manager_reason) {
+      updateFields.manager_reason = manager_reason; // Add manager_reason if provided
+    }
+
     const updatedRequest = await ArrangementRequest.findByIdAndUpdate(
       id,  // MongoDB ID for the request
-      { status: status,
-        withdraw_reason: withdraw_reason
-       },  // Update the status to 'Pending Withdrawal'
+      updateFields,// Update the status to 'Pending Withdrawal'
       { new: true }  // Return the updated document
     );
 
