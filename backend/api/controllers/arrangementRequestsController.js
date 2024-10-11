@@ -433,7 +433,7 @@ export const getArrangementRequests = async (req, res) => {
 
     const arrangementRequests = await ArrangementRequest.find({
       manager_id: numericManagerId,
-      status: "Pending",
+      status: { $in: ["Pending", "Approved"] }, // Fetch both Pending and Approved
     }).populate("staff");
 
     if (arrangementRequests.length === 0) {
@@ -468,5 +468,43 @@ export const getStaffArrangementRequests = async (req, res) => {
     return responseUtils.handleSuccessResponse(res, arrangementRequests, "Staff requests fetched successfully!");
   } catch (error) {
     return responseUtils.handleInternalServerError(res, error.message);
+  }
+};
+
+export const updateRequestStatus = async (req, res) => {
+  const { id } = req.params;   // Extract the request ID from URL params
+  const { status, withdraw_reason, manager_reason } = req.body; // Get the new status from the request body
+  if ((!withdraw_reason || withdraw_reason.trim() === "") && (!manager_reason || manager_reason.trim() === "")) {
+    return res.status(400).json({ message: 'Cancellation reason or manager reason cannot be empty' });
+  }
+  
+  try {
+    // Find the arrangement request by its ID and update its status
+    const updateFields = {
+      status: status,
+    };
+    if (withdraw_reason) {
+      updateFields.withdraw_reason = withdraw_reason; // Add withdraw_reason if provided
+    }
+    if (manager_reason) {
+      updateFields.manager_reason = manager_reason; // Add manager_reason if provided
+    }
+
+    const updatedRequest = await ArrangementRequest.findByIdAndUpdate(
+      id,  // MongoDB ID for the request
+      updateFields,// Update the status to 'Pending Withdrawal'
+      { new: true }  // Return the updated document
+    );
+
+    if (!updatedRequest) {
+      return res.status(404).json({ message: 'Request not found' });
+    }
+
+    // Return the updated request
+    res.status(200).json(updatedRequest);
+    
+  } catch (error) {
+    console.error('Error updating request:', error);
+    res.status(500).json({ message: 'Internal server error' });
   }
 };
