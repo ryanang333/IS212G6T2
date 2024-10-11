@@ -91,7 +91,7 @@ export default {
     addArrangement() {
       this.arrangements.push({
         id: ++this.counter,
-        startDate: null,
+        date: null,
         recurringWeeks: null,
         recurringInterval: null,
         time: null,

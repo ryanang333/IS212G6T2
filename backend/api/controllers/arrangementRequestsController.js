@@ -112,7 +112,7 @@ export const createRegArrangementRequests = async (req, res) => {
       const groupID = uuidv4();
 
       // Convert the recurring weeks into individual dates for each arrangement request
-      const startDate = new Date(arrangementRequestDirty.startDate);
+      const startDate = new Date(arrangementRequestDirty.date);
       const recurringInterval = parseInt(
         arrangementRequestDirty.recurringInterval.replace("week", ""),
         10

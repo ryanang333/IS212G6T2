@@ -6,9 +6,9 @@
         <input
           required
           type="date"
-          name="startDate" 
-          id="startDate"
-          v-model="localData.startDate"
+          name="date" 
+          id="date"
+          v-model="localData.date"
           @change="validateDayAndDate" 
           class="px-3 block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
         />
@@ -98,7 +98,7 @@ export default {
        * If value prop is not provided, initializes with an object containing null values.
        * @type {Object}
        */
-      localData: this.value || { id: null, startDate: null, numEvents: null, recurringInterval: null, time: null, reason: null }
+      localData: this.value || { id: null, date: null, numEvents: null, recurringInterval: null, time: null, reason: null }
     }
   },
   methods: {
