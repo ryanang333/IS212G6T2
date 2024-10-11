@@ -306,7 +306,7 @@ export default {
     },
 
     formatDate(date) {
-      return new Date(date).toLocaleDateString(); // Format date as desired
+      return new Date(date).toLocaleString(); // Format date as desired
     },
     openConfirmation(requestId) {
     if (!requestId) {
@@ -324,37 +324,48 @@ export default {
     this.withdrawalReason = ''; // Clear reason on close
 
   },
-
   async confirmCancellation() {
-    if (!this.activeRequestId) {
-      console.error('No active request ID to cancel');
-      return;
-    }
-    if (!this.withdrawalReason || this.withdrawalReason.trim() === "") {
-        this.errorMessage = "Cancellation reason cannot be empty";
-        this.showErrorModal = true; // Show error modal if the reason is empty
-        return;
-      }
+  if (!this.activeRequestId) {
+    console.error('No active request ID to cancel');
+    return;
+  }
 
-    try {
-      const response = await axios.patch(`http://localhost:3001/arrangementRequests/withdrawal/${this.activeRequestId}`, {
-        status: 'Cancelled',
-        manager_reason: this.withdrawalReason
-      });
+  if (!this.withdrawalReason || this.withdrawalReason.trim() === "") {
+    this.errorMessage = "Cancellation reason cannot be empty";
+    this.showErrorModal = true; // Show error modal if the reason is empty
+    return;
+  }
 
-      console.log('Request status updated successfully:', response.data);
-      this.fetchArrangementRequests();
-      this.closeConfirmation(); // Refresh the request list
-    } catch (error) {
-      if (error.response && error.response.data && error.response.data.message) {
+  try {
+    // Send the cancellation request to the backend
+    const response = await axios.patch(`http://localhost:3001/arrangementRequests/withdrawal/${this.activeRequestId}`, {
+      status: 'Cancelled',
+      manager_reason: this.withdrawalReason
+    });
+
+    console.log('Request status updated successfully:', response.data);
+
+    // Reset the lists before fetching new data
+    this.filteredRequests = [];
+    this.approvedRequests = [];
+
+    // Refetch the arrangement requests to reflect the latest state
+    await this.fetchArrangementRequests();
+
+    // Close the confirmation modal and reset the state
+    this.closeConfirmation();
+
+  } catch (error) {
+    console.error('Error during cancellation:', error);
+
+    if (error.response && error.response.data && error.response.data.message) {
       this.errorMessage = error.response.data.message; // Capture backend error message
-      } else {
+    } else {
       this.errorMessage = 'An error occurred while canceling the request'; // Fallback error message
     }
-    this.showErrorModal = true; // Show the error modal
-    }
 
-    this.closeConfirmation();
+    this.showErrorModal = true; // Show the error modal
+  }
   },
   closeErrorModal() {
       this.showErrorModal = false;
