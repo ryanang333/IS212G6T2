@@ -376,6 +376,8 @@ export default {
         withdraw_reason: this.withdrawalReason
       });
 
+ 
+
       console.log('Request status updated successfully:', response.data);
       this.fetchArrangementRequests();
       this.closeConfirmation(); // Refresh the request list

@@ -7,6 +7,7 @@ import {
 } from "../utils/dateChecker.js";
 import * as responseUtils from "../utils/responseUtils.js";
 import { v4 as uuidv4 } from "uuid"; // Used to generate group_id
+import { sendManagerNotification } from "../utils/notificationUtils.js"; // Import the notification utility
 
 export const REQUEST_STATUS_PENDING = "Pending";
 export const REQUEST_STATUS_NONE = "N/A";
@@ -503,6 +504,17 @@ export const updateRequestStatus = async (req, res) => {
       return res.status(404).json({ message: 'Request not found' });
     }
 
+    if (status === 'Pending Withdrawal') {
+      const managerId = updatedRequest.manager_id;
+      const staffName = updatedRequest.staff.name; // Assuming the staff object is populated
+      const requestDate = updatedRequest.request_date.toLocaleDateString();
+
+      // Send notification to the manager
+      await sendManagerNotification(
+        managerId,
+        `Withdrawal Request: ${staffName} has requested to withdraw their approved leave for ${requestDate}.`
+      );
+    }
     // Return the updated request
     res.status(200).json(updatedRequest);
     
