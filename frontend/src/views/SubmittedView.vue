@@ -67,7 +67,11 @@
             <td class="border px-4 py-2">{{ request.summary }}</td>
             <td class="border px-4 py-2">{{ request.request_time }}</td>
             <td class="border px-4 py-2">{{ request.reason }}</td>
-            <td class="border px-4 py-2">{{ request.status }}</td>
+            <td class="border px-4 py-2">{{ request.status }}
+              <button v-if="request.status === 'Approved'" @click="openConfirmation(request.children)" class="text-red-500 hover:underline ml-2">
+                    Cancel Request
+                    </button>
+            </td>
           </tr>
 
           <tr v-if="request.showChildren" class="bg-gray-50">
@@ -104,7 +108,7 @@
             <td class="border px-4 py-2">{{ request.request_time }}</td>
             <td class="border px-4 py-2">{{ request.reason }}</td>
             <td class="border px-4 py-2">{{ request.status }}
-              <button v-if="request.status === 'Approved'" @click="openConfirmation(request._id)" class="text-red-500 hover:underline ml-2">
+              <button v-if="request.status === 'Approved'" @click="checkRequestId(request)" class="text-red-500 hover:underline ml-2">
               Cancel Request
             </button>
 
@@ -183,7 +187,8 @@ export default {
       activeRequestId: null,
       withdrawalReason:'',
       showErrorModal: false, // Control the error modal visibility
-
+      activeRequestIds: [], // Update to handle an array of IDs
+      
     };
   },
   computed: {
@@ -337,7 +342,7 @@ export default {
     },
     closeConfirmation() {
     this.confirmationVisible = false;
-    this.activeRequestId = null;
+    this.activeRequestIds = [];
     this.withdrawalReason = ''; // Clear reason on close
 
     },
@@ -347,54 +352,87 @@ export default {
       this.errorMessage = ''; // Clear error message on close
     },
     
-    openConfirmation(requestId) {
-    if (!requestId) {
-      console.error('Request ID is not defined');
-      return;
+  openConfirmation(requestIds) {
+      // Check if requestIds is an array or a single ID
+      if (!Array.isArray(requestIds)) {
+        requestIds = [requestIds]; // Convert to array if it's a single ID
+      }
+      console.log('Opening confirmation for request(s):', requestIds);
+      this.activeRequestId = null;        // Clear the single request ID
+
+      this.activeRequestIds = requestIds; // Store the array of IDs
+      this.confirmationVisible = true;
+    },
+    checkRequestId(request) {
+    console.log('Request:', request);
+    if (request._id) {
+      this.openConfirmationSingle(request._id);
+    } else {
+      console.error('Request ID is undefined');
     }
-    console.log('Opening confirmation for request:', requestId);
-    this.confirmationVisible = true;
-    this.activeRequestId = requestId;
-  
   },
-
-
-  async confirmCancellation() {
-    if (!this.activeRequestId) {
-      console.error('No active request ID to cancel');
-      return;
+  checkRequestId(request) {
+    console.log('Request:', request);
+    if (request._id) {
+      this.openConfirmationSingle(request._id);
+    } else {
+      console.error('Request ID is undefined');
     }
-    if (!this.withdrawalReason || this.withdrawalReason.trim() === "") {
-        this.errorMessage = "Cancellation reason cannot be empty";
-        this.showErrorModal = true; // Show error modal if the reason is empty
+  },
+  
+    openConfirmationSingle(requestId) {
+      if (!requestId) {
+        console.error('Request ID is not defined');
         return;
       }
+      console.log('Opening confirmation for individual request:', requestId);
+      this.confirmationVisible = true;
+      this.activeRequestId = requestId;  // Store the single request ID
+      this.activeRequestIds = [];  // Clear the group request array
+    },
 
-    try {
-      const response = await axios.patch(`http://localhost:3001/arrangementRequests/withdrawal/${this.activeRequestId}`, {
-        status: 'Pending Withdrawal',
-        withdraw_reason: this.withdrawalReason
-      });
+  async confirmCancellation() {
+  // Filter activeRequestIds to only include requests with status 'Approved'
+  const approvedRequestIds = this.activeRequestIds.filter(request => request.status === 'Approved');
 
-      console.log('Request status updated successfully:', response.data);
-      this.fetchArrangementRequests();
-      this.closeConfirmation(); // Refresh the request list
-    } catch (error) {
-      if (error.response && error.response.data && error.response.data.message) {
-      this.errorMessage = error.response.data.message; // Capture backend error message
-      } else {
-      this.errorMessage = 'An error occurred while canceling the request'; // Fallback error message
-    }
-    this.showErrorModal = true; // Show the error modal
-    }
+  // Check if there are any approved requests to cancel
+  if (!approvedRequestIds || approvedRequestIds.length === 0) {
+    console.error('No active approved request IDs to cancel');
+    return;
+  }
 
+  if (!this.withdrawalReason || this.withdrawalReason.trim() === '') {
+    this.errorMessage = 'Cancellation reason cannot be empty';
+    this.showErrorModal = true;
+    return;
+  }
+
+  try {
+    // Send the filtered approved request IDs in the body instead of the URL
+    const response = await axios.patch(`http://localhost:3001/arrangementRequests/withdrawal`, {
+      requestIds: approvedRequestIds.map(request => request._id), // Pass only the approved IDs
+      status: 'Pending Withdrawal',
+      withdraw_reason: this.withdrawalReason
+    });
+
+    console.log('Requests status updated successfully:', response.data);
+    this.fetchArrangementRequests(); // Refresh the request list
     this.closeConfirmation();
-  },
-
-
+  } catch (error) {
+    if (error.response && error.response.data && error.response.data.message) {
+      this.errorMessage = error.response.data.message; // Capture backend error message
+    } else {
+      this.errorMessage = 'An error occurred while canceling the request(s).';
+    }
+    this.showErrorModal = true;
+  }
+},
+    
     toggleChildren(request) {
       request.showChildren = !request.showChildren;
     }
   },
+
+
 };
 </script>
