@@ -1,5 +1,5 @@
 import { updateRequestStatus } from "../../api/controllers/arrangementRequestsController";
-\import httpMocks from "node-mocks-http";
+import httpMocks from "node-mocks-http";
 import ArrangementRequest from '../../api/models/arrangementRequestsModel';
 import { MongoMemoryServer } from 'mongodb-memory-server-core';
 
