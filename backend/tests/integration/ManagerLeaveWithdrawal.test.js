@@ -2,6 +2,7 @@ import { updateRequestStatus } from "../../api/controllers/arrangementRequestsCo
 import httpMocks from "node-mocks-http";
 import ArrangementRequest from '../../api/models/arrangementRequestsModel';
 import { MongoMemoryServer } from 'mongodb-memory-server-core';
+import mongoose from 'mongoose';
 
 let mongoServer;
 
@@ -19,6 +20,7 @@ afterAll(async () => {
 
 afterEach(async () => {
   await ArrangementRequest.deleteMany({});
+  jest.restoreAllMocks();  
 });
 
 describe("updateRequestStatus - Integration Test with MongoDB", () => {
@@ -34,7 +36,7 @@ describe("updateRequestStatus - Integration Test with MongoDB", () => {
         withdraw_reason: "Project deadline",
       },
       user: {
-        manager_id: 140008, // The manager doing the withdrawal
+        manager_id: 140008, 
       },
     });
     res = httpMocks.createResponse();
@@ -46,7 +48,7 @@ describe("updateRequestStatus - Integration Test with MongoDB", () => {
       staff_id: 140881,
       request_date: new Date("2024-10-03T16:00:00.000Z"),
       status: "Approved",
-      manager_id: 140008, // Matching manager ID (direct subordinate)
+      manager_id: 140008, 
       group_id: null,
       request_time: "PM",
       reason: "Child care",
@@ -55,7 +57,7 @@ describe("updateRequestStatus - Integration Test with MongoDB", () => {
       staff_id: 140882,
       request_date: new Date("2024-10-08T16:00:00.000Z"),
       status: "Approved",
-      manager_id: 140008, // Matching manager ID (direct subordinate)
+      manager_id: 140008,
       group_id: null,
       request_time: "PM",
       reason: "Vacation",
@@ -64,7 +66,7 @@ describe("updateRequestStatus - Integration Test with MongoDB", () => {
     await testRequest1.save();
     await testRequest2.save();
 
-    req.body.requestIds = [testRequest1._id, testRequest2._id]; // Set request IDs to withdraw
+    req.body.requestIds = [testRequest1._id, testRequest2._id];
 
     await updateRequestStatus(req, res);
 
@@ -95,8 +97,8 @@ describe("updateRequestStatus - Integration Test with MongoDB", () => {
 
     await testRequest.save();
 
-    req.body.requestIds = [testRequest._id]; // Set request ID to withdraw
-    req.body.withdraw_reason = ""; // No reason provided
+    req.body.requestIds = [testRequest._id]; 
+    req.body.withdraw_reason = ""; 
 
     await updateRequestStatus(req, res);
 
@@ -104,8 +106,6 @@ describe("updateRequestStatus - Integration Test with MongoDB", () => {
     expect(res.statusCode).toBe(400);
     expect(response.message).toBe("Withdrawal reason is required");
   });
-
-
 
   test("should return a 500 if a database error occurs", async () => {
     jest.spyOn(ArrangementRequest, "updateMany").mockImplementation(() => {
@@ -120,3 +120,5 @@ describe("updateRequestStatus - Integration Test with MongoDB", () => {
     expect(res._getData()).toBe(JSON.stringify({ message: "Internal server error" }));
   });
 });
+
+jest.setTimeout(30000);

@@ -63,7 +63,7 @@ describe('ArrangementRequestsController', () => {
       await updateRequestStatus(req, res);
 
       expect(res.statusCode).toBe(500);
-      expect(res._getJSONData()).toEqual({ message: 'An error occurred while updating the requests.' });
+      expect(res._getJSONData()).toEqual({ message: 'Internal server error' });
     });
   });
 
