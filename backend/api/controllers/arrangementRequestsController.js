@@ -7,7 +7,6 @@ import {
 } from "../utils/dateChecker.js";
 import * as responseUtils from "../utils/responseUtils.js";
 import { v4 as uuidv4 } from "uuid"; // Used to generate group_id
-import mongoose from 'mongoose'; // Add this if not already imported
 
 export const REQUEST_STATUS_PENDING = "Pending";
 export const REQUEST_STATUS_NONE = "N/A";
@@ -503,7 +502,6 @@ export const updateRequestStatus = async (req, res) => {
 
     res.status(200).json({ message: 'Requests updated successfully' });
   } catch (error) {
-    console.error('Error updating requests:', error);
     res.status(500).json({ message: 'Internal server error' });
   }
 };
@@ -541,7 +539,6 @@ export const   updateIndividualRequestStatus= async (req, res) => {
     res.status(200).json(updatedRequest);
     
   } catch (error) {
-    console.error('Error updating request:', error);
     res.status(500).json({ message: 'Internal server error' });
   }
 };
