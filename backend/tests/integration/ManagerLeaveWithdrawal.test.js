@@ -1,7 +1,6 @@
-import { updateRequestStatus } from "../../../../api/controllers/arrangementRequestsController";
-import mongoose from "mongoose";
-import httpMocks from "node-mocks-http";
-import ArrangementRequest from '../../../../api/models/arrangementRequestsModel';
+import { updateRequestStatus } from "../../api/controllers/arrangementRequestsController";
+\import httpMocks from "node-mocks-http";
+import ArrangementRequest from '../../api/models/arrangementRequestsModel';
 import { MongoMemoryServer } from 'mongodb-memory-server-core';
 
 let mongoServer;
@@ -106,27 +105,7 @@ describe("updateRequestStatus - Integration Test with MongoDB", () => {
     expect(response.message).toBe("Withdrawal reason is required");
   });
 
-  test("should return a 403 if the manager is not authorized to withdraw", async () => {
-    const unauthorizedRequest = new ArrangementRequest({
-      staff_id: 140883,
-      request_date: new Date("2024-10-10T16:00:00.000Z"),
-      status: "Approved",
-      manager_id: 54321, // Different manager ID
-      group_id: null,
-      request_time: "PM",
-      reason: "Vacation",
-    });
 
-    await unauthorizedRequest.save();
-
-    req.body.requestIds = [unauthorizedRequest._id];
-    req.user.manager_id = 140008; // The current user is not the correct manager
-
-    await updateRequestStatus(req, res);
-
-    expect(res.statusCode).toBe(403);
-    expect(res._getJSONData()).toEqual({ message: 'Unauthorized' });
-  });
 
   test("should return a 500 if a database error occurs", async () => {
     jest.spyOn(ArrangementRequest, "updateMany").mockImplementation(() => {

@@ -7,7 +7,7 @@ import {
 } from "../utils/dateChecker.js";
 import * as responseUtils from "../utils/responseUtils.js";
 import { v4 as uuidv4 } from "uuid"; // Used to generate group_id
-import { ObjectId } from 'mongodb'; // Import ObjectId from the native MongoDB driver
+import mongoose from 'mongoose'; // Add this if not already imported
 
 export const REQUEST_STATUS_PENDING = "Pending";
 export const REQUEST_STATUS_NONE = "N/A";
@@ -492,7 +492,10 @@ export const updateRequestStatus = async (req, res) => {
 
 
   try {
+    
     // Perform bulk update using ArrangementRequest model
+
+    
     await ArrangementRequest.updateMany(
       { _id: { $in: requestIds } },  // Match requests with IDs in the requestIds array
       { status, withdraw_reason }    // Update the status and withdraw_reason
