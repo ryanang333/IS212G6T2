@@ -330,8 +330,7 @@ export const getStaffArrangementRequests = async (req, res) => {
     if (arrangementRequests.length === 0) {
       return responseUtils.handleNotFound(res, 'Request not found');
     }
-
-    res.status(200).json(arrangementRequests);
+    return responseUtils.handleSuccessResponse(arrangementRequests)
   } catch (error) {
     return responseUtils.handleInternalServerError(res, 'Server error');
   }
@@ -355,8 +354,7 @@ export const getArrangementRequests = async (req, res) => {
     if (arrangementRequests.length === 0) {
       return responseUtils.handleNotFound(res, "No arrangement requests found for this manager");
     }
-    
-    res.status(200).json(arrangementRequests);
+    return responseUtils.handleSuccessResponse(res, arrangementRequests);
   } catch (error) {
     return responseUtils.handleInternalServerError(res, error.message);
   }
@@ -364,6 +362,10 @@ export const getArrangementRequests = async (req, res) => {
 
 export const approveRequest = async (req, res) => {
   const { requestId } = req.body;
+
+  if (!requestId) {
+    return responseUtils.handleBadRequest(res, 'Bad request');
+  }
 
   try {
     const updatedRequest = await ArrangementRequest.findByIdAndUpdate(
@@ -375,16 +377,18 @@ export const approveRequest = async (req, res) => {
     if (!updatedRequest) {
       return responseUtils.handleNotFound(res, 'Request not found');
     }
-
-    res.status(200).json(updatedRequest);
+    return responseUtils.handleSuccessResponse(res, updatedRequest);
   } catch (error) {
-    console.error('Error Approving request:', error);
-    return responseUtils.handleNotFound(res, 'Request not found');
+    return responseUtils.handleInternalServerError(res, 'Server error');
   }
 };
 
 export const rejectRequest = async (req, res) => {
   const { requestId, reason } = req.body;
+
+  if (!requestId || !reason) {
+    return responseUtils.handleBadRequest(res, 'Bad request')
+  }
 
   try {
     const updatedRequest = await ArrangementRequest.findByIdAndUpdate(
@@ -396,10 +400,8 @@ export const rejectRequest = async (req, res) => {
     if (!updatedRequest) {
       return responseUtils.handleNotFound(res, 'Request not found');
     }
-
-    res.status(200).json(updatedRequest);
+    return responseUtils.handleSuccessResponse(res, updatedRequest);
   } catch (error) {
-    console.error('Error rejecting request:', error);
     return responseUtils.handleInternalServerError(res, 'Server error');
   }
 };
@@ -420,10 +422,8 @@ export const approveSelectedRequests = async (req, res) => {
     if (updatedRequests.nModified === 0) {
       return responseUtils.handleNotFound(res, 'Request not found');
     }
-
-    responseUtils.handleSuccessResponse(res, null, 'Selected requests approved successfully!');
+    return responseUtils.handleSuccessResponse(res, updatedRequests);
   } catch (error) {
-    console.error('Error approving selected requests:', error);
     return responseUtils.handleInternalServerError(res, 'Server error');
   }
 };
@@ -432,13 +432,8 @@ export const rejectSelectedRequests = async (req, res) => {
   const { requestIds, reason } = req.body;
 
   try {
-
     if (!reason) {
       return responseUtils.handleBadRequest(res, "Rejection Reason Required");
-    }
-
-    if (!requestIds || requestIds.length === 0) {
-      return responseUtils.handleBadRequest(res, "No Request Selected");
     }
 
     const updatedRequests = await ArrangementRequest.updateMany(
@@ -449,10 +444,8 @@ export const rejectSelectedRequests = async (req, res) => {
     if (updatedRequests.nModified === 0) {
       return responseUtils.handleNotFound(res, 'Request not found');
     }
-
-    responseUtils.handleSuccessResponse(res, null, 'Selected requests rejected successfully!');
+    return responseUtils.handleSuccessResponse(res, updatedRequests);
   } catch (error) {
-    console.error('Error rejecting selected requests:', error);
     return responseUtils.handleInternalServerError(res, 'Server error');
   }
 };
@@ -473,20 +466,16 @@ export const approveGroupRequests = async (req, res) => {
     if (updatedRequests.nModified === 0) {
       return responseUtils.handleNotFound(res, 'Request not found');
     }
-
-    responseUtils.handleSuccessResponse(res, null, 'Group requests approved successfully!');
-
+    return responseUtils.handleSuccessResponse(res, updatedRequests);
   } catch (error) {
     return responseUtils.handleInternalServerError(res, 'Server error');
   }
 };
 
 export const rejectGroupRequests = async (req, res) => {
-  console.log(req.body);
   const { requestIds, reason } = req.body;
 
   try {
-
     if (!reason) {
       return responseUtils.handleBadRequest(res, "Rejection Reason Required");
     }
@@ -495,15 +484,13 @@ export const rejectGroupRequests = async (req, res) => {
       { _id: { $in: requestIds }, status: "Pending" },
       { $set: { status: "Rejected", rejection_reason: reason } }
     );
-    console.log("updatedrequest => ", updatedRequests);
-    console.log("updatedrequest n modified => ", updatedRequests.nModified);
+    
     if (updatedRequests.modifiedCount === 0) {
       return responseUtils.handleNotFound(res, 'Request not found');
     }
-
-    responseUtils.handleSuccessResponse(res, null, 'Group requests rejected successfully!');
+    return responseUtils.handleSuccessResponse(res, updatedRequests);
   } catch (error) {
-    console.error("Error rejecting group requests:", error);
+   
     return responseUtils.handleInternalServerError(res, 'Server error');
   }
 };
@@ -511,10 +498,6 @@ export const rejectGroupRequests = async (req, res) => {
 export const approveAllRequests = async (req, res) => {
   try {
     const { managerId } = req.body;
-
-    if (!managerId) {
-      return responseUtils.handleBadRequest(res, "Manager ID Required");
-    }
 
     const pendingRequests = await ArrangementRequest.find({
       manager_id: managerId,
@@ -528,12 +511,9 @@ export const approveAllRequests = async (req, res) => {
     const updatedRequests = await ArrangementRequest.updateMany(
       { manager_id: managerId, status: "Pending" },
       { $set: { status: "Approved" } },
-      { new: true }
     );
-
-    res.status(200).json({ message: 'All pending requests approved successfully!', updatedRequests });
+    return responseUtils.handleSuccessResponse(res, updatedRequests)
   } catch (error) {
-    console.error('Error approving all requests:', error);
     return responseUtils.handleInternalServerError(res, 'Server error');
   }
 };
@@ -550,7 +530,6 @@ export const rejectAllRequests = async (req, res) => {
       return responseUtils.handleBadRequest(res, "Rejection Reason Required");
     }
 
-    // Find all pending requests for the given manager
     const pendingRequests = await ArrangementRequest.find({
       manager_id: managerId,
       status: "Pending",
@@ -560,16 +539,13 @@ export const rejectAllRequests = async (req, res) => {
       return responseUtils.handleNotFound(res, 'Request not found');
     }
 
-    // Reject all requests at once
     const updatedRequests = await ArrangementRequest.updateMany(
       { manager_id: managerId, status: "Pending" },
       { $set: { status: "Rejected", rejection_reason: reason } },
       { new: true }
     );
-
-    res.status(200).json({ message: 'All pending requests rejected successfully!', updatedRequests });
+    return responseUtils.handleSuccessResponse(res, updatedRequests)
   } catch (error) {
-    console.error('Error rejecting all requests:', error);
     return responseUtils.handleInternalServerError(res, 'Server error');
   }
 };
