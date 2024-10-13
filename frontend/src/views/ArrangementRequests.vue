@@ -13,190 +13,85 @@
 
     <p v-if="noPendingRequestsMessage" class="text-center text-red-500">{{ noPendingRequestsMessage }}</p>
 
-    <div v-if="selectedRequests.length > 0" class="flex justify-between items-center mb-4">
-      <div class="flex space-x-4">
-        <button 
-          @click="approveSelectedRequests" 
-          class="bg-green-500 text-white px-2 py-1 mr-1 rounded hover:bg-green-600"
-          :disabled="selectedRequests.length === 0">
-          Approve Selected
-        </button>
-        
-        <button 
-          @click="rejectSelectedRequests" 
-          class="bg-red-500 text-white px-2 py-1 mr-1 rounded hover:bg-red-600" 
-          :disabled="selectedRequests.length === 0">
-          Reject Selected
-        </button>
-
-        <textarea 
-          v-model="rejectionReason"
-          class="w-80 h-32 p-2 border rounded px-2 py-1 mr-1 resize-none" 
-          placeholder="Enter the reason for rejection"></textarea>
+    <!-- Pending Requests Table -->
+    <div>
+      <h2 class="text-xl font-semibold mb-2">Pending Requests</h2>
+      <div class="flex justify-center mb-4 space-x-4">
+        <button @click="acceptAll" class="bg-green-500 text-white px-4 py-2 rounded">Accept All</button>
+        <button @click="rejectAll" class="bg-red-500 text-white px-4 py-2 rounded">Reject All</button>
       </div>
-    </div>
 
-    <table class="min-w-full border-collapse border border-gray-300 mx-auto" v-if="arrangementRequests.length > 0">
-      <thead>
-        <tr class="bg-gray-100">
-          <th class="border border-gray-300 px-4 py-2">Select</th>
-          <th class="border border-gray-300 px-4 py-2">Staff</th>
-          <th class="border border-gray-300 px-4 py-2">Request Date</th>
-          <th class="border border-gray-300 px-4 py-2">Request Time</th>
-          <th class="border border-gray-300 px-4 py-2">Status</th>
-          <th class="border border-gray-300 px-4 py-2">Actions</th>
-        </tr>
-      </thead>
-      <tbody>
-        <template v-for="request in paginatedRequests" :key="request.id">
-          <tr 
-            class="cursor-pointer hover:bg-gray-100" 
-            @click="handleRowClick(request)"
-            :class="request.isAdHoc ? 'bg-gray-200' : ''"
-          >
-            <td class="border border-gray-300 px-4 py-2">
-              <input type="checkbox" v-model="request.selected" @click.stop />
-            </td>
-            <td class="border border-gray-300 px-4 py-2">{{ request.staff_id }}</td>
-            <td class="border border-gray-300 px-4 py-2">{{ request.request_date }}</td>
-            <td class="border border-gray-300 px-4 py-2">{{ request.request_time }}</td>
-            <td class="border border-gray-300 px-4 py-2">{{ request.status }}</td>
-            <td class="border border-gray-300 px-4 py-2">
-              <div class="flex justify-around">
-                <button @click.stop="approveRequest(request)" class="bg-blue-500 text-white px-2 py-1 rounded">Approve</button>
-                <button @click.stop="rejectRequest(request)" class="bg-red-500 text-white px-2 py-1 rounded">Reject</button>
-                <button @click.stop="requestAdditionalInfo(request)" class="bg-yellow-500 text-white px-2 py-1 rounded">Request Additional Info</button>
-              </div>
-            </td>
+      <table class="min-w-full border border-gray-300">
+        <thead>
+          <tr class="bg-gray-100">
+            <th class="border border-gray-300 px-4 py-2">Select</th>
+            <th class="border border-gray-300 px-4 py-2">Staff ID</th>
+            <th class="border border-gray-300 px-4 py-2">Request Date</th>
+            <th class="border border-gray-300 px-4 py-2">Request Time</th>
+            <th class="border border-gray-300 px-4 py-2">Status</th>
+            <th class="border border-gray-300 px-4 py-2">Actions</th>
           </tr>
+        </thead>
+        <tbody>
+          <template v-for="request in paginatedRequests" :key="request.id">
+            <tr 
+              class="cursor-pointer hover:bg-gray-100" 
+              @click="handleRowClick(request)"
+              :class="request.isAdHoc ? 'bg-gray-200' : ''"
+            >
+              <td class="border border-gray-300 px-4 py-2">
+                <input type="checkbox" v-model="request.selected" @click.stop />
+              </td>
+              <td class="border border-gray-300 px-4 py-2">{{ request.staff_id }}</td>
+              <td class="border border-gray-300 px-4 py-2">{{ request.request_date }}</td>
+              <td class="border border-gray-300 px-4 py-2">{{ request.request_time }}</td>
+              <td class="border border-gray-300 px-4 py-2">{{ request.status }}</td>
+              <td class="border border-gray-300 px-4 py-2">
+                <div class="flex justify-around">
+                  <button @click.stop="approveRequest(request)" class="bg-blue-500 text-white px-2 py-1 rounded">Approve</button>
+                  <button @click.stop="rejectRequest(request)" class="bg-red-500 text-white px-2 py-1 rounded">Reject</button>
+                  <button @click.stop="requestAdditionalInfo(request)" class="bg-yellow-500 text-white px-2 py-1 rounded">Request Additional Info</button>
+                </div>
+              </td>
+            </tr>
 
-          <tr v-if="request.showChildren">
-            <td colspan="6">
-              <table class="min-w-full border border-gray-300 mt-2">
-                <thead>
-                  <tr class="bg-gray-100">
-                    <th class="border border-gray-300 px-4 py-2">Select</th>
-                    <th class="border border-gray-300 px-4 py-2">Staff ID</th>
-                    <th class="border border-gray-300 px-4 py-2">Request Date</th>
-                    <th class="border border-gray-300 px-4 py-2">Request Time</th>
-                    <th class="border border-gray-300 px-4 py-2">Status</th>
-                    <th class="border border-gray-300 px-4 py-2">Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr v-for="child in request.children" :key="child.id">
-                    <td class="border border-gray-300 px-4 py-2">
-                      <input type="checkbox" v-model="child.selected" @click.stop />
-                    </td>
-                    <td class="border border-gray-300 px-4 py-2">{{ child.staff_id }}</td>
-                    <td class="border border-gray-300 px-4 py-2">{{ child.request_date }}</td>
-                    <td class="border border-gray-300 px-4 py-2">{{ child.request_time }}</td>
-                    <td class="border border-gray-300 px-4 py-2">{{ child.status }}</td>
-                    <td class="border border-gray-300 px-4 py-2">
-                      <div class="flex justify-around">
-                        <button @click.stop="approveRequest(child)" class="bg-blue-500 text-white px-2 py-1 rounded">Approve</button>
-                        <button @click.stop="rejectRequest(child)" class="bg-red-500 text-white px-2 py-1 rounded">Reject</button>
-                        <button @click.stop="requestAdditionalInfo(child)" class="bg-yellow-500 text-white px-2 py-1 rounded">Request Additional Info</button>
-                      </div>
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </td>
-          </tr>
-        </template>
-
-        <!-- Grouped Requests -->
-        <template v-for="(groupRequests, groupId) in groupedRequests" :key="groupId">
-          <!-- Group header row -->
-          <tr>
-            <td class="border border-gray-300 p-2">
-              <input 
-                type="checkbox" 
-                :checked="isGroupSelected(groupId)" 
-                @change="toggleGroupSelection(groupId, groupRequests)"
-              />
-            </td>
-            <td class="border border-gray-300 p-2">
-              <button 
-                @click="approveGroupRequests(groupId)" 
-                class="bg-green-500 text-white px-2 py-1 rounded hover:bg-green-600">
-                Approve Group
-              </button>
-              <button 
-                @click="showRejectModalForGroup(groupId)" 
-                class="bg-red-500 text-white px-2 py-1 rounded hover:bg-red-600">
-                Reject Group
-              </button>
-            </td>
-            <td class="border border-gray-300 p-2" colspan="4">
-              <button 
-                class="text-blue-600 hover:underline"
-                @click="toggleGroup(groupId)">
-                {{ groupRequests[0].staff_id }} 
-                ({{ formatDate(getGroupStartDate(groupRequests)) }} 
-                - {{ formatDate(getGroupEndDate(groupRequests)) }} 
-                - {{ groupRequests.length }} requests
-                )
-              </button>
-            </td>
-          </tr>
-
-          <!-- Group Requests (show each request in group) -->
-          <tr v-if="isGroupVisible(groupId)" v-for="request in groupRequests" :key="request._id">
-            <td class="border border-gray-300 p-2">
-              <input type="checkbox" v-model="selectedRequests" :value="request._id" />
-            </td>
-            <td class="border border-gray-300 p-2">
-              <div class="flex">
-                <button 
-                  @click="approveRequest(request._id)" 
-                  class="bg-green-500 text-white rounded px-2 py-1 mr-1 hover:bg-green-600">Approve</button>
-                <button 
-                  @click="showRejectModalForRequest(request._id)" 
-                  class="bg-red-500 text-white rounded px-2 py-1 hover:bg-red-600">Reject</button>
-              </div>
-            </td>
-            <td class="border border-gray-300 p-2">{{ request.request_id }}</td>
-            <td class="border border-gray-300 p-2">{{ request.staff_id }}</td>
-            <td class="border border-gray-300 p-2">{{ request.group_id || "-" }}</td>
-            <td class="border border-gray-300 p-2">{{ formatDate(request.request_date) }}</td>
-            <td class="border border-gray-300 p-2">{{ request.status }}</td>
-          </tr>
-        </template>
-
-        <!-- Non-grouped Requests (show as normal rows) -->
-        <tr v-for="request in nonGroupedRequests" :key="request._id">
-          <td class="border border-gray-300 p-2">
-            <input type="checkbox" v-model="selectedRequests" :value="request._id" />
-          </td>
-
-        <tr v-for="request in paginatedRequests" :key="request._id">
-
-          <td class="border border-gray-300 p-2">
-            <div class="flex">
-              <button 
-                @click="approveRequest(request._id)" 
-                class="bg-green-500 text-white rounded px-2 py-1 mr-1 hover:bg-green-600">Approve</button>
-              <button 
-                @click="showRejectModalForRequest(request._id)" 
-                class="bg-red-500 text-white rounded px-2 py-1 hover:bg-red-600">Reject</button>
-            </div>
-          </td>
-          <td class="border border-gray-300 p-2">{{ request.request_id }}</td>
-          <td class="border border-gray-300 p-2">{{ request.staff_id }}</td>
-          <td class="border border-gray-300 p-2">{{ request.group_id || "-" }}</td>
-
-          <td class="border border-gray-300 p-2">{{ formatDate(request.request_date) }}</td>
-
-          <-- <td class="border border-gray-300 p-2">{{ new Date(request.request_date).toLocaleString() }}</td> -->
-          <-- <td class="border border-gray-300 p-2">{{ request.time }}</td> -->
-          
-          <td class="border border-gray-300 p-2">{{ request.status }}</td>
-          <td class="border border-gray-300 p-2">{{ request.reason }}</td>
-        </tr>
-      </tbody>
-    </table>
+            <tr v-if="request.showChildren">
+              <td colspan="6">
+                <table class="min-w-full border border-gray-300 mt-2">
+                  <thead>
+                    <tr class="bg-gray-100">
+                      <th class="border border-gray-300 px-4 py-2">Select</th>
+                      <th class="border border-gray-300 px-4 py-2">Staff ID</th>
+                      <th class="border border-gray-300 px-4 py-2">Request Date</th>
+                      <th class="border border-gray-300 px-4 py-2">Request Time</th>
+                      <th class="border border-gray-300 px-4 py-2">Status</th>
+                      <th class="border border-gray-300 px-4 py-2">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr v-for="child in request.children" :key="child.id">
+                      <td class="border border-gray-300 px-4 py-2">
+                        <input type="checkbox" v-model="child.selected" @click.stop />
+                      </td>
+                      <td class="border border-gray-300 px-4 py-2">{{ child.staff_id }}</td>
+                      <td class="border border-gray-300 px-4 py-2">{{ child.request_date }}</td>
+                      <td class="border border-gray-300 px-4 py-2">{{ child.request_time }}</td>
+                      <td class="border border-gray-300 px-4 py-2">{{ child.status }}</td>
+                      <td class="border border-gray-300 px-4 py-2">
+                        <div class="flex justify-around">
+                          <button @click.stop="approveRequest(child)" class="bg-blue-500 text-white px-2 py-1 rounded">Approve</button>
+                          <button @click.stop="rejectRequest(child)" class="bg-red-500 text-white px-2 py-1 rounded">Reject</button>
+                          <button @click.stop="requestAdditionalInfo(child)" class="bg-yellow-500 text-white px-2 py-1 rounded">Request Additional Info</button>
+                        </div>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </td>
+            </tr>
+          </template>
+        </tbody>
+      </table>
 
 
     <p v-if="arrangementRequests.length === 0" class="text-center text-red-500">No pending requests.</p>
@@ -298,6 +193,13 @@ export default {
       loading: false,
       errorMessage: '',
       filteredRequests: [],
+      approvedRequests: [], // New state for approved requests
+      confirmationVisible: false,
+      activeRequestId: null,
+      withdrawalReason: '',
+      showErrorModal: false, // Control the error modal visibility
+
+
     };
   },
   computed: {
@@ -393,14 +295,11 @@ export default {
         return;
       }
 
-      this.loading = true;
       try {
         const response = await axios.get(`http://localhost:3001/arrangementRequests?manager_id=${this.staff_id}`);
         this.handleResponse(response.data);
       } catch (error) {
         this.handleError(error);
-      } finally {
-        this.loading = false;
       }
     },
 
@@ -410,49 +309,73 @@ export default {
       if (data.length === 0) {
         this.submitted_view = [];
         this.filteredRequests = [];
+        this.approvedRequests = []; // Clear approved requests if no data
         alert('No requests found for the logged-in user.');
       } else {
         const groupedRequests = {};
+        
         data.forEach(request => {
-          if (request.group_id) {
-            if (!groupedRequests[request.group_id]) {
-              groupedRequests[request.group_id] = [];
-            }
-            groupedRequests[request.group_id].push(request);
+          if (request.status === 'Approved') {
+            this.approvedRequests.push(request); // Push to approved requests array
           } else {
-            request.showChildren = false;
-            request.isAdHoc = true;
-            this.filteredRequests.push(request);
+            if (request.group_id) {
+              if (!groupedRequests[request.group_id]) {
+                groupedRequests[request.group_id] = [];
+              }
+              groupedRequests[request.group_id].push(request);
+            } else {
+              request.showChildren = false;
+              request.isAdHoc = true;
+              this.filteredRequests.push(request);
+            }
           }
         });
 
+        // Process each group
         for (const group in groupedRequests) {
           const groupRequests = groupedRequests[group];
+          const latestDate = groupRequests.reduce((latest, req) => new Date(req.request_date) > new Date(latest) ? req.request_date : latest, groupRequests[0].request_date);
 
-          const parentRequest = groupRequests.reduce((earliest, request) => {
-            return !earliest || new Date(request.request_date) < new Date(earliest.request_date) ? request : earliest;
-          }, null);
+          const parentRequest = {
+            id: `${group}-summary`,
+            staff_id: groupRequests[0].staff_id,
+            request_date: `Request Summary for ${this.staff_id} ${new Date(latestDate).toLocaleString()} (${groupRequests.length} requests)`,
+            request_time: '',
+            status: "Parent Request",
+            showChildren: false,
+            children: groupRequests,
+            isAdHoc: false
+          };
 
-          if (parentRequest) {
-            parentRequest.showChildren = false;
-            parentRequest.children = groupRequests.filter(req => req !== parentRequest);
-            parentRequest.isAdHoc = false;
-            this.filteredRequests.push(parentRequest);
-          }
+          this.filteredRequests.push(parentRequest);
         }
+
+        console.log('Processed requests:', this.filteredRequests);
+        console.log('Approved requests:', this.approvedRequests); // Log approved requests
       }
     },
 
     handleError(error) {
-      console.error('Error fetching arrangement requests:', error);
-      this.errorMessage = 'Failed to fetch arrangement requests. Please try again later.';
+      console.error('Error fetching requests:', error);
+      this.errorMessage = error.response?.data?.message || 'An error occurred while fetching requests.';
     },
 
     handleRowClick(request) {
       if (!request.isAdHoc) {
-        // Toggle children visibility only for non-Ad Hoc (regular) requests
         request.showChildren = !request.showChildren;
       }
+    },
+
+    approveRequest(request) {
+      console.log(`Approved request: ${request.id}`);
+    },
+
+    rejectRequest(request) {
+      console.log(`Rejected request: ${request.id}`);
+    },
+
+    requestAdditionalInfo(request) {
+      console.log(`Requested additional info for: ${request.id}`);
     },
 
     acceptAll() {
@@ -462,6 +385,7 @@ export default {
         }
       });
     },
+
     rejectAll() {
       this.filteredRequests.forEach(request => {
         if (request.selected) {
@@ -469,26 +393,86 @@ export default {
         }
       });
     },
-    approveRequest(request) {
-      console.log('Approved request:', request);
-    },
-    rejectRequest(request) {
-      console.log('Rejected request:', request);
-    },
-    requestAdditionalInfo(request) {
-      console.log('Requesting additional info for:', request);
-    },
 
     prevPage() {
       if (this.currentPage > 1) {
         this.currentPage--;
       }
     },
+
     nextPage() {
       if (this.currentPage < this.totalPages) {
         this.currentPage++;
       }
     },
+
+    formatDate(date) {
+      return new Date(date).toLocaleString(); // Format date as desired
+    },
+    openConfirmation(requestId) {
+    if (!requestId) {
+      console.error('Request ID is not defined');
+      return;
+    }
+    console.log('Opening confirmation for request:', requestId);
+    this.confirmationVisible = true;
+    this.activeRequestId = requestId;
+  
   },
+  closeConfirmation() {
+    this.confirmationVisible = false;
+    this.activeRequestId = null;
+    this.withdrawalReason = ''; // Clear reason on close
+
+  },
+  async confirmCancellation() {
+  if (!this.activeRequestId) {
+    console.error('No active request ID to cancel');
+    return;
+  }
+
+  if (!this.withdrawalReason || this.withdrawalReason.trim() === "") {
+    this.errorMessage = "Cancellation reason cannot be empty";
+    this.showErrorModal = true; // Show error modal if the reason is empty
+    return;
+  }
+
+  try {
+    // Send the cancellation request to the backend
+    const response = await axios.patch(`http://localhost:3001/arrangementRequests/withdrawal/${this.activeRequestId}`, {
+      status: 'Cancelled',
+      manager_reason: this.withdrawalReason
+    });
+
+    console.log('Request status updated successfully:', response.data);
+
+    // Reset the lists before fetching new data
+    this.filteredRequests = [];
+    this.approvedRequests = [];
+
+    // Refetch the arrangement requests to reflect the latest state
+    await this.fetchArrangementRequests();
+
+    // Close the confirmation modal and reset the state
+    this.closeConfirmation();
+
+  } catch (error) {
+    console.error('Error during cancellation:', error);
+
+    if (error.response && error.response.data && error.response.data.message) {
+      this.errorMessage = error.response.data.message; // Capture backend error message
+    } else {
+      this.errorMessage = 'An error occurred while canceling the request'; // Fallback error message
+    }
+
+    this.showErrorModal = true; // Show the error modal
+  }
+  },
+  closeErrorModal() {
+      this.showErrorModal = false;
+      this.errorMessage = ''; // Clear error message on close
+    }
+    
+  }
 };
 </script>

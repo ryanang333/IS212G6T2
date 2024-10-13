@@ -1,12 +1,12 @@
 import ArrangementRequest from "../models/arrangementRequestsModel.js";
-import { getStaffDetails } from "./staffController.js";
+import { getStaffDetails, getStaffIdsByDept } from "./staffController.js";
 import { createAuditEntry } from "./requestAuditController.js";
 import {
   checkDatesValidity,
   checkIfDatesOverlap,
 } from "../utils/dateChecker.js";
 import * as responseUtils from "../utils/responseUtils.js";
-import { v4 as uuidv4 } from "uuid"; // Used to generate group_id 
+import { v4 as uuidv4 } from "uuid"; // Used to generate group_id
 
 export const REQUEST_STATUS_PENDING = "Pending";
 export const REQUEST_STATUS_NONE = "N/A";
@@ -98,6 +98,117 @@ export const createTempArrangementRequests = async (req, res) => {
     return responseUtils.handleInternalServerError(res, error.message);
   }
 };
+
+/**
+ * Formats the schedule data for staff members based on their requests.
+ *
+ * This function creates a schedule map from a mapping of staff IDs to names
+ * and an array of requests. It populates the schedule for each staff member
+ * based on their requests.
+ *
+ * @param {Map<string, string>} staffIdMap - A map where the key is the staff ID and the value is the staff member's name.
+ * @param {Array<Object>} requestsArray - An array of request objects, each containing details about the requests made by staff members.
+ * @returns {Map<string, Object>} A map where each key is a staff ID, and the value is an object containing the AM and PM status and the staff member's name.
+ */
+const formatScheduleData = (staffIdMap, requestsArray) => {
+  const staffIdToScheduleMap = transformStaffIdToScheduleMap(staffIdMap);
+  populateScheduleMap(staffIdToScheduleMap, requestsArray);
+  return staffIdToScheduleMap;
+};
+
+/**
+ * Transforms a map of staff IDs to a schedule map.
+ *
+ * This function initializes a new map where each staff ID is mapped to an object
+ * containing the AM and PM schedule status (initialized to 0) and the staff member's name.
+ *
+ * @param {Map<string, string>} staffIdMap - A map where the key is the staff ID and the value is the staff member's name.
+ * @returns {Map<string, Object>} A map where each key is a staff ID, and the value is an object containing the AM and PM schedule status and the staff member's name.
+ */
+const transformStaffIdToScheduleMap = (staffIdMap) => {
+  const staffIdToScheduleMap = new Map();
+  for (let [staffId, name] of staffIdMap) {
+    staffIdToScheduleMap.set(staffId, {
+      AM: 0,
+      PM: 0,
+      name: name,
+    });
+  }
+  return staffIdToScheduleMap;
+};
+
+/**
+ * Populates the schedule map with request data.
+ *
+ * This function iterates over an array of requests and updates the schedule
+ * map based on the requests made by each staff member. It sets the AM and PM
+ * schedule statuses according to the request type (Full Day or Part Day).
+ *
+ * @param {Map<string, Object>} staffIdToScheduleMap - A map where each key is a staff ID, and the value is an object containing the AM and PM schedule status and the staff member's name.
+ * @param {Array<Object>} requestsArray - An array of request objects, each containing details about the requests made by staff members.
+ */
+const populateScheduleMap = (staffIdToScheduleMap, requestsArray) => {
+  for (let request of requestsArray) {
+    let schedule;
+    if (staffIdToScheduleMap.has(request.staff_id)) {
+      schedule = staffIdToScheduleMap.get(request.staff_id);
+    }
+    if (request.request_time == "Full Day") {
+      schedule["AM"] = 1;
+      schedule["PM"] = 1;
+    } else {
+      schedule[request.request_time] = 1;
+    }
+    staffIdToScheduleMap.set(request.staff_id, schedule);
+  }
+};
+
+/**
+ * Handles the GET request for fetching the team schedule.
+ *
+ * This asynchronous function retrieves the staff IDs for a specific department
+ * and finds any existing requests between the provided start and end dates.
+ * It formats the schedule data and returns it in the response.
+ *
+ * @async
+ * @param {Object} req - The request object from the client, containing query parameters for start date, end date, and department.
+ * @param {Object} res - The response object used to send back the desired HTTP response.
+ * @returns {Promise<void>} A promise that resolves when the response is sent or rejects on error.
+ */
+export const getTeamSchedule = async (req, res) => {
+  const { startDate, endDate, dept } = req.query;
+  if (!startDate || !endDate) {
+    return responseUtils.handleBadRequest(
+      res,
+      "Start or end date not populated!"
+    );
+  } else if (!dept) {
+    return responseUtils.handleBadRequest(res, "Please provide the department");
+  }
+  try {
+    const staffIdMap = await getStaffIdsByDept(dept);
+    let requestsArray = [];
+    if (staffIdMap.size > 0) {
+      requestsArray = await findExistingRequestsBetweenDates(
+        Array.from(staffIdMap.keys()),
+        startDate,
+        endDate
+      );
+    }
+    const formattedMap = formatScheduleData(staffIdMap, requestsArray);
+    return responseUtils.handleSuccessResponse(
+      res,
+      Array.from(formattedMap.values()),
+      "Requests fetched successfully!"
+    );
+  } catch (error) {
+    return responseUtils.handleInternalServerError(
+      res,
+      "Unable to get requests by dept :("
+    );
+  }
+};
+
 /**
  * Retrieves the schedule of requests for a specific staff member between given dates.
  *
@@ -121,7 +232,7 @@ export const getOwnSchedule = async (req, res) => {
 
   try {
     const response = await findExistingRequestsBetweenDates(
-      staff_id,
+      [staff_id],
       startDate,
       endDate
     );
@@ -261,20 +372,20 @@ const createNewRequests = async (arrangementRequests, staffId, managerId) => {
  *
  * @async
  * @function findExistingRequestsBetweenDates
- * @param {string} staffId - The unique identifier of the staff member.
+ * @param {Array} staffIds - An array of unique identifier of the staff members.
  * @param {string} startDate - The start date for filtering requests (inclusive).
  * @param {string} endDate - The end date for filtering requests (inclusive).
  * @throws {Error} Will throw an error if the request to fetch existing requests fails.
  * @returns {Promise<Array>} A promise that resolves to an array of approved arrangement requests.
  */
 export const findExistingRequestsBetweenDates = async (
-  staffId,
+  staffIds,
   startDate,
   endDate
 ) => {
   try {
     return await ArrangementRequest.find({
-      staff_id: staffId,
+      staff_id: { $in: staffIds },
       request_date: {
         $gte: startDate,
         $lte: endDate,
@@ -348,7 +459,7 @@ export const getArrangementRequests = async (req, res) => {
 
     const arrangementRequests = await ArrangementRequest.find({
       manager_id: numericManagerId,
-      status: "Pending",
+      status: { $in: ["Pending", "Approved"] }, // Fetch both Pending and Approved
     }).populate("staff");
 
     if (arrangementRequests.length === 0) {
@@ -547,5 +658,82 @@ export const rejectAllRequests = async (req, res) => {
     return responseUtils.handleSuccessResponse(res, updatedRequests)
   } catch (error) {
     return responseUtils.handleInternalServerError(res, 'Server error');
+  };
+};
+
+export const updateRequestStatus = async (req, res) => {
+  const { id } = req.params;   // Extract the request ID from URL params
+  const { status, withdraw_reason, manager_reason } = req.body; // Get the new status from the request body
+  if ((!withdraw_reason || withdraw_reason.trim() === "") && (!manager_reason || manager_reason.trim() === "")) {
+    return res.status(400).json({ message: 'Cancellation reason or manager reason cannot be empty' });
+  }
+  
+  try {
+    // Find the arrangement request by its ID and update its status
+    const updateFields = {
+      status: status,
+    };
+    if (withdraw_reason) {
+      updateFields.withdraw_reason = withdraw_reason; // Add withdraw_reason if provided
+    }
+    if (manager_reason) {
+      updateFields.manager_reason = manager_reason; // Add manager_reason if provided
+    }
+
+    const updatedRequest = await ArrangementRequest.findByIdAndUpdate(
+      id,  // MongoDB ID for the request
+      updateFields,// Update the status to 'Pending Withdrawal'
+      { new: true }  // Return the updated document
+    );
+
+    if (!updatedRequest) {
+      return res.status(404).json({ message: 'Request not found' });
+    }
+
+    // Return the updated request
+    res.status(200).json(updatedRequest);
+    
+  } catch (error) {
+    console.error('Error updating request:', error);
+    res.status(500).json({ message: 'Internal server error' });
+
+  }
+};
+
+export const updateRequestStatus = async (req, res) => {
+  const { id } = req.params;   // Extract the request ID from URL params
+  const { status, withdraw_reason, manager_reason } = req.body; // Get the new status from the request body
+  if ((!withdraw_reason || withdraw_reason.trim() === "") && (!manager_reason || manager_reason.trim() === "")) {
+    return res.status(400).json({ message: 'Cancellation reason or manager reason cannot be empty' });
+  }
+  
+  try {
+    // Find the arrangement request by its ID and update its status
+    const updateFields = {
+      status: status,
+    };
+    if (withdraw_reason) {
+      updateFields.withdraw_reason = withdraw_reason; // Add withdraw_reason if provided
+    }
+    if (manager_reason) {
+      updateFields.manager_reason = manager_reason; // Add manager_reason if provided
+    }
+
+    const updatedRequest = await ArrangementRequest.findByIdAndUpdate(
+      id,  // MongoDB ID for the request
+      updateFields,// Update the status to 'Pending Withdrawal'
+      { new: true }  // Return the updated document
+    );
+
+    if (!updatedRequest) {
+      return res.status(404).json({ message: 'Request not found' });
+    }
+
+    // Return the updated request
+    res.status(200).json(updatedRequest);
+    
+  } catch (error) {
+    console.error('Error updating request:', error);
+    res.status(500).json({ message: 'Internal server error' });
   }
 };

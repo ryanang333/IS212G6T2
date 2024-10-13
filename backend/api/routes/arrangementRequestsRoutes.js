@@ -5,6 +5,8 @@ import {
     createTempArrangementRequests, 
     createRegArrangementRequests,
     getOwnSchedule,
+    getTeamSchedule,
+    updateRequestStatus,
     approveRequest,
     rejectRequest,
     approveSelectedRequests,
@@ -22,6 +24,8 @@ router.get('/staff', getStaffArrangementRequests);
 router.post('/temp', createTempArrangementRequests);
 router.post('/reg', createRegArrangementRequests);
 router.get("/myschedule", getOwnSchedule);
+router.get("/teamschedule", getTeamSchedule);
+router.patch('/withdrawal/:id', updateRequestStatus);
 router.post('/approve', approveRequest);
 router.post('/reject', rejectRequest);
 router.post('/approveSelected', approveSelectedRequests);

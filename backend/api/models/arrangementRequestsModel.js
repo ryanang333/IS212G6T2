@@ -38,6 +38,14 @@ const arrangementRequestSchema = new Schema(
       type: String,
       default: null 
     },
+    manager_reason: {
+      type: String,
+      maxLength: 100,
+    },
+    withdraw_reason: {
+      type: String,
+      maxLength: 100,
+    }
   },
   {
     collection: 'arrangement_requests',
