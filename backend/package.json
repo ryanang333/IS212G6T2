@@ -19,9 +19,10 @@
     "csv-parser": "^3.0.0",
     "dotenv": "^16.4.5",
     "express": "^4.21.0",
-    "mongodb-memory-server-core": "^10.0.1",
-    "mongoose": "^8.6.3",
+    "mongodb-memory-server-core": "^10.1.2",
+    "mongoose": "^8.7.1",
     "mongoose-sequence": "^6.0.1",
+    "supertest": "^7.0.0",
     "uuid": "^10.0.0"
   },
   "devDependencies": {
@@ -30,7 +31,7 @@
     "babel-jest": "^29.7.0",
     "eslint": "^8.57.0",
     "jest": "^29.7.0",
-    "node-mocks-http": "^1.16.0",
+    "node-mocks-http": "^1.16.1",
     "nodemon": "^3.1.7"
   }
 }
