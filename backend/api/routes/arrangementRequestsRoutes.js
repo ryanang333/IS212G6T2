@@ -6,7 +6,7 @@ import {
   createRegArrangementRequests,
   getOwnSchedule,
   getTeamSchedule,
-  updateRequestStatus
+  updateRequestStatus,
   cancelPendingArrangementRequests,
 } from "../controllers/arrangementRequestsController.js";
 
