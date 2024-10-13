@@ -19,6 +19,7 @@
             <th class="border border-gray-300 px-4 py-2">Staff ID</th>
             <th class="border border-gray-300 px-4 py-2">Request Date</th>
             <th class="border border-gray-300 px-4 py-2">Request Time</th>
+            <th class="border border-gray-300 px-4 py-2">Reason</th>
             <th class="border border-gray-300 px-4 py-2">Status</th>
             <th class="border border-gray-300 px-4 py-2">Actions</th>
           </tr>
@@ -36,6 +37,7 @@
               <td class="border border-gray-300 px-4 py-2">{{ request.staff_id }}</td>
               <td class="border border-gray-300 px-4 py-2">{{ request.request_date }}</td>
               <td class="border border-gray-300 px-4 py-2">{{ request.request_time }}</td>
+              <td class="border border-gray-300 px-4 py-2">{{ request.reason }}</td>
               <td class="border border-gray-300 px-4 py-2">{{ request.status }}</td>
               <td class="border border-gray-300 px-4 py-2">
                 <div class="flex justify-around">
