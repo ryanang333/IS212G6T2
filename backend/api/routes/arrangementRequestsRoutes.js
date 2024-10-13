@@ -19,6 +19,5 @@ router.post("/reg", createRegArrangementRequests);
 router.get("/myschedule", getOwnSchedule);
 router.get("/teamschedule", getTeamSchedule);
 router.patch('/withdrawal/:id', updateRequestStatus);
-
 router.post("/cancel", cancelPendingArrangementRequests)
 export default router;

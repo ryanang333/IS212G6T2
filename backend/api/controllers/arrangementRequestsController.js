@@ -490,6 +490,7 @@ export const getStaffArrangementRequests = async (req, res) => {
       return responseUtils.handleBadRequest(res, "No requests selected for cancellation.");
     }
 
+  
     const pendingRequests = await ArrangementRequest.find({
       staff_id: staffId,
       _id: { $in: requestIds },
@@ -500,21 +501,25 @@ export const getStaffArrangementRequests = async (req, res) => {
       return responseUtils.handleNotFound(res, "No pending requests found for cancellation.");
     }
 
+    
     if (cancelAll) {
       const groupId = pendingRequests[0].group_id; 
       if (groupId) {
+       
         await ArrangementRequest.updateMany(
           { group_id: groupId, status: REQUEST_STATUS_PENDING },
           { status: REQUEST_STATUS_CANCELLED }
         );
       }
     } else {
+      
       await ArrangementRequest.updateMany(
         { _id: { $in: requestIds }, status: REQUEST_STATUS_PENDING },
         { status: REQUEST_STATUS_CANCELLED }
       );
     }
 
+    
     await createAuditEntry(pendingRequests, staffId, REQUEST_STATUS_PENDING, REQUEST_STATUS_CANCELLED);
 
     return responseUtils.handleSuccessResponse(
