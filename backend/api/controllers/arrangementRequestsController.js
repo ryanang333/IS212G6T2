@@ -7,6 +7,7 @@ import {
 } from "../utils/dateChecker.js";
 import * as responseUtils from "../utils/responseUtils.js";
 import { v4 as uuidv4 } from "uuid"; // Used to generate group_id
+import { ObjectId } from 'mongodb'; // Import ObjectId from the native MongoDB driver
 
 export const REQUEST_STATUS_PENDING = "Pending";
 export const REQUEST_STATUS_NONE = "N/A";
@@ -483,6 +484,13 @@ export const updateRequestStatus = async (req, res) => {
     return res.status(400).json({ message: 'No request IDs provided' });
   }
 
+ 
+
+  if (!withdraw_reason || withdraw_reason.trim() === '') {
+    return res.status(400).json({ message: 'Withdrawal reason is required' });
+  }
+
+
   try {
     // Perform bulk update using ArrangementRequest model
     await ArrangementRequest.updateMany(
@@ -493,7 +501,7 @@ export const updateRequestStatus = async (req, res) => {
     res.status(200).json({ message: 'Requests updated successfully' });
   } catch (error) {
     console.error('Error updating requests:', error);
-    res.status(500).json({ message: 'An error occurred while updating the requests.' });
+    res.status(500).json({ message: 'Internal server error' });
   }
 };
 
