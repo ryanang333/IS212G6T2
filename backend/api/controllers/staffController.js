@@ -34,6 +34,15 @@ export const getStaff = async (req, res) => {
   }
 };
 
+export const getAllDepartments = async(req, res) => {
+  try{
+    const departmentArray = await Staff.distinct('dept');
+    return responseUtils.handleSuccessResponse(res, departmentArray);
+  }catch(error){
+    return responseUtils.handleInternalServerError(res, error);
+  }
+}
+
 export const getStaffIdsByDept = async (department) => {
   if (!department || department == null || department.trim() === "") {
     throw new Error("Department should be a non null value");

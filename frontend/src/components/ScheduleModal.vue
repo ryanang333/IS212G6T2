@@ -14,6 +14,25 @@
             <h4 class="text-2xl text-center font-bold dark:text-white">
               {{ selectedDepartment }} Department
             </h4>
+            <p class="mt-2 text-md text-center text-gray-500">{{ date }}</p>
+          </div>
+          <div class="mb-3 flex items-center justify-center align-center" v-if="tabSelected==='isOverall'">
+            <span
+              class="bg-blue-100 text-blue-800 text-xs font-medium me-2 px-2.5 py-0.5 rounded dark:bg-blue-900 dark:text-blue-300"
+              >Home (AM) : {{ totalHomeAM }}</span
+            >
+            <span
+              class="bg-gray-100 text-gray-800 text-xs font-medium me-2 px-2.5 py-0.5 rounded dark:bg-gray-700 dark:text-gray-300"
+              >Office (AM) : {{ totalRecordsLength - totalHomeAM}}</span
+            >
+            <span
+              class="bg-red-100 text-red-800 text-xs font-medium me-2 px-2.5 py-0.5 rounded dark:bg-red-900 dark:text-red-300"
+              >Home (PM) : {{ totalHomePM }}</span
+            >
+            <span
+              class="bg-green-100 text-green-800 text-xs font-medium me-2 px-2.5 py-0.5 rounded dark:bg-green-900 dark:text-green-300"
+              >Office (PM) : {{ totalRecordsLength - totalHomePM }}</span
+            >
           </div>
           <table class="w-full text-sm text-left rtl:text-right text-gray-500 dark:text-gray-400">
             <thead
@@ -85,7 +104,6 @@
               </svg>
             </button>
           </div>
-
           <div class="bg-gray-50 px-4 py-3 sm:flex sm:flex-row-reverse sm:px-6">
             <button
               type="button"
@@ -110,7 +128,10 @@ export default {
       displayData: null,
       selectedDepartment: null,
       currentPage: 1,
-      itemsPerPage: 8
+      itemsPerPage: 8,
+      totalRecordsLength: 0,
+      totalHomeAM: 0,
+      totalHomePM: 0,
     }
   },
   props: ['scheduleData', 'date', 'department', 'tabSelected'],
@@ -122,7 +143,7 @@ export default {
       const start = (this.currentPage - 1) * this.itemsPerPage
       const end = start + this.itemsPerPage
       return this.displayData?.slice(start, end)
-    }
+    },
   },
   emits: ['closemodal'],
   methods: {
@@ -152,17 +173,42 @@ export default {
         })
         if (response.status === 200) {
           this.displayData = response.data.data
+          if (this.tabSelected === 'isOverall'){
+            this.computeTotalNumbers();
+          }
         }
       } catch (error) {
         const errorMessage = error.response?.data?.message || error.message
         alert(`Error - ${errorMessage}`)
       }
     },
+
+    /**
+   * Computes the total number of AM and PM records from the `displayData` array
+   * and updates the corresponding totals and record length.
+   *
+   * Iterates through the `displayData` array to sum up the 'AM' and 'PM' values
+   * and assigns the totals to `totalHomeAM`, `totalHomePM`, and the number of records to `totalRecordsLength`.
+   */
+    computeTotalNumbers(){
+      let totalRecords = this.displayData.length;
+      let homeAM = 0;
+      let homePM = 0;
+      this.displayData.forEach((person)=> {
+        homeAM += person['AM'];
+        homePM += person['PM'];
+      })
+      this.totalHomeAM = homeAM;
+      this.totalHomePM = homePM;
+      this.totalRecordsLength = totalRecords;
+    },
+
     nextPage() {
       if (this.currentPage < this.totalPages) {
         this.currentPage++
       }
     },
+
     prevPage() {
       if (this.currentPage > 1) {
         this.currentPage--
@@ -170,9 +216,7 @@ export default {
     }
   },
   mounted() {
-    if (this.tabSelected === 'isTeam') {
-      this.getDeptData(this.department)
-    }
+    this.getDeptData(this.department)
   }
 }
 </script>
