@@ -392,12 +392,9 @@ export default {
       this.activeRequestIds = [];  // Clear the group request array
     },
 
-  async confirmCancellation() {
-  // Filter activeRequestIds to only include requests with status 'Approved'
-  const approvedRequestIds = this.activeRequestIds.filter(request => request.status === 'Approved');
-
-  // Check if there are any approved requests to cancel
-  if ((!approvedRequestIds || approvedRequestIds.length === 0) && !this.activeRequestId) {
+    async confirmCancellation() {
+  // Check if there is an individual request to cancel
+  if (!this.activeRequestId && (!this.activeRequestIds || this.activeRequestIds.length === 0)) {
     console.error('No active approved request IDs or active request ID to cancel');
     return;
   }
@@ -409,12 +406,17 @@ export default {
   }
 
   try {
+    let requestIds = [];
 
-    const requestIds = approvedRequestIds.length > 0 
-      ? approvedRequestIds.map(request => request._id) 
-      : [this.activeRequestId]; // Fallback to using the activeRequestId if approvedRequestIds is empty
+    // If activeRequestIds are set (for group requests), use them
+    if (this.activeRequestIds && this.activeRequestIds.length > 0) {
+      requestIds = this.activeRequestIds;
+    } else if (this.activeRequestId) {
+      // Otherwise, use the activeRequestId for individual requests
+      requestIds = [this.activeRequestId];
+    }
 
-    // Send the filtered approved request IDs in the body instead of the URL
+    // Send the filtered approved request IDs in the body
     const response = await axios.patch(`http://localhost:3001/arrangementRequests/withdrawal`, {
       requestIds,
       status: 'Pending Withdrawal',
@@ -433,7 +435,8 @@ export default {
     this.showErrorModal = true;
   }
 },
-    
+
+
     toggleChildren(request) {
       request.showChildren = !request.showChildren;
     }
