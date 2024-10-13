@@ -276,6 +276,7 @@ export default {
               reason: request.reason,
               status: request.status,
               isAdHoc: true,
+              _id: request._id
             });
           }
         });
@@ -396,8 +397,8 @@ export default {
   const approvedRequestIds = this.activeRequestIds.filter(request => request.status === 'Approved');
 
   // Check if there are any approved requests to cancel
-  if (!approvedRequestIds || approvedRequestIds.length === 0) {
-    console.error('No active approved request IDs to cancel');
+  if ((!approvedRequestIds || approvedRequestIds.length === 0) && !this.activeRequestId) {
+    console.error('No active approved request IDs or active request ID to cancel');
     return;
   }
 
@@ -408,9 +409,14 @@ export default {
   }
 
   try {
+
+    const requestIds = approvedRequestIds.length > 0 
+      ? approvedRequestIds.map(request => request._id) 
+      : [this.activeRequestId]; // Fallback to using the activeRequestId if approvedRequestIds is empty
+
     // Send the filtered approved request IDs in the body instead of the URL
     const response = await axios.patch(`http://localhost:3001/arrangementRequests/withdrawal`, {
-      requestIds: approvedRequestIds.map(request => request._id), // Pass only the approved IDs
+      requestIds,
       status: 'Pending Withdrawal',
       withdraw_reason: this.withdrawalReason
     });
