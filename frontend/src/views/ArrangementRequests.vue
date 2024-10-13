@@ -116,7 +116,7 @@
               @click="handleRowClick(approvedRequest)"
             >
               <td class="border border-gray-300 px-4 py-2">{{ approvedRequest.staff_id }}</td>
-              <td class="border border-gray-300 px-4 py-2">{{ formatDate(approvedRequest.request_date) }}</td>
+              <td class="border border-gray-300 px-4 py-2">{{ (approvedRequest.request_date) }}</td>
               <td class="border border-gray-300 px-4 py-2">{{ approvedRequest.request_time }}</td>
               <td class="border border-gray-300 px-4 py-2">
                 {{ approvedRequest.status }}
@@ -424,49 +424,50 @@ export default {
     },
 
     async confirmCancellation() {
-      if (!this.activeRequestId) {
-        console.error('No active request ID to cancel');
-        return;
-      }
+  if (!this.activeRequestId) {
+    console.error('No active request ID to cancel');
+    return;
+  }
 
-      if (!this.withdrawalReason || this.withdrawalReason.trim() === "") {
-        this.errorMessage = "Cancellation reason cannot be empty";
-        this.showErrorModal = true;
-        return;
-      }
+  if (!this.withdrawalReason || this.withdrawalReason.trim() === "") {
+    this.errorMessage = "Cancellation reason cannot be empty";
+    this.showErrorModal = true;
+    return;
+  }
 
-      try {
-        // Send the cancellation request to the backend
-        const response = await axios.patch(`http://localhost:3001/arrangementRequests/withdrawal/${this.activeRequestId}`, {
-          status: 'Cancelled',
-          manager_reason: this.withdrawalReason
-        });
+  try {
+    // Send the cancellation request to the correct backend route without the ID in the URL
+    const response = await axios.patch('http://localhost:3001/arrangementRequests/withdrawal', {
+      requestIds: [this.activeRequestId],  // Send the active request ID in the body
+      status: 'Cancelled',
+      withdraw_reason: this.withdrawalReason
+    });
 
-        console.log('Request status updated successfully:', response.data);
+    console.log('Request status updated successfully:', response.data);
 
-        // Reset the lists before fetching new data
-        this.filteredRequests = [];
-        this.approvedRequests = [];
-        this.adHocApprovedRequests = [];
+    // Reset the lists before fetching new data
+    this.filteredRequests = [];
+    this.approvedRequests = [];
+    this.adHocApprovedRequests = [];
 
-        // Refetch the arrangement requests to reflect the latest state
-        await this.fetchArrangementRequests();
+    // Refetch the arrangement requests to reflect the latest state
+    await this.fetchArrangementRequests();
 
-        // Close the confirmation modal and reset the state
-        this.closeConfirmation();
+    // Close the confirmation modal and reset the state
+    this.closeConfirmation();
 
-      } catch (error) {
-        console.error('Error during cancellation:', error);
+  } catch (error) {
+    console.error('Error during cancellation:', error);
 
-        if (error.response && error.response.data && error.response.data.message) {
-          this.errorMessage = error.response.data.message;
-        } else {
-          this.errorMessage = 'An error occurred while canceling the request';
-        }
+    if (error.response && error.response.data && error.response.data.message) {
+      this.errorMessage = error.response.data.message;
+    } else {
+      this.errorMessage = 'An error occurred while canceling the request';
+    }
 
-        this.showErrorModal = true;
-      }
-    },
+    this.showErrorModal = true;
+  }
+},
 
     closeErrorModal() {
       this.showErrorModal = false;
