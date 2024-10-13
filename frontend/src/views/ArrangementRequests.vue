@@ -380,16 +380,17 @@ export default {
     },
 
     cancelAllApproved(approvedRequest) {
-      const approvedChildren = approvedRequest.children.filter(child => child.status === 'Approved');
-      if (approvedChildren.length === 0) {
-        alert('No approved child requests to cancel.');
-        return;
-      }
+    const approvedChildren = approvedRequest.children.filter(child => child.status === 'Approved');
+    if (approvedChildren.length === 0) {
+      alert('No approved child requests to cancel.');
+      return;
+    }
 
-      approvedChildren.forEach(child => {
-        this.openConfirmation(child._id); // Loop through each approved child request and open cancellation
-      });
-    },
+    // Collect all approved child request IDs
+    const approvedRequestIds = approvedChildren.map(child => child._id);
+
+    this.openConfirmation(approvedRequestIds); // Pass all approved request IDs to openConfirmation
+  },
 
     prevPage() {
       if (this.currentPage > 1) {
@@ -407,67 +408,68 @@ export default {
       return new Date(date).toLocaleString(); // Formats the date to a readable string
     },
 
-    openConfirmation(requestId) {
-      if (!requestId) {
-        console.error('Request ID is not defined');
-        return;
-      }
-      console.log('Opening confirmation for request:', requestId);
-      this.confirmationVisible = true;
-      this.activeRequestId = requestId;
-    },
+    openConfirmation(requestIds) {
+    if (!Array.isArray(requestIds)) {
+      requestIds = [requestIds]; // Ensure it's an array
+    }
+    console.log('Opening confirmation for request(s):', requestIds);
+    this.confirmationVisible = true;
+    this.activeRequestIds = requestIds; // Store the array of request IDs
+  },
 
     closeConfirmation() {
       this.confirmationVisible = false;
-      this.activeRequestId = null;
+      this.activeRequestIds = [];
       this.withdrawalReason = ''; // Clear reason on close
     },
 
     async confirmCancellation() {
-  if (!this.activeRequestId) {
-    console.error('No active request ID to cancel');
-    return;
-  }
-
-  if (!this.withdrawalReason || this.withdrawalReason.trim() === "") {
-    this.errorMessage = "Cancellation reason cannot be empty";
-    this.showErrorModal = true;
-    return;
-  }
-
-  try {
-    // Send the cancellation request to the correct backend route without the ID in the URL
-    const response = await axios.patch('http://localhost:3001/arrangementRequests/withdrawal', {
-      requestIds: [this.activeRequestId],  // Send the active request ID in the body
-      status: 'Cancelled',
-      withdraw_reason: this.withdrawalReason
-    });
-
-    console.log('Request status updated successfully:', response.data);
-
-    // Reset the lists before fetching new data
-    this.filteredRequests = [];
-    this.approvedRequests = [];
-    this.adHocApprovedRequests = [];
-
-    // Refetch the arrangement requests to reflect the latest state
-    await this.fetchArrangementRequests();
-
-    // Close the confirmation modal and reset the state
-    this.closeConfirmation();
-
-  } catch (error) {
-    console.error('Error during cancellation:', error);
-
-    if (error.response && error.response.data && error.response.data.message) {
-      this.errorMessage = error.response.data.message;
-    } else {
-      this.errorMessage = 'An error occurred while canceling the request';
+    if (!this.activeRequestIds || this.activeRequestIds.length === 0) {
+      console.error('No active request IDs to cancel');
+      return;
     }
 
-    this.showErrorModal = true;
-  }
-},
+    if (!this.withdrawalReason || this.withdrawalReason.trim() === "") {
+      this.errorMessage = "Cancellation reason cannot be empty";
+      this.showErrorModal = true;
+      return;
+    }
+
+    try {
+      // Send the cancellation request for all active request IDs
+      const response = await axios.patch('http://localhost:3001/arrangementRequests/withdrawal', {
+        requestIds: this.activeRequestIds,  // Send all active request IDs
+        status: 'Cancelled',
+        withdraw_reason: this.withdrawalReason
+      });
+
+      console.log('Requests status updated successfully:', response.data);
+
+      // Reset the lists before fetching new data
+      this.filteredRequests = [];
+      this.approvedRequests = [];
+      this.adHocApprovedRequests = [];
+
+      // Refetch the arrangement requests to reflect the latest state
+      await this.fetchArrangementRequests();
+
+      // Close the confirmation modal and reset the state
+      this.closeConfirmation();
+
+    } catch (error) {
+      console.error('Error during cancellation:', error);
+
+      if (error.response && error.response.data && error.response.data.message) {
+        this.errorMessage = error.response.data.message;
+      } else {
+        this.errorMessage = 'An error occurred while canceling the request(s)';
+      }
+
+      this.showErrorModal = true;
+    }
+  },
+
+
 
     closeErrorModal() {
       this.showErrorModal = false;

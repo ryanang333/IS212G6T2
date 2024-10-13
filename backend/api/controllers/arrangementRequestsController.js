@@ -433,7 +433,7 @@ export const getArrangementRequests = async (req, res) => {
 
     const arrangementRequests = await ArrangementRequest.find({
       manager_id: numericManagerId,
-      status: { $in: ["Pending", "Approved"] }, // Fetch both Pending and Approved
+      status: { $in: ["Pending", "Approved","Pending Withdrawal"] }, // Fetch both Pending and Approved
     }).populate("staff");
 
     if (arrangementRequests.length === 0) {
