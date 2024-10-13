@@ -36,13 +36,13 @@ const populateData = async () => {
 const populateStaff = async () => {
   try {
     await Staff.create({
-      staff_id: 140881,
-      staff_fname: "George",
-      staff_lname: "Clooney",
-      dept: "Accounts Manager",
-      position: "Manager",
+      staff_id: 140883,
+      staff_fname: "Matt",
+      staff_lname: "Damon",
+      dept: "Sales",
+      position: "Team Lead",
       country: "Singapore",
-      email: "george.clooney@allinone.com.sg",
+      email: "matt.damon@allinone.com.sg",
       reporting_manager: 130002,
       role: 2,
     });
@@ -57,7 +57,7 @@ const populateRequests = async () => {
     // Inserting requests as an array
     const requests = await ArrangementRequest.insertMany([
       {
-        staff_id: 140881,
+        staff_id: 140883,
         request_date: new Date("2024-01-12T08:00:00"), 
         request_time: "AM",
         reason: "Need to take care of children",
@@ -65,7 +65,7 @@ const populateRequests = async () => {
         manager_id: 130002
       },
       {
-        staff_id: 140881,
+        staff_id: 140883,
         request_date: new Date("2024-09-24T08:00:00"),
         request_time: "AM",
         reason: "Stomach Pain",
