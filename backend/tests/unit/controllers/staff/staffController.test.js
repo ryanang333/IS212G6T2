@@ -2,13 +2,11 @@ import {
   getStaff,
   getStaffIdsByDept,
   getStaffDetails,
+  getAllDepartments,
 } from "../../../../api/controllers/staffController.js";
 import Staff from "../../../../api/models/staffModel.js";
 import httpMocks from "node-mocks-http";
-import {
-  mockStaff,
-  mockStaffByDept,
-} from "../../../mock/testHelper.js";
+import { mockStaff, mockStaffByDept } from "../../../mock/testHelper.js";
 jest.mock("../../../../api/models/staffModel.js");
 
 describe("Staff Controller Unit Tests", () => {
@@ -21,7 +19,7 @@ describe("Staff Controller Unit Tests", () => {
 
   afterEach(() => {
     jest.resetAllMocks();
-  })
+  });
 
   describe("getStaff", () => {
     test("should return 400 if staff_id is not numeric", async () => {
@@ -50,6 +48,31 @@ describe("Staff Controller Unit Tests", () => {
       Staff.findOne.mockRejectedValue(new Error("Database error"));
       await getStaff(req, res);
       expect(res.statusCode).toBe(500);
+    });
+  });
+
+  describe("getAllDepartments", () => {
+    test("should throw a 500 error if database has an issue", async () => {
+      Staff.distinct.mockRejectedValue(new Error("Database error"));
+      await getAllDepartments(req, res);
+      expect(res.statusCode).toBe(500);
+    });
+
+    test("should return a 200 code, with an array of values", async () => {
+      const deptArray = [
+        "CEO",
+        "Consultancy",
+        "Engineering",
+        "Finance",
+        "HR",
+        "IT",
+        "Sales",
+        "Solutioning",
+      ];
+      Staff.distinct.mockResolvedValue(deptArray);
+      await getAllDepartments(req, res);
+      expect(res.statusCode).toBe(200);
+      expect(res._getJSONData().data).toEqual(deptArray);
     });
   });
 
