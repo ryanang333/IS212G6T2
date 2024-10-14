@@ -454,24 +454,21 @@ export const getStaffArrangementRequests = async (req, res) => {
     const { staff_id } = req.query;
 
     if (!staff_id) {
-      return res.status(400).json({ error: "staff_id is required" });
+      return responseUtils.handleBadRequest(res, "staff_id is required");
     }
 
     const numericStaffID = Number(staff_id);
 
     const arrangementRequests = await ArrangementRequest.find({
       staff_id: numericStaffID,
-    }).populate("staff");
+    });
 
     if (arrangementRequests.length === 0) {
-      return res
-        .status(404)
-        .json({ message: "No arrangement requests found for this staff" });
+      return responseUtils.handleNotFound(res, "No arrangement requests found for this staff");
     }
-
-    res.status(200).json(arrangementRequests);
+    return responseUtils.handleSuccessResponse(res, arrangementRequests, "Staff requests fetched successfully!");
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    return responseUtils.handleInternalServerError(res, error.message);
   }
 };
 /**
