@@ -134,7 +134,7 @@ export default {
       totalHomePM: 0,
     }
   },
-  props: ['scheduleData', 'date', 'department', 'tabSelected'],
+  props: ['date', 'department', 'tabSelected'],
   computed: {
     totalPages() {
       return Math.ceil(this.displayData?.length / this.itemsPerPage)
@@ -216,7 +216,7 @@ export default {
     }
   },
   mounted() {
-    this.getDeptData(this.department)
+    this.getDeptData(this.department);
   }
 }
 </script>
