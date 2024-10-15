@@ -433,7 +433,7 @@ export const getArrangementRequests = async (req, res) => {
 
     const arrangementRequests = await ArrangementRequest.find({
       manager_id: numericManagerId,
-      status: { $in: ["Pending", "Approved"] }, // Fetch both Pending and Approved
+      status: { $in: ["Pending", "Approved","Pending Withdrawal"] }, // Fetch both Pending and Approved
     }).populate("staff");
 
     if (arrangementRequests.length === 0) {
@@ -471,7 +471,39 @@ export const getStaffArrangementRequests = async (req, res) => {
   }
 };
 
+
 export const updateRequestStatus = async (req, res) => {
+  const { requestIds, status, withdraw_reason } = req.body;
+
+  // Validate requestIds is an array and has valid values
+  if (!Array.isArray(requestIds) || requestIds.length === 0) {
+    return res.status(400).json({ message: 'No request IDs provided' });
+  }
+
+ 
+
+  if (!withdraw_reason || withdraw_reason.trim() === '') {
+    return res.status(400).json({ message: 'Withdrawal reason is required' });
+  }
+
+
+  try {
+    
+    // Perform bulk update using ArrangementRequest model
+
+    
+    await ArrangementRequest.updateMany(
+      { _id: { $in: requestIds } },  // Match requests with IDs in the requestIds array
+      { status, withdraw_reason }    // Update the status and withdraw_reason
+    );
+
+    res.status(200).json({ message: 'Requests updated successfully' });
+  } catch (error) {
+    res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
+export const   updateIndividualRequestStatus= async (req, res) => {
   const { id } = req.params;   // Extract the request ID from URL params
   const { status, withdraw_reason, manager_reason } = req.body; // Get the new status from the request body
   if ((!withdraw_reason || withdraw_reason.trim() === "") && (!manager_reason || manager_reason.trim() === "")) {
@@ -504,7 +536,6 @@ export const updateRequestStatus = async (req, res) => {
     res.status(200).json(updatedRequest);
     
   } catch (error) {
-    console.error('Error updating request:', error);
     res.status(500).json({ message: 'Internal server error' });
   }
 };
