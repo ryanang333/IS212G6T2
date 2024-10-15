@@ -3,9 +3,15 @@
   <ScheduleModal
     v-if="showScheduleModal"
     :date="dateSelected"
-    :department="dept"
+    :department="selectedDept"
     :tabSelected="tab"
-    @closemodal="this.showScheduleModal=false;"
+    @closemodal="this.showScheduleModal = false"
+  />
+  <OptionsModal
+    v-if="isOpenOptions"
+    :options="departments"
+    @close="this.isOpenOptions = false"
+    @optionselected="handleDeptSelect"
   />
 </template>
 
@@ -15,6 +21,7 @@ import dayGridPlugin from '@fullcalendar/daygrid'
 import interactionPlugin from '@fullcalendar/interaction'
 import axios from 'axios'
 import ScheduleModal from './ScheduleModal.vue'
+import OptionsModal from './OptionsModal.vue'
 export default {
   data() {
     return {
@@ -41,15 +48,29 @@ export default {
         events: this.events,
         datesSet: this.handleDatesSet
       },
-      dateSelected: null
+      dateSelected: null,
+      isOpenOptions: false,
+      departments: null,
+      selectedDept: null
     }
   },
   props: ['tab', 'height', 'staffId', 'dept'],
   components: {
     FullCalendar,
-    ScheduleModal
+    ScheduleModal,
+    OptionsModal
   },
   methods: {
+    /**
+     * Handles the selection of department from OptionsModal
+     *
+     * @param {String} event - The event object containing the department that was selected.
+     */
+    handleDeptSelect(event) {
+      this.selectedDept = event
+      this.isOpenOptions = false
+      this.showScheduleModal = true
+    },
     /**
      * Handles the date set event from the calendar.
      * Fetches the data for the given date range.
@@ -87,10 +108,41 @@ export default {
         }
       })
     },
+
+    /**
+     * Handles the click event on a date. Depending on the selected tab,
+     * it either opens a modal or fetches department data.
+     *
+     * @async
+     * @param {Object} event - The event object from the date click.
+     * @param {string} event.dateStr - The selected date in string format.
+     * @returns {Promise<void>} - Returns a promise that resolves after the async actions are completed.
+     */
     async handleDateClick(event) {
+      this.dateSelected = event.dateStr
       if (this.tab === 'isTeam') {
-        this.dateSelected = event.dateStr
         this.showScheduleModal = true
+        this.selectedDept = this.dept
+      } else if (this.tab === 'isOverall') {
+        await this.fetchDepartmentData()
+        this.isOpenOptions = true
+      }
+    },
+
+    /**
+     * Fetches a list of all departments from the server and updates the local state.
+     *
+     * @async
+     * @returns {Promise<void>} - Returns a promise that resolves after the department data is fetched.
+     * @throws {Error} - Throws an error if the request fails.
+     */
+    async fetchDepartmentData() {
+      try {
+        const response = await axios.get('http://localhost:3001/staff/department')
+        this.departments = response.data.data
+      } catch (error) {
+        const errorMessage = error.response?.data?.message || error.message
+        alert(`Error - ${errorMessage}`)
       }
     },
 

@@ -218,7 +218,7 @@ export default {
           params: { staff_id: this.staff_id }
         });
 
-        this.handleResponse(response.data);
+        this.handleResponse(response.data.data);
       } catch (error) {
         this.handleError(error);
       } finally {
