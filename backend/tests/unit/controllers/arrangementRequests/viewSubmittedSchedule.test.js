@@ -44,15 +44,14 @@ describe("getStaffArrangementRequests", () => {
     expect(response.data.length).toBe(2);
   });
 
-  test("should return a 404 if no requests found", async () => {
+  test("should return an empty array if no requests found", async () => {
     ArrangementRequest.find.mockResolvedValue([]);
 
     await getStaffArrangementRequests(req, res);
 
-    expect(res.statusCode).toBe(404);
-    expect(JSON.parse(res._getData())).toEqual({
-      message: "No arrangement requests found for this staff",
-    });
+    expect(res.statusCode).toBe(200);
+    const response = res._getJSONData();
+    expect(response.data).toEqual([]);
   });
 
   test("should return a 500 if an error occurs", async () => {
