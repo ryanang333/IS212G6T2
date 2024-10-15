@@ -44,7 +44,7 @@ describe("getArrangementRequests", () => {
 
     expect(ArrangementRequest.find).toHaveBeenCalledWith({
       manager_id: 123,
-      status: { $in: ["Pending", "Approved"] },
+      status: { $in: ["Pending", "Approved", "Pending Withdrawal"] },
     });
     expect(res.statusCode).toBe(200);
     const response = res._getJSONData();
