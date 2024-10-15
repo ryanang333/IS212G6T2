@@ -52,23 +52,45 @@
       <h2>No submitted requests</h2>
     </div>
 
-    <table v-else class="min-w-full border border-collapse mt-6">
-      <thead class="bg-gray-200">
-        <tr>
-          <th class="px-4 py-2 border">Request Date</th>
-          <th class="px-4 py-2 border">Request Time</th>
-          <th class="px-4 py-2 border">Reason for Arrangement</th>
-          <th class="px-4 py-2 border">Status</th>
-        </tr>
-      </thead>
-      <tbody>
-        <template v-for="request in paginatedRequests" :key="request._id">
-          <tr @click="toggleChildren(request)" class="cursor-pointer" :class="{ 'bg-gray-100': request.showChildren }" v-if="!request.isAdHoc">
-            <td class="border px-4 py-2">{{ request.summary }}</td>
-            <td class="border px-4 py-2">{{ request.request_time }}</td>
-            <td class="border px-4 py-2">{{ request.reason }}</td>
-            <td class="border px-4 py-2">{{ request.status }}</td>
+      <table v-else class="table-auto w-full mt-6">
+        <thead>
+          <tr>
+            <th class="px-4 py-2">Request ID</th>
+            <th class="px-4 py-2">Staff ID</th>
+            <th class="px-4 py-2">Group ID</th>
+            <th class="px-4 py-2">Request Date</th>
+            <th class="px-4 py-2">Requested Time</th>
+            <th class="px-4 py-2">Reason for Arrangement</th>
+            <th class="px-4 py-2">Status</th>
           </tr>
+        </thead>
+        <tbody>
+          <tr v-for="request in paginatedRequests" :key="request._id" class="text-left">
+            <td class="border px-4 py-2 align-middle">{{ request.request_id }}</td>
+            <td class="border px-4 py-2 align-middle">{{ request.staff_id }}</td>
+            <td class="border px-4 py-2 align-middle">{{ request.group_id || '-' }}</td>
+            <td class="border px-4 py-2 align-middle">{{ new Date(request.request_date).toLocaleDateString() }}</td>
+            <td class="border px-4 py-2 align-middle">{{ request.time }}</td>
+            <td class="border px-4 py-2 align-middle">{{ request.reason }}</td>
+            <td class="border px-4 py-2 align-middle">{{ request.status }}</td>
+            <td class="border px-4 py-2 align-middle">
+              <input 
+                  type="checkbox" 
+                  v-model="selectedRequests" 
+                  :value="request._id" 
+                  v-if="request.status === 'Pending'"
+                />
+            </td>
+          </tr>
+        </tbody>
+      </table>
+     <!-- Cancel Selected Requests Button -->
+
+    <div class="flex justify-center mt-4">
+      <button @click="cancelSelectedRequests" class="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 transition">
+        Cancel Selected Requests
+      </button>
+    </div>
 
           <tr v-if="request.showChildren" class="bg-gray-50">
             <td colspan="4">
@@ -187,6 +209,10 @@ export default {
     };
   },
   computed: {
+      selectedRequests: [] 
+      };
+    },
+    computed: {
     paginatedRequests() {
       const start = (this.currentPage - 1) * this.recordsPerPage;
       const end = start + this.recordsPerPage;
@@ -395,6 +421,106 @@ export default {
     toggleChildren(request) {
       request.showChildren = !request.showChildren;
     }
+      
+  },
+    async cancelSelectedRequests() {
+  if (this.selectedRequests.length === 0) {
+    alert('Please select requests to cancel.');
+    return;
+  }
+
+
+  const firstSelectedRequest = this.paginatedRequests.find(request => this.selectedRequests.includes(request._id));
+
+  if (!firstSelectedRequest) {
+    alert('Unable to find the staff ID for the selected requests.');
+    return;
+  }
+
+  const staffId = firstSelectedRequest.staff_id; 
+  const requestIds = this.selectedRequests;
+  const cancelAll = false;
+
+  try {
+    const response = await axios.post('http://localhost:3001/arrangementRequests/cancel', {
+      staffId,
+      requestIds,
+      cancelAll
+    });
+
+    if (response.data && response.data.data.length >0) {
+      alert('Selected requests have been canceled successfully.');
+      this.fetchArrangementRequests(); 
+      this.selectedRequests = [];  
+    } else {
+      alert('Failed to cancel the requests.');
+    }
+  } catch (error) {
+    console.error('Error cancelling selected requests:', error);
+  }
+},
+      applyFilters() {
+        this.filteredRequests = [];
+
+        for (const request of this.submitted_view) {
+        let matchesFilter = true;
+
+        if (this.filters.requestType === 'Regular' && request.group_id) {
+            matchesFilter = false;
+        } else if (this.filters.requestType === 'Ad-hoc' && !request.group_id) {
+            matchesFilter = false;
+        }
+
+        if (this.filters.status !== 'all' && request.status !== this.filters.status) {
+            matchesFilter = false;
+        }
+
+        const now = new Date();
+        const arrangementDate = new Date(request.request_date);
+        if (this.filters.datePassed === 'upcoming' && arrangementDate < now) {
+            matchesFilter = false;
+        }
+        if (this.filters.datePassed === 'past' && arrangementDate >= now) {
+            matchesFilter = false;
+        }
+
+        if (matchesFilter) {
+            this.filteredRequests.push(request);
+        }
+        }
+
+        if (this.filters.arrangementDate) {
+        this.filteredRequests.sort((a, b) => {
+            const dateA = new Date(a.request_date);
+            const dateB = new Date(b.request_date);
+            if (this.filters.arrangementDate === 'asc') {
+            return dateA - dateB;
+            } else {
+            return dateB - dateA;
+            }
+        });
+        }
+        this.showFilterModal = false;
+        },
+      resetFilters() {
+        this.filters = {
+          arrangementDate: '',
+          requestType: 'all',
+          status: 'all',
+          datePassed: 'all',
+        };
+        this.filteredRequests = this.submitted_view;
+      },
+      nextPage() {
+      if (this.currentPage < this.totalPages) {
+        this.currentPage++;
+      }
+    },
+    prevPage() {
+      if (this.currentPage > 1) {
+        this.currentPage--;
+      }
+    },
   },
 };
 </script>

@@ -43,7 +43,13 @@ const router = createRouter({
       name: 'home',
       component: Hello,
       meta: { requiresAuth: true },
-    }
+    },
+    // {
+    //   path: '/cancel',
+    //   name: 'cancel',
+    //   component: Cancel ,
+    //   meta: { requiresAuth: true },
+    // }
   ]
 })
 
