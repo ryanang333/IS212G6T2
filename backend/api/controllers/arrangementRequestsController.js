@@ -462,9 +462,6 @@ export const getStaffArrangementRequests = async (req, res) => {
       staff_id: numericStaffID,
     });
 
-    if (arrangementRequests.length === 0) {
-      return responseUtils.handleNotFound(res, "No arrangement requests found for this staff");
-    }
     return responseUtils.handleSuccessResponse(res, arrangementRequests, "Staff requests fetched successfully!");
   } catch (error) {
     return responseUtils.handleInternalServerError(res, error.message);
