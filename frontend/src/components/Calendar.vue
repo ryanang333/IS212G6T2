@@ -9,6 +9,7 @@
   />
   <OptionsModal
     v-if="isOpenOptions"
+    :message="msg"
     :options="departments"
     @close="this.isOpenOptions = false"
     @optionselected="handleDeptSelect"
@@ -51,7 +52,8 @@ export default {
       dateSelected: null,
       isOpenOptions: false,
       departments: null,
-      selectedDept: null
+      selectedDept: null,
+      msg: "Select a department to view overall schedule for",
     }
   },
   props: ['tab', 'height', 'staffId', 'dept'],

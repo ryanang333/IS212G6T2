@@ -61,7 +61,7 @@
       >
     </td>
     <td>
-      <button @click="handleActions">
+      <button @click="handleActions(node)">
         <svg
           xmlns="http://www.w3.org/2000/svg"
           viewBox="0 0 16 16"
@@ -145,7 +145,7 @@
       >
     </td>
     <td class="p-4 text-gray-600">
-      <button @click="handleActions">
+      <button @click="handleActions(child)">
         <svg
           xmlns="http://www.w3.org/2000/svg"
           viewBox="0 0 16 16"
@@ -168,26 +168,31 @@ export default {
   props: {
     node: { type: Object, required: true }
   },
+  emits:['requestaction'],
   data() {
     return {
-      isOpen: false
+      isOpen: false,
     }
   },
   computed: {
     hasChildren() {
-      return this.node.group_id != null && this.node.children;
+      return this.node.group_id != null && this.node.children
     }
   },
   methods: {
     toggle() {
       this.isOpen = !this.isOpen
-    }
+    },
+    handleActions(reqObj) {
+      if (reqObj.status == null) {
+        this.$emit('requestaction', {data: reqObj, type: 'regular'});
+      } else {
+        this.$emit('requestaction',  {data: reqObj, type: 'adhoc'});
+      }
+    },
+
   }
 }
 </script>
 
-<style scoped>
-.rotate-180 {
-  transform: rotate(180deg);
-}
-</style>
+<style scoped></style>
