@@ -35,8 +35,15 @@
                   class="mt-2 text-base sm:ml-4 font-semibold leading-6 text-gray-900"
                   id="modal-title"
                 >
-                  Select a department to view overall schedule for
+                  {{ message }}
                 </h3>
+                <span
+                  class="mt-2 sm:ml-4 text-xs flex font-semibold leading-6 text-gray-400"
+                  id="help-text"
+                  v-if="helpMessage!= null"
+                >
+                  {{ helpMessage }}
+                </span>
                 <div class="mt-2">
                   <div class="p-4">
                     <ul class="grid grid-cols-2 mb-4">
@@ -95,7 +102,7 @@ export default {
   data() {
     return {}
   },
-  props: ['options'],
+  props: ['options', 'message', 'helpMessage'],
   methods: {},
   emits: ['optionselected', 'close']
 }
