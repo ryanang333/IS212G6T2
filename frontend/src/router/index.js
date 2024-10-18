@@ -7,6 +7,7 @@ import { isAuthenticated } from '../../utils/localStorage'
 import Schedule from '../views/Schedule.vue'
 import Hello from '../views/Hello.vue'
 import MyRequests from '../views/MyRequests.vue';
+import RequestAudit from '../views/RequestAudit.vue';
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
@@ -49,6 +50,11 @@ const router = createRouter({
       path: '/myrequests',
       name: 'myrequest',
       component: MyRequests,
+    },
+    {
+      path: '/requestaudit',
+      name: 'requestaudit',
+      component: RequestAudit,
     }
   ]
 })
