@@ -3,7 +3,7 @@
     <div>
       <main class="mx-auto max-w-screen-2xl sm:px-20">
         <div class="flex items-baseline justify-between border-b border-gray-200 pb-6 pt-24">
-          <h1 class="text-4xl font-bold tracking-tight text-gray-900">My Requests</h1>
+          <h1 class="text-4xl font-bold tracking-tight text-gray-900">{{ pageTitle }}</h1>
 
           <div class="flex items-center">
             <Menu as="div" class="relative inline-block text-left">
@@ -111,6 +111,19 @@
                   <table class="min-w-full table-auto border-collapse shadow-lg">
                     <thead>
                       <tr class="bg-gray-800 text-white">
+                        <th class="p-4 text-left font-semibold uppercase tracking-wider"></th>
+                        <th
+                          v-if="invokingPage === 'Staff Request'"
+                          class="p-4 text-left font-semibold uppercase tracking-wider"
+                        >
+                          Staff Name
+                        </th>
+                        <th
+                          v-if="invokingPage === 'Staff Request'"
+                          class="p-4 text-left font-semibold uppercase tracking-wider"
+                        >
+                          Position
+                        </th>
                         <th class="p-4 text-left font-semibold uppercase tracking-wider">Date</th>
                         <th class="p-4 text-left font-semibold uppercase tracking-wider">Time</th>
                         <th class="p-4 text-left font-semibold uppercase tracking-wider">Reason</th>
@@ -119,10 +132,11 @@
                       </tr>
                     </thead>
                     <tbody class="bg-white">
-                      <MyRequest
+                      <Request
                         v-for="(node, index) in requests"
                         :key="index"
                         :node="node"
+                        :invokingPage="invokingPage"
                         @requestaction="handleRequestEmit"
                       />
                     </tbody>
@@ -165,12 +179,18 @@ import {
   MenuItems
 } from '@headlessui/vue'
 import { ChevronDownIcon, MinusIcon, PlusIcon } from '@heroicons/vue/20/solid'
-import MyRequest from '../components/MyRequest.vue'
-import { getInStorage } from '../../utils/localStorage.js'
+import Request from '@/components/Request.vue'
+import { getInStorage } from '@/utils/localStorage.js'
 import axios from 'axios'
-import OptionsModal from '../components/OptionsModal.vue'
+import OptionsModal from '@/components/OptionsModal.vue'
 import InputPrompt from '@/components/InputPrompt.vue'
 export default {
+  props: ['invokingPage', 'pageTitle', 'parentSortingOptions', 'parentFilters'],
+  mounted() {
+    this.copyPropsLocally()
+    this.staffId = getInStorage('staff_id')
+    this.fetchArrangementRequests()
+  },
   data() {
     return {
       isOpenOptions: false,
@@ -189,47 +209,12 @@ export default {
       requests: [],
       status: [],
       helpMsg: '**For recurring request(s), the action will only be applied to applicable date(s)',
-      sortOptions: [
-        { name: 'Latest to Oldest', current: true },
-        { name: 'Oldest to Latest', current: false }
-      ],
-      filters: [
-        {
-          id: 'Type',
-          name: 'Request Type',
-          options: [
-            { value: 'Ad-Hoc', label: 'Ad-Hoc', checked: false },
-            { value: 'Regular', label: 'Regular', checked: false },
-            { value: 'All', label: 'All', checked: true }
-          ]
-        },
-        {
-          id: 'Status',
-          name: 'Request Status',
-          options: [
-            { value: 'Pending', label: 'Pending', checked: false },
-            { value: 'Approved', label: 'Approved', checked: false },
-            { value: 'Rejected', label: 'Rejected', checked: false },
-            { value: 'Cancelled', label: 'Cancelled', checked: false },
-            { value: 'Pending Withdrawal', label: 'Pending Withdrawal', checked: false },
-            { value: 'Withdrawn', label: 'Withdrawn', checked: false },
-            { value: 'All', label: 'All', checked: true }
-          ]
-        },
-        {
-          id: 'Date',
-          name: 'Date',
-          options: [
-            { value: 'Upcoming', label: 'Upcoming', checked: true },
-            { value: 'Past', label: 'Past', checked: false },
-            { value: 'All', label: 'All', checked: false }
-          ]
-        }
-      ]
+      sortOptions: [],
+      filters: []
     }
   },
   components: {
-    MyRequest,
+    Request,
     Dialog,
     Disclosure,
     DisclosureButton,
@@ -245,6 +230,10 @@ export default {
     InputPrompt
   },
   methods: {
+    copyPropsLocally() {
+      this.sortOptions = this.parentSortingOptions
+      this.filters = this.parentFilters
+    },
     /**
      * Handles the option chosen by the user from a selection menu.
      * Depending on the chosen option ('Cancel' or 'Withdraw'), it filters the
@@ -267,6 +256,14 @@ export default {
       } else if (event == 'Withdraw') {
         cleanedRequests = this.selectedRequest.filter((req) => req.status == 'Approved')
         this.withdrawArrangementRequests(cleanedRequests)
+      } else if (event == 'Reject Request') {
+        console.log('reject req');
+      } else if (event == 'Approve Request') {
+        console.log('approve req');
+      } else if (event == 'Approve Withdrawal') {
+        console.log('approve withdrawal');
+      } else if (event == 'Reject Withdrawal') {
+        console.log('reject withdrawal');
       }
       this.isOpenOptions = false
     },
@@ -406,15 +403,30 @@ export default {
     checkPossibleOptions(reqArray) {
       const possibleOptions = new Set()
       reqArray.forEach((req) => {
-        switch (req.status) {
-          case 'Approved':
-            possibleOptions.add('Withdraw')
-            break
-          case 'Pending':
-            possibleOptions.add('Cancel')
-            break
-          default:
-            break
+        if (this.invokingPage === 'My Request') {
+          switch (req.status) {
+            case 'Approved':
+              possibleOptions.add('Withdraw')
+              break
+            case 'Pending':
+              possibleOptions.add('Cancel')
+              break
+            default:
+              break
+          }
+        } else if (this.invokingPage === 'Staff Request') {
+          switch (req.status) {
+            case 'Pending':
+              possibleOptions.add('Approve Request')
+              possibleOptions.add('Reject Request')
+              break
+            case 'Pending Withdrawal':
+              possibleOptions.add('Approve Withdrawal')
+              possibleOptions.add('Reject Withdrawal')
+              break
+            default:
+              break
+          }
         }
       })
       return possibleOptions
@@ -434,11 +446,20 @@ export default {
         return
       }
       try {
-        const response = await axios.get('http://localhost:3001/arrangementRequests/staff', {
-          params: { staff_id: this.staffId, status: this.status }
-        })
+        let response
+        if (this.invokingPage === 'My Request') {
+          response = await axios.get('http://localhost:3001/arrangementRequests/staff', {
+            params: { staff_id: this.staffId, status: this.status }
+          })
+        } else if (this.invokingPage === 'Staff Request') {
+          response = await axios.get(
+            `http://localhost:3001/arrangementRequests?manager_id=${this.staffId}`
+          )
+        }
         let data = response.data.data
-        this.fullRequests = await this.convertToTreeData(data)
+        console.log(data)
+        this.fullRequests = this.convertToTreeData(data)
+        console.log(this.fullRequests)
         this.filterRequests()
       } catch (error) {
         const errorMessage = error.response?.data?.message || error.message
@@ -500,7 +521,9 @@ export default {
             })}`,
             children: value,
             reason: value[0].reason,
-            request_time: value[0].request_time
+            request_time: value[0].request_time,
+            staff_name: value[0].staff_name,
+            position: value[0].position
           })
         } else {
           requestsArr.push(...value)
@@ -611,12 +634,15 @@ export default {
         default:
           break
       }
+
       switch (status) {
         case 'Pending':
           filteredRequests = filteredRequests.filter((request) => {
             if (request.group_id) {
               return (
-                request.children && request.children.some((child) => child.status === 'Pending')
+                (request.children &&
+                  request.children.some((child) => child.status === 'Pending')) ||
+                request.status === 'Pending'
               )
             }
             return request.status === 'Pending'
@@ -626,7 +652,9 @@ export default {
           filteredRequests = filteredRequests.filter((request) => {
             if (request.group_id) {
               return (
-                request.children && request.children.some((child) => child.status === 'Approved')
+                (request.children &&
+                  request.children.some((child) => child.status === 'Approved')) ||
+                request.status === 'Approved'
               )
             }
             return request.status === 'Approved'
@@ -636,7 +664,9 @@ export default {
           filteredRequests = filteredRequests.filter((request) => {
             if (request.group_id) {
               return (
-                request.children && request.children.some((child) => child.status === 'Rejected')
+                (request.children &&
+                  request.children.some((child) => child.status === 'Rejected')) ||
+                request.status === 'Rejected'
               )
             }
             return request.status === 'Rejected'
@@ -646,7 +676,9 @@ export default {
           filteredRequests = filteredRequests.filter((request) => {
             if (request.group_id) {
               return (
-                request.children && request.children.some((child) => child.status === 'Cancelled')
+                (request.children &&
+                  request.children.some((child) => child.status === 'Cancelled')) ||
+                request.status === 'Cancelled'
               )
             }
             return request.status === 'Cancelled'
@@ -656,8 +688,9 @@ export default {
           filteredRequests = filteredRequests.filter((request) => {
             if (request.group_id) {
               return (
-                request.children &&
-                request.children.some((child) => child.status === 'Pending Withdrawal')
+                (request.children &&
+                  request.children.some((child) => child.status === 'Pending Withdrawal')) ||
+                request.status === 'Pending Withdrawal'
               )
             }
             return request.status === 'Pending Withdrawal'
@@ -667,7 +700,9 @@ export default {
           filteredRequests = filteredRequests.filter((request) => {
             if (request.group_id) {
               return (
-                request.children && request.children.some((child) => child.status === 'Withdrawn')
+                (request.children &&
+                  request.children.some((child) => child.status === 'Withdrawn')) ||
+                request.status === 'Withdrawn'
               )
             }
             return request.status === 'Withdrawn'
@@ -676,6 +711,7 @@ export default {
         default:
           break
       }
+
       switch (date) {
         case 'Upcoming':
           filteredRequests = filteredRequests.filter((request) => {
@@ -696,10 +732,6 @@ export default {
       }
       this.requests = filteredRequests
     }
-  },
-  mounted() {
-    this.staffId = getInStorage('staff_id')
-    this.fetchArrangementRequests()
   }
 }
 </script>

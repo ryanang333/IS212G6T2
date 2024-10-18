@@ -421,30 +421,91 @@ const findExistingRequests = async ({ staff_id, requestSlots }) => {
   }
 };
 
+/**
+ * Fetches arrangement requests for a specific manager.
+ *
+ * This function retrieves the arrangement requests for the provided manager ID,
+ * and fetches staff details via a lookup operation. It filters for requests
+ * with statuses: "Pending", "Approved", and "Pending Withdrawal".
+ *
+ * @param {Object} req - Express request object.
+ * @param {Object} req.query - Query parameters from the request.
+ * @param {string} req.query.manager_id - Manager ID to filter arrangement requests.
+ * @param {Object} res - Express response object.
+ * @returns {Promise<void>} - Sends a JSON response with fetched arrangement requests
+ * or an error message if a failure occurs.
+ * @throws {Error} - If an error occurs during database aggregation.
+ */
 export const getArrangementRequests = async (req, res) => {
   try {
     const { manager_id } = req.query;
 
     if (!manager_id) {
-      return res.status(400).json({ error: "manager_id is required" });
+      return responseUtils.handleBadRequest(res, "The managerID is required");
     }
 
     const numericManagerId = Number(manager_id);
 
-    const arrangementRequests = await ArrangementRequest.find({
-      manager_id: numericManagerId,
-      status: { $in: ["Pending", "Approved", "Pending Withdrawal"] }, // Fetch both Pending and Approved
-    }).populate("staff");
+    const arrangementRequests = await ArrangementRequest.aggregate([
+      {
+        $match: {
+          manager_id: numericManagerId,
+          status: { $in: ["Pending", "Approved", "Pending Withdrawal"] },
+        },
+      },
+      {
+        $lookup: {
+          from: "staff",
+          localField: "staff_id",
+          foreignField: "staff_id",
+          as: "staffDetails",
+        },
+      },
+      {
+        $unwind: {
+          path: "$staffDetails",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
+        $addFields: {
+          staff_name: {
+            $concat: [
+              { $ifNull: ["$staffDetails.staff_fname", ""] },
+              " ",
+              { $ifNull: ["$staffDetails.staff_lname", ""] },
+            ],
+          },
+          position: { $ifNull: ["$staffDetails.position", ""] },
+        },
+      },
+      {
+        $project: {
+          _id: 1,
+          staff_id: 1,
+          staff_name: 1,
+          status: 1,
+          request_date: 1,
+          group_id: 1,
+          request_time: 1,
+          reason: 1,
+          rejection_reason: 1,
+          withdraw_reason: 1,
+          manager_reason: 1,
+          __v: 1,
+          manager_id: 1,
+          position: 1,
+        },
+      },
+    ]);
 
-    if (arrangementRequests.length === 0) {
-      return res
-        .status(404)
-        .json({ message: "No arrangement requests found for this manager" });
-    }
-
-    res.status(200).json(arrangementRequests);
+    return responseUtils.handleSuccessResponse(
+      res,
+      arrangementRequests,
+      "Requests fetched successfully!"
+    );
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    return responseUtils.handleInternalServerError(res, error.message);
   }
 };
 

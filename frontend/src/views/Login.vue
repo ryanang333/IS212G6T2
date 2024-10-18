@@ -62,8 +62,8 @@
 
 <script>
 import axios from 'axios'
-import { REGEX_NUM } from '../../utils/utils';
-import { saveInStorage } from '../../utils/localStorage'
+import { REGEX_NUM } from '../utils/utils'
+import { saveInStorage } from '../utils/localStorage'
 export default {
   data() {
     return {
@@ -79,12 +79,16 @@ export default {
      * @returns {Promise<void>} - No return value.
      */
     async login() {
-      if (this.staffId === null || this.staffId.trim().length == 0|| !REGEX_NUM.test(this.staffId)) {
+      if (
+        this.staffId === null ||
+        this.staffId.trim().length == 0 ||
+        !REGEX_NUM.test(this.staffId)
+      ) {
         alert('Please enter a valid ID before tryna log in!')
-        return;
+        return
       }
       try {
-        console.log(this.staffId);
+        console.log(this.staffId)
         const response = await axios.get(`http://localhost:3001/staff?staff_id=${this.staffId}`)
         if (response.status === 200) {
           const { data } = response

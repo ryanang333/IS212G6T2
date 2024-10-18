@@ -26,53 +26,55 @@ describe("getArrangementRequests", () => {
     await getArrangementRequests(req, res);
     expect(res.statusCode).toBe(400);
     expect(JSON.parse(res._getData())).toEqual({
-      error: "manager_id is required",
+      message: "The managerID is required",
     });
   });
 
   test("should return a 200 and fetched arrangement requests on success", async () => {
-    ArrangementRequest.find.mockReturnValue({
-      populate: jest
-        .fn()
-        .mockResolvedValue([
-          mockApprovedRegularArrangementRequest,
-          mockApprovedTemporaryArrangementRequest,
-        ]),
-    });
+    ArrangementRequest.aggregate = jest
+      .fn()
+      .mockResolvedValue([
+        mockApprovedRegularArrangementRequest,
+        mockApprovedTemporaryArrangementRequest,
+      ]);
 
     await getArrangementRequests(req, res);
 
-    expect(ArrangementRequest.find).toHaveBeenCalledWith({
-      manager_id: 123,
-      status: { $in: ["Pending", "Approved", "Pending Withdrawal"] },
-    });
+    expect(ArrangementRequest.aggregate).toHaveBeenCalledWith([
+      {
+        $match: {
+          manager_id: 123,
+          status: { $in: ["Pending", "Approved", "Pending Withdrawal"] },
+        },
+      },
+      expect.any(Object),
+      expect.any(Object),
+      expect.any(Object),
+      expect.any(Object),
+    ]);
+
     expect(res.statusCode).toBe(200);
     const response = res._getJSONData();
-    expect(response.length).toBe(2);
+    expect(response.data.length).toBe(2);
   });
 
-  test("should return a 404 if no arrangement requests are found", async () => {
-    ArrangementRequest.find.mockReturnValue({
-      populate: jest.fn().mockResolvedValue([]),
-    });
+  test("should an empty array if no arrangement requests are found", async () => {
+    ArrangementRequest.aggregate = jest.fn().mockResolvedValue([]);
 
     await getArrangementRequests(req, res);
 
-    expect(res.statusCode).toBe(404);
-    expect(JSON.parse(res._getData())).toEqual({
-      message: "No arrangement requests found for this manager",
-    });
+    expect(res.statusCode).toBe(200);
+    const response = res._getJSONData();
+    expect(response.data.length).toBe(0);
   });
 
   test("should return a 500 if an error occurs", async () => {
     const errorMessage = "Database error";
-    ArrangementRequest.find.mockReturnValue({
-      populate: jest.fn().mockRejectedValue(new Error(errorMessage)),
-    });
+    ArrangementRequest.aggregate = jest.fn().mockRejectedValue(new Error("Database error"));
 
     await getArrangementRequests(req, res);
 
     expect(res.statusCode).toBe(500);
-    expect(JSON.parse(res._getData())).toEqual({ error: errorMessage });
+    expect(JSON.parse(res._getData())).toEqual({ message: errorMessage });
   });
 });
