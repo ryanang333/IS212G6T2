@@ -5,8 +5,8 @@ import Login from '../views/Login.vue'
 import { isAuthenticated } from '../utils/localStorage'
 import Schedule from '../views/Schedule.vue'
 import Hello from '../views/Hello.vue'
-import ViewMyRequests from '@/views/ViewMyRequests.vue'
-import ViewStaffRequests from '@/views/ViewStaffRequests.vue'
+import MyRequests from '../views/MyRequests.vue';
+import RequestAudit from '../views/RequestAudit.vue';
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
@@ -41,13 +41,13 @@ const router = createRouter({
     },
     {
       path: '/myrequests',
-      name: 'myrequests',
-      component: ViewMyRequests
+      name: 'myrequest',
+      component: MyRequests,
     },
     {
-      path: '/staffrequests',
-      name: 'staffrequests',
-      component: ViewStaffRequests
+      path: '/requestaudit',
+      name: 'requestaudit',
+      component: RequestAudit,
     }
   ]
 })
