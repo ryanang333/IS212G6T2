@@ -5,9 +5,13 @@ import Login from '../views/Login.vue'
 import { isAuthenticated } from '../utils/localStorage'
 import Schedule from '../views/Schedule.vue'
 import Hello from '../views/Hello.vue'
-import ViewMyRequests from '@/views/ViewMyRequests.vue'
-import ViewStaffRequests from '@/views/ViewStaffRequests.vue'
-import RequestAudit from '@/views/RequestAudit.vue'
+
+const ROLES = {
+  HR_SENIOR_MGMT: 1,
+  STAFF: 2,
+  MGRS_DIRS: 3
+};
+
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
@@ -20,19 +24,25 @@ const router = createRouter({
       path: '/schedule',
       name: 'schedule',
       component: Schedule,
-      meta: { requiresAuth: true }
+      meta: {requiresAuth: true, requiredRoles:[ROLES.HR_SENIOR_MGMT,ROLES.MGRS_DIRS,ROLES.STAFF]},
     },
     {
       path: '/arrangementrequests',
       name: 'arrangementrequests',
       component: ArrangementRequest,
-      meta: { requiresAuth: true }
+      meta: { requiresAuth: true, requiredRoles:[ROLES.MGRS_DIRS]},
+    },
+    {
+      path: '/submittedview',
+      name: 'submittedview',
+      component: SubmittedView,
+      meta: { requiresAuth: true,requiredRoles:[ROLES.HR_SENIOR_MGMT,ROLES.MGRS_DIRS,ROLES.STAFF] },
     },
     {
       path: '/apply',
       name: 'apply',
       component: ApplyArrangement,
-      meta: { requiresAuth: true }
+      meta: { requiresAuth: true,requiredRoles:[ROLES.STAFF] },
     },
     {
       path: '/',
@@ -40,21 +50,12 @@ const router = createRouter({
       component: Hello,
       meta: { requiresAuth: true }
     },
-    {
-      path: '/myrequests',
-      name: 'myrequests',
-      component: ViewMyRequests
-    },
-    {
-      path: '/staffrequests',
-      name: 'staffrequests',
-      component: ViewStaffRequests
-    },
-    {
-      path: '/audit-logs',
-      name: 'requestaudit',
-      component: RequestAudit
-    }
+    // {
+    //   path: '/cancel',
+    //   name: 'cancel',
+    //   component: Cancel ,
+    //   meta: { requiresAuth: true },
+    // }
   ]
 })
 
