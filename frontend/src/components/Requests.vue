@@ -257,13 +257,13 @@ export default {
         cleanedRequests = this.selectedRequest.filter((req) => req.status == 'Approved')
         this.withdrawArrangementRequests(cleanedRequests)
       } else if (event == 'Reject Request') {
-        console.log('reject req');
+        console.log('reject req')
       } else if (event == 'Approve Request') {
-        console.log('approve req');
+        console.log('approve req')
       } else if (event == 'Approve Withdrawal') {
-        console.log('approve withdrawal');
+        console.log('approve withdrawal')
       } else if (event == 'Reject Withdrawal') {
-        console.log('reject withdrawal');
+        console.log('reject withdrawal')
       }
       this.isOpenOptions = false
     },
@@ -359,7 +359,21 @@ export default {
     },
 
     async cancelArrangementRequests(reqArray) {
-      console.log(reqArray)
+      try {
+        const response = await axios.patch(
+          'http://localhost:3001/arrangementRequests/staffcancellation',
+          {
+            requests: reqArray,
+          }
+        )
+        if (response.status === 200) {
+          alert(response.data.message)
+          this.fetchArrangementRequests()
+        }
+      } catch (error) {
+        const errorMessage = error.response?.data?.message || error.message
+        alert(`Error - ${errorMessage}`)
+      }
     },
 
     /**
@@ -520,7 +534,7 @@ export default {
               year: 'numeric'
             })}`,
             children: value,
-            reason: value[0].reason,
+            // reason: value[0].reason,
             request_time: value[0].request_time,
             staff_name: value[0].staff_name,
             position: value[0].position
@@ -529,6 +543,7 @@ export default {
           requestsArr.push(...value)
         }
       }
+      console.log(requestsArr);
       return requestsArr
     },
 

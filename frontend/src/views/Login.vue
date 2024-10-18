@@ -94,7 +94,7 @@ export default {
           const { data } = response
           saveInStorage(data.data)
           alert('Successfully logged in!')
-          this.$router.push('/submittedview')
+          this.$router.push('/schedule')
         }
       } catch (error) {
         const errorMessage = error.response?.data?.message || error.message

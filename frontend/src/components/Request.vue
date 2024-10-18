@@ -37,7 +37,13 @@
       </span>
     </td>
     <td class="p-4 text-gray-600">{{ node.request_time }}</td>
-    <td class="p-4 text-gray-600">{{ node.reason }}</td>
+    <td
+      class="p-4 text-gray-600"
+      v-if="node.status == 'Pending Withdrawal' || node.status == 'Withdrawn'"
+    >
+      {{ node.withdraw_reason }}
+    </td>
+    <td class="p-4 text-gray-600" v-else>{{ node.reason }}</td>
     <td class="p-4 text-gray-600">
       <span
         v-if="node.status == 'Pending'"
@@ -97,13 +103,19 @@
     <td class="ps-4"></td>
     <td v-if="invokingPage === 'Staff Request'" class="ps-4"></td>
     <td v-if="invokingPage === 'Staff Request'" class="ps-4"></td>
-    <td class="p-4" :class="{'pl-10': invokingPage === 'My Request'}">
+    <td class="p-4" :class="{ 'pl-10': invokingPage === 'My Request' }">
       <span class="flex items-center space-x-2">
         <span class="text-gray-800">{{ child.request_date }}</span>
       </span>
     </td>
     <td class="p-4 text-gray-600"></td>
-    <td class="p-4 text-gray-600"></td>
+    <td
+      class="p-4 text-gray-600"
+      v-if="child.status == 'Pending Withdrawal' || child.status == 'Withdrawn'"
+    >
+      {{ child.withdraw_reason }}
+    </td>
+    <td class="p-4 text-gray-600" v-else>{{ child.reason }}</td>
     <td class="p-4 text-gray-600">
       <span
         v-if="child.status == 'Pending'"
