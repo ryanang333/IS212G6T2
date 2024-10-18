@@ -549,6 +549,59 @@ export const extractIdsWithStatus = (reqArray, status) => {
 };
 
 /**
+ * Cancels staff arrangement requests based on request IDs provided in the request body.
+ *
+ * This function expects an array of request objects in the request body,
+ * each containing an ID and a status. It filters out the IDs of requests
+ * with a "Pending" status, and updates their status to "Cancelled".
+ *
+ * @async
+ * @function cancelStaffRequests
+ * @param {Object} req - Express request object.
+ * @param {Object} req.body - Request body.
+ * @param {Array} req.body.requests - Array of requests to be canceled.
+ * @param {string} req.body.requests[].id - ID of the request.
+ * @param {string} req.body.requests[].status - Status of the request.
+ * @param {Object} res - Express response object.
+ * @returns {Promise<void>} Sends a success or error response depending on the outcome.
+ * @throws Will return an internal server error response if the database operation fails.
+ */
+export const cancelStaffRequests = async (req, res) => {
+  const { requests } = req.body;
+
+  if (!Array.isArray(requests) || requests.length === 0) {
+    return responseUtils.handleBadRequest(
+      res,
+      "Please provide valid requests to cancel"
+    );
+  }
+  const cleanedRequestsId = extractIdsWithStatus(requests, "Pending");
+
+  if (cleanedRequestsId.length == 0){
+    return responseUtils.handleBadRequest(res, "Please provide at least one pending request to cancel");
+  }
+
+  try {
+    await ArrangementRequest.updateMany(
+      { _id: { $in: cleanedRequestsId } },
+      {
+        status: "Cancelled",
+      }
+    );
+    return responseUtils.handleSuccessResponse(
+      res,
+      null,
+      "Requests have been cancelled successfully!"
+    );
+  } catch (error) {
+    return responseUtils.handleInternalServerError(
+      res,
+      "Internal server error"
+    );
+  }
+};
+
+/**
  * Withdraws staff requests and updates their status to "Pending Withdrawal".
  *
  * This asynchronous function processes a withdrawal request for multiple arrangement requests.
@@ -578,6 +631,11 @@ export const withdrawStaffRequests = async (req, res) => {
     );
   }
   const cleanedRequestsId = extractIdsWithStatus(requests, "Approved");
+
+  if (cleanedRequestsId.length == 0){
+    return responseUtils.handleBadRequest(res, "Please provide at least one pending request to cancel");
+  }
+  
   try {
     await ArrangementRequest.updateMany(
       { _id: { $in: cleanedRequestsId } },
