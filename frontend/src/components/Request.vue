@@ -1,6 +1,6 @@
 <template>
   <tr class="hover:bg-gray-50 transition-all duration-200 ease-in-out">
-    <td class="p-4">
+    <td class="ps-4">
       <span class="flex items-center space-x-2">
         <button
           v-if="hasChildren"
@@ -23,6 +23,16 @@
             />
           </svg>
         </button>
+      </span>
+    </td>
+    <td v-if="invokingPage === 'Staff Request'" class="p-4 font-medium text-gray-800">
+      {{ node.staff_name }}
+    </td>
+    <td v-if="invokingPage === 'Staff Request'" class="p-4 font-medium text-gray-800">
+      {{ node.position }}
+    </td>
+    <td class="p-4">
+      <span class="flex items-center space-x-2">
         <span class="text-gray-800 font-medium">{{ node.request_date }}</span>
       </span>
     </td>
@@ -84,29 +94,11 @@
     :key="index"
     class="bg-gray-50"
   >
-    <td class="p-4 pl-10">
+    <td class="ps-4"></td>
+    <td v-if="invokingPage === 'Staff Request'" class="ps-4"></td>
+    <td v-if="invokingPage === 'Staff Request'" class="ps-4"></td>
+    <td class="p-4" :class="{'pl-10': invokingPage === 'My Request'}">
       <span class="flex items-center space-x-2">
-        <button
-          v-if="child.hasChildren"
-          @click="child.toggle"
-          class="focus:outline-none transition-transform duration-200"
-          :class="child.isOpen ? 'rotate-90' : 'rotate-0'"
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-            class="w-4 h-4 text-gray-500"
-          >
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M9 5l7 7-7 7"
-            />
-          </svg>
-        </button>
         <span class="text-gray-800">{{ child.request_date }}</span>
       </span>
     </td>
@@ -166,12 +158,13 @@
 <script>
 export default {
   props: {
-    node: { type: Object, required: true }
+    node: { type: Object, required: true },
+    invokingPage: { type: String, required: true }
   },
-  emits:['requestaction'],
+  emits: ['requestaction'],
   data() {
     return {
-      isOpen: false,
+      isOpen: false
     }
   },
   computed: {
@@ -185,12 +178,11 @@ export default {
     },
     handleActions(reqObj) {
       if (reqObj.status == null) {
-        this.$emit('requestaction', {data: reqObj, type: 'regular'});
+        this.$emit('requestaction', { data: reqObj, type: 'regular' })
       } else {
-        this.$emit('requestaction',  {data: reqObj, type: 'adhoc'});
+        this.$emit('requestaction', { data: reqObj, type: 'adhoc' })
       }
-    },
-
+    }
   }
 }
 </script>

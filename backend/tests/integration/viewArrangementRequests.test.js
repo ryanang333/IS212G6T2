@@ -5,9 +5,6 @@ import ArrangementRequest from "../../api/models/arrangementRequestsModel.js";
 import { MongoMemoryServer } from 'mongodb-memory-server-core';
 
 let mongoServer;
-
-jest.setTimeout(120000);
-
 beforeAll(async () => {
   mongoServer = await MongoMemoryServer.create();
   const mongoURI = mongoServer.getUri();
@@ -64,8 +61,8 @@ describe("viewArrangementRequests - Integration Test with MongoDB", () => {
 
     const response = res._getJSONData();
     expect(res.statusCode).toBe(200);
-    expect(response.length).toBe(2);
-    expect(response).toEqual([
+    expect(response.data.length).toBe(2);
+    expect(response.data).toEqual([
       expect.objectContaining({
         staff_id: 140881,
         request_date: new Date("2024-10-03T16:00:00.000Z").toISOString(),
@@ -88,7 +85,7 @@ describe("viewArrangementRequests - Integration Test with MongoDB", () => {
   });
 
   test("should return a 500 if database error occurs", async () => {
-    jest.spyOn(ArrangementRequest, "find").mockImplementation(() => {
+    jest.spyOn(ArrangementRequest, "aggregate").mockImplementation(() => {
       throw new Error("Database error");
     });
     await getArrangementRequests(req, res);

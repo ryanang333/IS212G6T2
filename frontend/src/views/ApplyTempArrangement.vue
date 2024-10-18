@@ -59,7 +59,7 @@
 <script>
 import ApplyArrangementBar from '../components/ApplyArrangementBar.vue'
 import axios from 'axios'
-import { checkDatesValidity } from '../../utils/utils'
+import { checkDatesValidity } from '../utils/utils'
 export default {
   mounted() {
     this.addArrangement()
@@ -73,8 +73,8 @@ export default {
   },
   computed: {
     /**
-     * Determines the text for the submit button. 
-     * If no request is needed -> 'Apply' 
+     * Determines the text for the submit button.
+     * If no request is needed -> 'Apply'
      * Else 'Submit Request'
      */
     submitButtonText() {

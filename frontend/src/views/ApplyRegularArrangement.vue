@@ -59,12 +59,12 @@
 <script>
 import ApplyRegArrangementBar from '../components/ApplyRegArrangementBar.vue'
 import axios from 'axios'
-import { checkDatesValidity } from '../../utils/utils'
-import { getInStorage } from '../../utils/localStorage';
+import { checkDatesValidity } from '../utils/utils'
+import { getInStorage } from '../utils/localStorage'
 export default {
   mounted() {
-    this.staffId = getInStorage('staff_id');
-    this.addArrangement();
+    this.staffId = getInStorage('staff_id')
+    this.addArrangement()
   },
   data() {
     return {
@@ -75,8 +75,8 @@ export default {
   },
   computed: {
     /**
-     * Determines the text for the submit button. 
-     * If no request is needed -> 'Apply' 
+     * Determines the text for the submit button.
+     * If no request is needed -> 'Apply'
      * Else 'Submit Request'
      */
     submitButtonText() {
@@ -105,7 +105,7 @@ export default {
      * @returns {Promise<void>}
      * @throws {Error} Throws an error if the request fails.
      */
-     async makeRequest() {
+    async makeRequest() {
       let data = {
         staffId: this.staffId,
         arrangementRequests: this.arrangements
@@ -178,7 +178,7 @@ export default {
   },
   components: {
     ApplyRegArrangementBar
-  },
+  }
 }
 </script>
 
