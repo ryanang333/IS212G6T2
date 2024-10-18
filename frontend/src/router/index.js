@@ -4,7 +4,9 @@ import SubmittedView from '../views/SubmittedView.vue'
 import ApplyArrangement from '../views/ApplyArrangement.vue'
 import Login from '../views/Login.vue'
 import { isAuthenticated } from '../../utils/localStorage'
-import Hello from '@/views/Hello.vue'
+import Schedule from '../views/Schedule.vue'
+import Hello from '../views/Hello.vue'
+import MyRequests from '../views/MyRequests.vue';
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
@@ -12,6 +14,12 @@ const router = createRouter({
       path: '/login',
       name: 'login',
       component: Login
+    },
+    {
+      path: '/schedule',
+      name: 'schedule',
+      component: Schedule,
+      meta: {requiresAuth: true},
     },
     {
       path: '/arrangementrequests',
@@ -36,6 +44,11 @@ const router = createRouter({
       name: 'home',
       component: Hello,
       meta: { requiresAuth: true },
+    },
+    {
+      path: '/myrequests',
+      name: 'myrequest',
+      component: MyRequests,
     }
   ]
 })

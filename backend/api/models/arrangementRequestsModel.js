@@ -15,7 +15,7 @@ const arrangementRequestSchema = new Schema(
     },
     status: {
       type: String,
-      enum: ['Pending', 'Approved', 'Rejected', 'Canceled', 'Pending Withdrawal', 'Withdrawn'],
+      enum: ['Pending', 'Approved', 'Rejected', 'Cancelled', 'Pending Withdrawal', 'Withdrawn'],
       required: true,
     },
     manager_id: {
