@@ -62,13 +62,14 @@ import axios from 'axios'
 import { checkDatesValidity } from '../utils/utils'
 export default {
   mounted() {
+    this.staffId = getInStorage('staff_id')
     this.addArrangement()
   },
   data() {
     return {
       counter: 0, //Variable used to keep track of the unique ID of each request in the frontend
       arrangements: [],
-      staffId: '140881' //fetch from local storage after authentication is implemented
+      staffId: '' //fetch from local storage after authentication is implemented
     }
   },
   computed: {
