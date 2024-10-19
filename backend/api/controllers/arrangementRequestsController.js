@@ -131,48 +131,33 @@ export const createRegArrangementRequests = async (req, res) => {
         "Arrangement request dates are invalid!"
       );
     }
-
-    // Check if the staff is CEO and approve instantly if true
-    const instantApproval = await approveIfCEO(staffId, allArrangementRequestsClean);
-    if (instantApproval) {
-      return responseUtils.handleCreatedResponse(
-        res,
-        instantApproval,
-        "Request(s) have been instantly approved!"
-      );
-    }
-
-    // Fetch staff details
+    // Function 2 - Get Staff Details
     const staff = await getStaffDetails(staffId);
     if (!staff) {
       return responseUtils.handleNotFound(res, "Staff does not exist!");
     }
+    console.log(staff)
 
-    // Create the requests
+    // Function 3 - CEO?
+    if (staff.position === 'MD') {
+      await createNewCEORequests(allArrangementRequestsClean, staffId, staff.reporting_manager);
+      return responseUtils.handleCreatedResponse(
+        res,
+        true,
+        "Request(s) have been instantly approved for CEO!"
+      );
+    }
+    // Function 4 - Not CEO!
     const createdRequests = await createNewRequests(
       allArrangementRequestsClean,
       staff.staff_id,
       staff.reporting_manager
     );
+    console.log(createdRequests)
 
-    // Initialize alert message and a Set to store unique week start dates
+    // Function 5 - More Than 2 WFH?
+    const weeksWithTooManyRequests = await checkWFHRequestsPerWeek(allArrangementRequestsClean, staffId);
     let alertMessage = "Request created successfully!";
-    const weeksWithTooManyRequests = new Set();
-
-    // Check for WFH requests in each week after creation
-    for (const request of allArrangementRequestsClean) {
-      const { weekStart, weekEnd } = getWeekStartAndEnd(request.date);
-
-      // Find all WFH requests for the staff in the current week (including the newly created ones)
-      const existingRequests = await findExistingRequestsForPendingAndAccepted(staffId, weekStart, weekEnd);
-
-      // If more than 2 requests exist, add the start of the week to the Set (to avoid duplicates)
-      if (existingRequests.length > 2) {
-        weeksWithTooManyRequests.add(weekStart.toDateString()); // Add only the start of the week
-      }
-    }
-
-    // If there are any weeks with too many requests, update the alert message
     if (weeksWithTooManyRequests.size > 0) {
       alertMessage = `Notice! You have more than 2 requests in the week(s) of [${[...weeksWithTooManyRequests].join(', ')}]. Request will be processed and manager will be notified.`;
     }

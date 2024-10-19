@@ -60,6 +60,7 @@
 import ApplyArrangementBar from '../components/ApplyArrangementBar.vue'
 import axios from 'axios'
 import { checkDatesValidity } from '../utils/utils'
+import { getInStorage } from '../utils/localStorage'
 export default {
   mounted() {
     this.staffId = getInStorage('staff_id')
