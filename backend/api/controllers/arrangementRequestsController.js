@@ -601,6 +601,76 @@ export const cancelStaffRequests = async (req, res) => {
   }
 };
 
+export const ApproveWithdrawalRequest = async (req, res) => {
+  const { requests } = req.body;
+
+  if (!Array.isArray(requests) || requests.length === 0) {
+    return responseUtils.handleBadRequest(
+      res,
+      "Please provide valid requests to approve"
+    );
+  }
+  const cleanedRequestsId = extractIdsWithStatus(requests, "Pending Withdrawal");
+
+  if (cleanedRequestsId.length == 0){
+    return responseUtils.handleBadRequest(res, "Please provide at least one pending withdrawal request to approve");
+  }
+
+  try {
+    await ArrangementRequest.updateMany(
+      { _id: { $in: cleanedRequestsId } },
+      {
+        status: "Withdrawn",
+      }
+    );
+    return responseUtils.handleSuccessResponse(
+      res,
+      null,
+      "Withdrawal requests have been approved!"
+    );
+  } catch (error) {
+    return responseUtils.handleInternalServerError(
+      res,
+      "Internal server error"
+    );
+  }
+};
+
+export const RejectWithdrawalRequest = async (req, res) => {
+  const { requests } = req.body;
+
+  if (!Array.isArray(requests) || requests.length === 0) {
+    return responseUtils.handleBadRequest(
+      res,
+      "Please provide valid requests to reject"
+    );
+  }
+  const cleanedRequestsId = extractIdsWithStatus(requests, "Pending Withdrawal");
+
+  if (cleanedRequestsId.length == 0){
+    return responseUtils.handleBadRequest(res, "Please provide at least one pending withdrawal request to reject");
+  }
+
+  try {
+    await ArrangementRequest.updateMany(
+      { _id: { $in: cleanedRequestsId } },
+      {
+        status: "Approved",
+      }
+    );
+    return responseUtils.handleSuccessResponse(
+      res,
+      null,
+      "Requests have been rejected!"
+    );
+  } catch (error) {
+    return responseUtils.handleInternalServerError(
+      res,
+      "Internal server error"
+    );
+  }
+};
+
 /**
  * Withdraws staff requests and updates their status to "Pending Withdrawal".
  *
