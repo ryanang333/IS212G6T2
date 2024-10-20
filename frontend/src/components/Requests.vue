@@ -259,7 +259,8 @@ export default {
       } else if (event == 'Reject Request') {
         console.log('reject req')
       } else if (event == 'Approve Request') {
-        console.log('approve req')
+        cleanedRequests = this.selectedRequest.filter((req) => req.status == 'Pending')
+        this.approveArrangementRequest(cleanedRequests)
       } else if (event == 'Approve Withdrawal') {
         console.log('approve withdrawal')
       } else if (event == 'Reject Withdrawal') {
@@ -268,6 +269,23 @@ export default {
       this.isOpenOptions = false
     },
 
+    async approveArrangementRequest(reqArray) {
+      try {
+        const response = await axios.patch(
+          'http://localhost:3001/arrangementRequests/staffapproval',
+          {
+            requests: reqArray
+          }
+        )
+        if (response.status === 200){
+          alert(response.data.message);
+          this.fetchArrangementRequests();
+        }
+      } catch (error) {
+        const errorMessage = error.response?.data?.message || error.message
+        alert(`Error - ${errorMessage}`)
+      }
+    },
     /**
      * Handles the process of withdrawing arrangement requests.
      * Displays a modal to the user to enter a reason for withdrawal.
@@ -363,7 +381,7 @@ export default {
         const response = await axios.patch(
           'http://localhost:3001/arrangementRequests/staffcancellation',
           {
-            requests: reqArray,
+            requests: reqArray
           }
         )
         if (response.status === 200) {
@@ -543,7 +561,7 @@ export default {
           requestsArr.push(...value)
         }
       }
-      console.log(requestsArr);
+      console.log(requestsArr)
       return requestsArr
     },
 

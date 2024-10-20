@@ -484,6 +484,41 @@ export const extractIdsWithStatus = (reqArray, status) => {
   return reqArray.filter((req) => req.status == status).map((req) => req._id);
 };
 
+export const approveStaffRequests = async (req, res) => {
+  const { requests } = req.body;
+
+  if (!Array.isArray(requests) || requests.length === 0) {
+    return responseUtils.handleBadRequest(
+      res,
+      "Please provide valid requests to approve"
+    );
+  }
+  const cleanedRequestsId = extractIdsWithStatus(requests, "Pending");
+
+  if (cleanedRequestsId.length == 0){
+    return responseUtils.handleBadRequest(res, "Please provide at least one pending request to approve");
+  }
+
+  try {
+    await ArrangementRequest.updateMany(
+      { _id: { $in: cleanedRequestsId } },
+      {
+        status: "Approved",
+      }
+    );
+    return responseUtils.handleSuccessResponse(
+      res,
+      null,
+      "Requests have been approved successfully!"
+    );
+  } catch (error) {
+    return responseUtils.handleInternalServerError(
+      res,
+      "Internal server error"
+    );
+  }
+};
+
 /**
  * Cancels staff arrangement requests based on request IDs provided in the request body.
  *
