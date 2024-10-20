@@ -1,4 +1,4 @@
-import { cancelStaffRequests } from "../../api/controllers/arrangementRequestsController.js";
+import { approveStaffRequests } from "../../api/controllers/arrangementRequestsController.js";
 import mongoose from "mongoose";
 import httpMocks from "node-mocks-http";
 import ArrangementRequest from "../../api/models/arrangementRequestsModel.js";
@@ -25,13 +25,13 @@ afterEach(async () => {
   await ArrangementRequest.deleteMany({});
 });
 
-describe("cancelStaffRequests - Integration Test with MongoDB", () => {
+describe("approveStaffRequests - Integration Test with MongoDB", () => {
   let req, res;
 
   beforeEach(() => {
     req = httpMocks.createRequest({
       method: "PATCH",
-      url: "/arrangementRequests/staffcancellation",
+      url: "/arrangementRequests/staffapproval",
       body: {
         requests: [],
       },
@@ -39,7 +39,7 @@ describe("cancelStaffRequests - Integration Test with MongoDB", () => {
     res = httpMocks.createResponse();
   });
 
-  test("should update the status of an ad-hoc request to Cancelled successfully", async () => {
+  test("should update the status of an ad-hoc request to approved successfully", async () => {
     const request1 = new ArrangementRequest({
       staff_id: 140881,
       request_date: new Date("2024-10-03T16:00:00.000Z"),
@@ -53,19 +53,19 @@ describe("cancelStaffRequests - Integration Test with MongoDB", () => {
 
     req.body.requests = [request1];
 
-    await cancelStaffRequests(req, res);
+    await approveStaffRequests(req, res);
 
     const response = res._getJSONData();
     expect(res.statusCode).toBe(200);
     expect(response.message).toBe(
-      "Requests have been cancelled successfully!"
+      "Requests have been approved successfully!"
     );
 
     const updatedRequest1 = await ArrangementRequest.findById(request1._id);
-    expect(updatedRequest1.status).toBe("Cancelled");
+    expect(updatedRequest1.status).toBe("Approved");
   });
 
-  test("should update the status of a regular request to Cancelled successfully", async () => {
+  test("should update the status of a regular request to Approved successfully", async () => {
     const request1 = new ArrangementRequest({
       staff_id: 140881,
       request_date: new Date("2024-10-03T16:00:00.000Z"),
@@ -90,19 +90,19 @@ describe("cancelStaffRequests - Integration Test with MongoDB", () => {
 
     req.body.requests = [request1, request2];
 
-    await cancelStaffRequests(req, res);
+    await approveStaffRequests(req, res);
 
     const response = res._getJSONData();
     expect(res.statusCode).toBe(200);
     expect(response.message).toBe(
-      "Requests have been cancelled successfully!"
+      "Requests have been approved successfully!"
     );
 
     const updatedRequest1 = await ArrangementRequest.findById(request1._id);
     const updatedRequest2 = await ArrangementRequest.findById(request2._id);
 
-    expect(updatedRequest1.status).toBe("Cancelled");
-    expect(updatedRequest2.status).toBe("Cancelled");
+    expect(updatedRequest1.status).toBe("Approved");
+    expect(updatedRequest2.status).toBe("Approved");
   });
 
   test("should return a 500 if database error occurs", async () => {
@@ -122,7 +122,7 @@ describe("cancelStaffRequests - Integration Test with MongoDB", () => {
     jest.spyOn(ArrangementRequest, "updateMany").mockImplementation(() => {
       throw new Error("Database error");
     });
-    await cancelStaffRequests(req, res);
+    await approveStaffRequests(req, res);
     expect(res.statusCode).toBe(500);
   });
 
@@ -141,7 +141,7 @@ describe("cancelStaffRequests - Integration Test with MongoDB", () => {
         withdraw_reason: "cancel lagh",
       },
     ];
-    await cancelStaffRequests(req, res);
+    await approveStaffRequests(req, res);
     expect(res.statusCode).toBe(400);
   });
 });
