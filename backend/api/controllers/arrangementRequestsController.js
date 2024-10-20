@@ -26,7 +26,7 @@ export const REQUEST_STATUS_APPROVED = "Approved";
 export const createTempArrangementRequests = async (req, res) => {
   try {
     const { staffId, arrangementRequests } = req.body;
-    console.log(arrangementRequests)
+    console.log(arrangementRequests);
 
     // Function 1 - Check Date
     const validationResponse = checkDatesValidity(arrangementRequests);
@@ -36,25 +36,29 @@ export const createTempArrangementRequests = async (req, res) => {
         "Arrangement request dates are invalid!"
       );
     }
-    console.log(validationResponse)
+    console.log(validationResponse);
 
     // Function 2 - Get Staff Details
     const staff = await getStaffDetails(staffId);
     if (!staff) {
       return responseUtils.handleNotFound(res, "Staff does not exist!");
     }
-    console.log(staff)
+    console.log(staff);
 
     // Function 3 - CEO?
-    if (staff.position === 'MD') {
-      await createNewCEORequests(arrangementRequests, staffId, staff.reporting_manager);
+    if (staff.position === "MD") {
+      await createNewCEORequests(
+        arrangementRequests,
+        staffId,
+        staff.reporting_manager
+      );
       return responseUtils.handleCreatedResponse(
         res,
         true,
         "Request(s) have been instantly approved for CEO!"
       );
     }
-    console.log(staff.position)
+    console.log(staff.position);
 
     // Function 4 - Not CEO!
     const createdRequests = await createNewRequests(
@@ -62,13 +66,18 @@ export const createTempArrangementRequests = async (req, res) => {
       staff.staff_id,
       staff.reporting_manager
     );
-    console.log(createdRequests)
-    
+    console.log(createdRequests);
+
     // Function 5 - More Than 2 WFH?
-    const weeksWithTooManyRequests = await checkWFHRequestsPerWeek(arrangementRequests, staffId);
+    const weeksWithTooManyRequests = await checkWFHRequestsPerWeek(
+      arrangementRequests,
+      staffId
+    );
     let alertMessage = "Request created successfully!";
     if (weeksWithTooManyRequests.size > 0) {
-      alertMessage = `Notice! You have more than 2 requests in the week(s) of [${[...weeksWithTooManyRequests].join(', ')}]. Request will be processed and manager will be notified.`;
+      alertMessage = `Notice! You have more than 2 requests in the week(s) of [${[
+        ...weeksWithTooManyRequests,
+      ].join(", ")}]. Request will be processed and manager will be notified.`;
     }
 
     // Done!
@@ -77,7 +86,6 @@ export const createTempArrangementRequests = async (req, res) => {
       createdRequests,
       alertMessage
     );
-
   } catch (error) {
     if (error.message.includes("Cannot apply")) {
       return responseUtils.handleConflict(res, error.message);
@@ -114,8 +122,8 @@ export const createRegArrangementRequests = async (req, res) => {
 
         arrangementRequestsClean.push({
           ...arrangementRequestDirty, // Spread existing properties
-          date: requestDate,          // Override the date
-          group_id: groupID,          // Add a unique group ID for this request
+          date: requestDate, // Override the date
+          group_id: groupID, // Add a unique group ID for this request
         });
       }
 
@@ -136,11 +144,15 @@ export const createRegArrangementRequests = async (req, res) => {
     if (!staff) {
       return responseUtils.handleNotFound(res, "Staff does not exist!");
     }
-    console.log(staff)
+    console.log(staff);
 
     // Function 3 - CEO?
-    if (staff.position === 'MD') {
-      await createNewCEORequests(allArrangementRequestsClean, staffId, staff.reporting_manager);
+    if (staff.position === "MD") {
+      await createNewCEORequests(
+        allArrangementRequestsClean,
+        staffId,
+        staff.reporting_manager
+      );
       return responseUtils.handleCreatedResponse(
         res,
         true,
@@ -153,13 +165,18 @@ export const createRegArrangementRequests = async (req, res) => {
       staff.staff_id,
       staff.reporting_manager
     );
-    console.log(createdRequests)
+    console.log(createdRequests);
 
     // Function 5 - More Than 2 WFH?
-    const weeksWithTooManyRequests = await checkWFHRequestsPerWeek(allArrangementRequestsClean, staffId);
+    const weeksWithTooManyRequests = await checkWFHRequestsPerWeek(
+      allArrangementRequestsClean,
+      staffId
+    );
     let alertMessage = "Request created successfully!";
     if (weeksWithTooManyRequests.size > 0) {
-      alertMessage = `Notice! You have more than 2 requests in the week(s) of [${[...weeksWithTooManyRequests].join(', ')}]. Request will be processed and manager will be notified.`;
+      alertMessage = `Notice! You have more than 2 requests in the week(s) of [${[
+        ...weeksWithTooManyRequests,
+      ].join(", ")}]. Request will be processed and manager will be notified.`;
     }
 
     // Return the response with the appropriate alert message
@@ -168,7 +185,6 @@ export const createRegArrangementRequests = async (req, res) => {
       createdRequests,
       alertMessage
     );
-
   } catch (error) {
     if (error.message.includes("Cannot apply")) {
       return responseUtils.handleConflict(res, error.message);
@@ -484,6 +500,22 @@ export const extractIdsWithStatus = (reqArray, status) => {
   return reqArray.filter((req) => req.status == status).map((req) => req._id);
 };
 
+/**
+ * Approves pending staff requests.
+ *
+ * This function takes a list of requests from the request body, checks if they are valid
+ * and have a "Pending" status, and then updates their status to "Approved". It responds with
+ * appropriate messages based on the outcome.
+ *
+ * @async
+ * @function approveStaffRequests
+ * @param {Object} req - The request object, containing the requests in the body.
+ * @param {Object} req.body - The body of the request.
+ * @param {Array} req.body.requests - An array of request objects.
+ * @param {Object} res - The response object, used to send responses to the client.
+ * @returns {Promise<void>} - Sends a response indicating success or failure of the operation.
+ * @throws {Error} - If there's an internal server error while processing the requests.
+ */
 export const approveStaffRequests = async (req, res) => {
   const { requests } = req.body;
 
@@ -495,8 +527,11 @@ export const approveStaffRequests = async (req, res) => {
   }
   const cleanedRequestsId = extractIdsWithStatus(requests, "Pending");
 
-  if (cleanedRequestsId.length == 0){
-    return responseUtils.handleBadRequest(res, "Please provide at least one pending request to approve");
+  if (cleanedRequestsId.length == 0) {
+    return responseUtils.handleBadRequest(
+      res,
+      "Please provide at least one pending request to approve"
+    );
   }
 
   try {
@@ -510,6 +545,65 @@ export const approveStaffRequests = async (req, res) => {
       res,
       null,
       "Requests have been approved successfully!"
+    );
+  } catch (error) {
+    return responseUtils.handleInternalServerError(
+      res,
+      "Internal server error"
+    );
+  }
+};
+
+/**
+ * Rejects a list of staff arrangement requests by updating their status to "Rejected" and recording the manager's reason.
+ *
+ * @async
+ * @function rejectStaffRequests
+ * @param {Object} req - Express request object containing the request data.
+ * @param {Array} req.body.requests - An array of arrangement requests to be rejected.
+ * @param {string} req.body.reason - The reason provided by the manager for the rejection.
+ * @param {Object} res - Express response object used to send the response back to the client.
+ * @returns {Promise<void>} A promise that resolves when the rejection process is completed.
+ * @throws {Error} Sends an appropriate HTTP response in case of validation failures or server errors.
+ */
+export const rejectStaffRequests = async (req, res) => {
+  const { requests, reason } = req.body;
+
+  if (!Array.isArray(requests) || requests.length === 0) {
+    return responseUtils.handleBadRequest(
+      res,
+      "Please provide valid requests to reject"
+    );
+  }
+
+  if (!reason || reason.trim() == "") {
+    return responseUtils.handleBadRequest(
+      res,
+      "Please provide a reason for rejection"
+    );
+  }
+
+  const cleanedRequestsId = extractIdsWithStatus(requests, "Pending");
+
+  if (cleanedRequestsId.length == 0) {
+    return responseUtils.handleBadRequest(
+      res,
+      "Please provide at least one pending request to reject"
+    );
+  }
+
+  try {
+    await ArrangementRequest.updateMany(
+      { _id: { $in: cleanedRequestsId } },
+      {
+        status: "Rejected",
+        manager_reason: reason,
+      }
+    );
+    return responseUtils.handleSuccessResponse(
+      res,
+      null,
+      "Requests have been rejected successfully!"
     );
   } catch (error) {
     return responseUtils.handleInternalServerError(
@@ -548,8 +642,11 @@ export const cancelStaffRequests = async (req, res) => {
   }
   const cleanedRequestsId = extractIdsWithStatus(requests, "Pending");
 
-  if (cleanedRequestsId.length == 0){
-    return responseUtils.handleBadRequest(res, "Please provide at least one pending request to cancel");
+  if (cleanedRequestsId.length == 0) {
+    return responseUtils.handleBadRequest(
+      res,
+      "Please provide at least one pending request to cancel"
+    );
   }
 
   try {
@@ -603,10 +700,13 @@ export const withdrawStaffRequests = async (req, res) => {
   }
   const cleanedRequestsId = extractIdsWithStatus(requests, "Approved");
 
-  if (cleanedRequestsId.length == 0){
-    return responseUtils.handleBadRequest(res, "Please provide at least one pending request to cancel");
+  if (cleanedRequestsId.length == 0) {
+    return responseUtils.handleBadRequest(
+      res,
+      "Please provide at least one pending request to cancel"
+    );
   }
-  
+
   try {
     await ArrangementRequest.updateMany(
       { _id: { $in: cleanedRequestsId } },
