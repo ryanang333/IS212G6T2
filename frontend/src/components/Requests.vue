@@ -257,7 +257,8 @@ export default {
         cleanedRequests = this.selectedRequest.filter((req) => req.status == 'Approved')
         this.withdrawArrangementRequests(cleanedRequests)
       } else if (event == 'Reject Request') {
-        console.log('reject req')
+        cleanedRequests = this.selectedRequest.filter((req) => req.status == 'Pending')
+        this.rejectArrangementRequest(cleanedRequests)
       } else if (event == 'Approve Request') {
         cleanedRequests = this.selectedRequest.filter((req) => req.status == 'Pending')
         this.approveArrangementRequest(cleanedRequests)
@@ -269,6 +270,56 @@ export default {
       this.isOpenOptions = false
     },
 
+    /**
+     * Rejects a list of arrangement requests after prompting the user for a rejection reason via a modal.
+     *
+     * @async
+     * @function rejectArrangementRequest
+     * @param {Array} reqArray - An array of request objects to be rejected.
+     * @returns {Promise<void>} A promise that resolves when the server processes the rejection request.
+     * @throws {Error} Will throw an error if the request fails, or if the user cancels the modal input.
+     */
+    async rejectArrangementRequest(reqArray) {
+      try {
+        const modalResponse = await this.showModal(
+          'Enter a reason for rejection',
+          'Cancel',
+          'Reject'
+        )
+        if (modalResponse.button === 'Cancel') {
+          return
+        }
+        try {
+          console.log(reqArray)
+          const response = await axios.patch(
+            'http://localhost:3001/arrangementRequests/staffrejection',
+            {
+              requests: reqArray,
+              reason: modalResponse.input
+            }
+          )
+          if (response.status === 200) {
+            alert(response.data.message)
+            this.fetchArrangementRequests()
+          }
+        } catch (error) {
+          const errorMessage = error.response?.data?.message || error.message
+          alert(`Error - ${errorMessage}`)
+        }
+      } catch (error) {
+        console.error(error)
+      }
+    },
+    
+    /**
+     * Approves a list of arrangement requests by sending them to the server for staff approval.
+     *
+     * @async
+     * @function approveArrangementRequest
+     * @param {Array} reqArray - An array of request objects to be approved.
+     * @returns {Promise<void>} A promise that resolves when the server responds to the approval request.
+     * @throws {Error} Will throw an error if the request fails, displaying an alert with the error message.
+     */
     async approveArrangementRequest(reqArray) {
       try {
         const response = await axios.patch(
@@ -277,9 +328,9 @@ export default {
             requests: reqArray
           }
         )
-        if (response.status === 200){
-          alert(response.data.message);
-          this.fetchArrangementRequests();
+        if (response.status === 200) {
+          alert(response.data.message)
+          this.fetchArrangementRequests()
         }
       } catch (error) {
         const errorMessage = error.response?.data?.message || error.message
@@ -489,9 +540,7 @@ export default {
           )
         }
         let data = response.data.data
-        console.log(data)
         this.fullRequests = this.convertToTreeData(data)
-        console.log(this.fullRequests)
         this.filterRequests()
       } catch (error) {
         const errorMessage = error.response?.data?.message || error.message
@@ -561,7 +610,6 @@ export default {
           requestsArr.push(...value)
         }
       }
-      console.log(requestsArr)
       return requestsArr
     },
 
@@ -764,6 +812,7 @@ export default {
           break
       }
       this.requests = filteredRequests
+      console.log(this.requests)
     }
   }
 }

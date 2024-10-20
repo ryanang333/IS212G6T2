@@ -8,7 +8,8 @@ import {
   getTeamSchedule,
   withdrawStaffRequests,
   cancelStaffRequests,
-  approveStaffRequests
+  approveStaffRequests,
+  rejectStaffRequests
 } from "../controllers/arrangementRequestsController.js";
 
 const router = express.Router();
@@ -22,5 +23,6 @@ router.get("/teamschedule", getTeamSchedule);
 router.patch('/staffwithdrawal', withdrawStaffRequests);
 router.patch('/staffcancellation', cancelStaffRequests);
 router.patch('/staffapproval', approveStaffRequests);
+router.patch('/staffrejection', rejectStaffRequests);
 
 export default router;

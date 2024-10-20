@@ -7,7 +7,7 @@ import app from "./backend_start.js";
 console.log("Running!");
 
 (async () => {
-  await connectDB("014_04");
+  await connectDB("015_04");
 
   await populateData();
 
