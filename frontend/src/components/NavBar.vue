@@ -5,14 +5,8 @@
         <router-link to="/apply" class="text-white hover:underline">Make Request</router-link>
       </li>
       <li>
-        <router-link to="/submittedview" class="text-white hover:underline"
-          >Submitted Requests</router-link
-        >
-      </li>
-      <li>
         <router-link to="/myrequests" class="text-white hover:underline">My Requests</router-link>
       </li>
-
       <li><router-link to="/schedule" class="text-white hover:underline">Schedule</router-link></li>
       <li><router-link to="/inbox" class="text-white hover:underline">Inbox</router-link></li>
 
@@ -20,9 +14,9 @@
         <router-link to="/audit-logs" class="text-white hover:underline">Audit Logs</router-link>
       </li>
 
-      <li v-if="role === '3'">
-        <router-link to="/arrangementrequests" class="text-white hover:underline"
-          >Staff Requests for Review</router-link
+      <li v-if="role === '3' || role === '1'">
+        <router-link to="/staffrequests" class="text-white hover:underline"
+          >Staff Requests</router-link
         >
       </li>
     </ul>

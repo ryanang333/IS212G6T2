@@ -1,6 +1,6 @@
 <template>
   <tr class="hover:bg-gray-50 transition-all duration-200 ease-in-out">
-    <td class="p-4">
+    <td class="ps-4">
       <span class="flex items-center space-x-2">
         <button
           v-if="hasChildren"
@@ -23,11 +23,27 @@
             />
           </svg>
         </button>
+      </span>
+    </td>
+    <td v-if="invokingPage === 'Staff Request'" class="p-4 font-medium text-gray-800">
+      {{ node.staff_name }}
+    </td>
+    <td v-if="invokingPage === 'Staff Request'" class="p-4 font-medium text-gray-800">
+      {{ node.position }}
+    </td>
+    <td class="p-4">
+      <span class="flex items-center space-x-2">
         <span class="text-gray-800 font-medium">{{ node.request_date }}</span>
       </span>
     </td>
     <td class="p-4 text-gray-600">{{ node.request_time }}</td>
-    <td class="p-4 text-gray-600">{{ node.reason }}</td>
+    <td
+      class="p-4 text-gray-600"
+      v-if="node.status == 'Pending Withdrawal' || node.status == 'Withdrawn'"
+    >
+      {{ node.withdraw_reason }}
+    </td>
+    <td class="p-4 text-gray-600" v-else>{{ node.reason }}</td>
     <td class="p-4 text-gray-600">
       <span
         v-if="node.status == 'Pending'"
@@ -61,7 +77,7 @@
       >
     </td>
     <td>
-      <button @click="handleActions">
+      <button @click="handleActions(node)">
         <svg
           xmlns="http://www.w3.org/2000/svg"
           viewBox="0 0 16 16"
@@ -84,34 +100,22 @@
     :key="index"
     class="bg-gray-50"
   >
-    <td class="p-4 pl-10">
+    <td class="ps-4"></td>
+    <td v-if="invokingPage === 'Staff Request'" class="ps-4"></td>
+    <td v-if="invokingPage === 'Staff Request'" class="ps-4"></td>
+    <td class="p-4" :class="{ 'pl-10': invokingPage === 'My Request' }">
       <span class="flex items-center space-x-2">
-        <button
-          v-if="child.hasChildren"
-          @click="child.toggle"
-          class="focus:outline-none transition-transform duration-200"
-          :class="child.isOpen ? 'rotate-90' : 'rotate-0'"
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-            class="w-4 h-4 text-gray-500"
-          >
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M9 5l7 7-7 7"
-            />
-          </svg>
-        </button>
         <span class="text-gray-800">{{ child.request_date }}</span>
       </span>
     </td>
     <td class="p-4 text-gray-600"></td>
-    <td class="p-4 text-gray-600"></td>
+    <td
+      class="p-4 text-gray-600"
+      v-if="child.status == 'Pending Withdrawal' || child.status == 'Withdrawn'"
+    >
+      {{ child.withdraw_reason }}
+    </td>
+    <td class="p-4 text-gray-600" v-else>{{ child.reason }}</td>
     <td class="p-4 text-gray-600">
       <span
         v-if="child.status == 'Pending'"
@@ -145,7 +149,7 @@
       >
     </td>
     <td class="p-4 text-gray-600">
-      <button @click="handleActions">
+      <button @click="handleActions(child)">
         <svg
           xmlns="http://www.w3.org/2000/svg"
           viewBox="0 0 16 16"
@@ -166,8 +170,10 @@
 <script>
 export default {
   props: {
-    node: { type: Object, required: true }
+    node: { type: Object, required: true },
+    invokingPage: { type: String, required: true }
   },
+  emits: ['requestaction'],
   data() {
     return {
       isOpen: false
@@ -175,19 +181,22 @@ export default {
   },
   computed: {
     hasChildren() {
-      return this.node.group_id != null && this.node.children;
+      return this.node.group_id != null && this.node.children
     }
   },
   methods: {
     toggle() {
       this.isOpen = !this.isOpen
+    },
+    handleActions(reqObj) {
+      if (reqObj.status == null) {
+        this.$emit('requestaction', { data: reqObj, type: 'regular' })
+      } else {
+        this.$emit('requestaction', { data: reqObj, type: 'adhoc' })
+      }
     }
   }
 }
 </script>
 
-<style scoped>
-.rotate-180 {
-  transform: rotate(180deg);
-}
-</style>
+<style scoped></style>

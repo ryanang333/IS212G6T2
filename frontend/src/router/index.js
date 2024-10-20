@@ -1,12 +1,12 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import ArrangementRequest from '../views/ArrangementRequests.vue'
-import SubmittedView from '../views/SubmittedView.vue'
 import ApplyArrangement from '../views/ApplyArrangement.vue'
 import Login from '../views/Login.vue'
-import { isAuthenticated } from '../../utils/localStorage'
+import { isAuthenticated } from '../utils/localStorage'
 import Schedule from '../views/Schedule.vue'
 import Hello from '../views/Hello.vue'
-import MyRequests from '../views/MyRequests.vue';
+import ViewMyRequests from '@/views/ViewMyRequests.vue'
+import ViewStaffRequests from '@/views/ViewStaffRequests.vue'
 import RequestAudit from '../views/RequestAudit.vue';
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -20,51 +20,40 @@ const router = createRouter({
       path: '/schedule',
       name: 'schedule',
       component: Schedule,
-      meta: {requiresAuth: true},
+      meta: { requiresAuth: true }
     },
     {
       path: '/arrangementrequests',
       name: 'arrangementrequests',
       component: ArrangementRequest,
-      meta: { requiresAuth: true },
-    },
-    {
-      path: '/submittedview',
-      name: 'submittedview',
-      component: SubmittedView,
-      meta: { requiresAuth: true },
+      meta: { requiresAuth: true }
     },
     {
       path: '/apply',
       name: 'apply',
       component: ApplyArrangement,
-      meta: { requiresAuth: true },
+      meta: { requiresAuth: true }
     },
     {
-      path : '/',
+      path: '/',
       name: 'home',
       component: Hello,
-      meta: { requiresAuth: true },
+      meta: { requiresAuth: true }
     },
     {
       path: '/myrequests',
       name: 'myrequest',
       component: MyRequests,
-    },
-    {
-      path: '/requestaudit',
-      name: 'requestaudit',
-      component: RequestAudit,
     }
   ]
 })
 
 router.beforeEach((to, from, next) => {
   if (to.meta.requiresAuth && !isAuthenticated()) {
-      next('/login'); 
+    next('/login')
   } else {
-      next();
+    next()
   }
-});
+})
 
 export default router
