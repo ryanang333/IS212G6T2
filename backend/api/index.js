@@ -3,6 +3,7 @@ import express from 'express';
 import cors from 'cors';
 import staffRoutes from './routes/staffRoutes.js';
 import arrangementRequestsRoutes from './routes/arrangementRequestsRoutes.js';
+import requestAuditRoutes from './routes/requestAuditRoutes.js';
 import connectDB from '../config/db.config.js'; 
 
 dotenv.config();
@@ -24,6 +25,7 @@ app.get("/", (req, res) => {
 
 app.use('/staff', staffRoutes);
 app.use('/arrangementRequests', arrangementRequestsRoutes);
+app.use('/requestAudit', requestAuditRoutes);
 
 
 app.listen(process.env.PORT, () => {
