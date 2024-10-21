@@ -9,7 +9,9 @@ import {
   withdrawStaffRequests,
   cancelStaffRequests,
   ApproveWithdrawalRequest,
-  RejectWithdrawalRequest
+  RejectWithdrawalRequest,
+  approveStaffRequests,
+  rejectStaffRequests
 } from "../controllers/arrangementRequestsController.js";
 
 const router = express.Router();
@@ -24,5 +26,6 @@ router.patch('/staffwithdrawal', withdrawStaffRequests);
 router.patch('/staffcancellation', cancelStaffRequests);
 router.patch('/approveWithdrawal', ApproveWithdrawalRequest);
 router.patch('/rejectWithdrawal', RejectWithdrawalRequest);
-
+router.patch('/staffapproval', approveStaffRequests);
+router.patch('/staffrejection', rejectStaffRequests);
 export default router;
