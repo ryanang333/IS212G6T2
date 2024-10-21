@@ -8,43 +8,14 @@ import {
 import * as responseUtils from "../utils/responseUtils.js";
 import { v4 as uuidv4 } from "uuid"; // Used to generate group_id
 
+import {
+  createNewCEORequests,
+  createNewRequests,
+  checkWFHRequestsPerWeek,
+} from "../utils/creationUtils.js";
 export const REQUEST_STATUS_PENDING = "Pending";
 export const REQUEST_STATUS_NONE = "N/A";
 export const REQUEST_STATUS_APPROVED = "Approved";
-
-/**
- * Approves arrangement request instantly if staff is CEO.
- * @param {string} staffId - The ID of the staff member.
- * @param {Array<Object>} arrangementRequests - The array of arrangement request objects.
- * @returns {Promise<Array|boolean>} - A promise that resolves to an array of approved requests or false if not the CEO.
- */
-const approveIfCEO = async (staffId, arrangementRequests) => {
-  if (staffId === "00001") {
-    // Instantly approve the request if the staff is CEO
-    const reqArr = await ArrangementRequest.insertMany(
-      arrangementRequests.map((req) => ({
-        staff_id: staffId,
-        request_date: new Date(req.date),
-        status: "Approved", // Instantly approve
-        manager_id: "00001", // is his own id
-        request_time: req.time,
-        group_id: req.group_id || null,
-        reason: req.reason,
-      }))
-    );
-    if (reqArr.length > 0) {
-      await createAuditEntry(
-        reqArr,
-        staffId,
-        REQUEST_STATUS_NONE,
-        REQUEST_STATUS_APPROVED
-      );
-    }
-    return true;
-    //Create audit logs
-  }
-  return false;
-};
 
 /**
  * Creates temporary arrangement requests for a staff member.
@@ -55,7 +26,9 @@ const approveIfCEO = async (staffId, arrangementRequests) => {
 export const createTempArrangementRequests = async (req, res) => {
   try {
     const { staffId, arrangementRequests } = req.body;
+    console.log(arrangementRequests);
 
+    // Function 1 - Check Date
     const validationResponse = checkDatesValidity(arrangementRequests);
     if (!validationResponse.isValid) {
       return responseUtils.handleBadRequest(
@@ -63,30 +36,154 @@ export const createTempArrangementRequests = async (req, res) => {
         "Arrangement request dates are invalid!"
       );
     }
+    console.log(validationResponse);
 
-    // Check if the staff is CEO and approve instantly if true
-    const instantApproval = await approveIfCEO(staffId, arrangementRequests);
-    if (instantApproval) {
-      return responseUtils.handleCreatedResponse(
-        res,
-        instantApproval,
-        "Request(s) have been instantly approved!"
-      );
-    }
-
+    // Function 2 - Get Staff Details
     const staff = await getStaffDetails(staffId);
     if (!staff) {
       return responseUtils.handleNotFound(res, "Staff does not exist!");
     }
+    console.log(staff);
 
+    // Function 3 - CEO?
+    if (staff.position === "MD") {
+      await createNewCEORequests(
+        arrangementRequests,
+        staffId,
+        staff.reporting_manager
+      );
+      return responseUtils.handleCreatedResponse(
+        res,
+        true,
+        "Request(s) have been instantly approved for CEO!"
+      );
+    }
+    console.log(staff.position);
+
+    // Function 4 - Not CEO!
+    const createdRequests = await createNewRequests(
+      arrangementRequests,
+      staff.staff_id,
+      staff.reporting_manager
+    );
+    console.log(createdRequests);
+
+    // Function 5 - More Than 2 WFH?
+    const weeksWithTooManyRequests = await checkWFHRequestsPerWeek(
+      arrangementRequests,
+      staffId
+    );
+    let alertMessage = "Request created successfully!";
+    if (weeksWithTooManyRequests.size > 0) {
+      alertMessage = `Notice! You have more than 2 requests in the week(s) of [${[
+        ...weeksWithTooManyRequests,
+      ].join(", ")}]. Request will be processed and manager will be notified.`;
+    }
+
+    // Done!
     return responseUtils.handleCreatedResponse(
       res,
-      await createNewRequests(
-        arrangementRequests,
-        staff.staff_id,
+      createdRequests,
+      alertMessage
+    );
+  } catch (error) {
+    if (error.message.includes("Cannot apply")) {
+      return responseUtils.handleConflict(res, error.message);
+    }
+    return responseUtils.handleInternalServerError(res, error.message);
+  }
+};
+
+export const createRegArrangementRequests = async (req, res) => {
+  try {
+    const { staffId, arrangementRequests } = req.body;
+
+    // Create an array to hold all the clean arrangement requests
+    const allArrangementRequestsClean = [];
+
+    // Loop through each arrangement request
+    for (const arrangementRequestDirty of arrangementRequests) {
+      // Generate a unique group ID for each arrangement request
+      const groupID = uuidv4();
+
+      // Convert the recurring weeks into individual dates for each arrangement request
+      const startDate = new Date(arrangementRequestDirty.startDate);
+      const recurringInterval = parseInt(
+        arrangementRequestDirty.recurringInterval.replace("week", ""),
+        10
+      ); // Get the interval in weeks
+      const numEvents = arrangementRequestDirty.numEvents;
+      const arrangementRequestsClean = [];
+
+      // Generate individual requests based on the number of events
+      for (let i = 0; i < numEvents; i++) {
+        const requestDate = new Date(startDate);
+        requestDate.setDate(requestDate.getDate() + i * recurringInterval * 7);
+
+        arrangementRequestsClean.push({
+          ...arrangementRequestDirty, // Spread existing properties
+          date: requestDate, // Override the date
+          group_id: groupID, // Add a unique group ID for this request
+        });
+      }
+
+      // Add the cleaned requests for this arrangement request to the main array
+      allArrangementRequestsClean.push(...arrangementRequestsClean);
+    }
+
+    // Check dates for all requests
+    const validationResponse = checkDatesValidity(allArrangementRequestsClean);
+    if (!validationResponse.isValid) {
+      return responseUtils.handleBadRequest(
+        res,
+        "Arrangement request dates are invalid!"
+      );
+    }
+    // Function 2 - Get Staff Details
+    const staff = await getStaffDetails(staffId);
+    if (!staff) {
+      return responseUtils.handleNotFound(res, "Staff does not exist!");
+    }
+    console.log(staff);
+
+    // Function 3 - CEO?
+    if (staff.position === "MD") {
+      await createNewCEORequests(
+        allArrangementRequestsClean,
+        staffId,
         staff.reporting_manager
-      ),
-      "Request(s) have been submitted successfully!"
+      );
+      return responseUtils.handleCreatedResponse(
+        res,
+        true,
+        "Request(s) have been instantly approved for CEO!"
+      );
+    }
+    // Function 4 - Not CEO!
+    const createdRequests = await createNewRequests(
+      allArrangementRequestsClean,
+      staff.staff_id,
+      staff.reporting_manager
+    );
+    console.log(createdRequests);
+
+    // Function 5 - More Than 2 WFH?
+    const weeksWithTooManyRequests = await checkWFHRequestsPerWeek(
+      allArrangementRequestsClean,
+      staffId
+    );
+    let alertMessage = "Request created successfully!";
+    if (weeksWithTooManyRequests.size > 0) {
+      alertMessage = `Notice! You have more than 2 requests in the week(s) of [${[
+        ...weeksWithTooManyRequests,
+      ].join(", ")}]. Request will be processed and manager will be notified.`;
+    }
+
+    // Return the response with the appropriate alert message
+    return responseUtils.handleCreatedResponse(
+      res,
+      createdRequests,
+      alertMessage
     );
   } catch (error) {
     if (error.message.includes("Cannot apply")) {
@@ -246,124 +343,6 @@ export const getOwnSchedule = async (req, res) => {
   }
 };
 
-export const createRegArrangementRequests = async (req, res) => {
-  try {
-    const { staffId, arrangementRequests } = req.body;
-    const arrangementRequestsDirty = arrangementRequests[0];
-
-    // Uses UUID module to gen unique group ID - Note that it is a string
-    const groupID = uuidv4();
-
-    // Convert the recurring weeks into individual dates for arrangement requests
-    const startDate = new Date(arrangementRequestsDirty.startDate);
-    const recurringInterval = parseInt(
-      arrangementRequestsDirty.recurringInterval.replace("week", ""),
-      10
-    ); // Get the interval in weeks
-    const numEvents = arrangementRequestsDirty.numEvents;
-    const newRequests = [];
-
-    for (let i = 0; i < numEvents; i++) {
-      const requestDate = new Date(startDate);
-      requestDate.setDate(requestDate.getDate() + i * recurringInterval * 7);
-
-      newRequests.push({
-        date: requestDate,
-        time: arrangementRequestsDirty.time,
-        reason: arrangementRequestsDirty.reason,
-        group_id: groupID,
-      });
-    }
-    const validationResponse = checkDatesValidity(arrangementRequests);
-    if (!validationResponse.isValid) {
-      return responseUtils.handleBadRequest(
-        res,
-        "Arrangement request dates are invalid!"
-      );
-    }
-    // Check if the staff is CEO and approve instantly if true
-    const instantApproval = await approveIfCEO(staffId, newRequests);
-    if (instantApproval) {
-      return responseUtils.handleCreatedResponse(
-        res,
-        instantApproval,
-        "Request(s) have been instantly approved!"
-      );
-    }
-
-    // Fetch staff details
-    const staff = await getStaffDetails(staffId);
-    if (!staff) {
-      return responseUtils.handleNotFound(res, "Staff does not exist!");
-    }
-
-    // Create new arrangement requests
-    const createdRequests = await createNewRequests(
-      newRequests,
-      staff.staff_id,
-      staff.reporting_manager
-    );
-
-    return responseUtils.handleCreatedResponse(
-      res,
-      createdRequests,
-      "Request(s) have been submitted successfully!"
-    );
-  } catch (error) {
-    if (error.message.includes("Cannot apply")) {
-      return responseUtils.handleConflict(res, error.message);
-    }
-    return responseUtils.handleInternalServerError(res, error.message);
-  }
-};
-
-/**
- * Creates new arrangement requests if there are no existing requests for the specified slots.
- * @param {Array<Object>} arrangementRequests - The array of arrangement request objects.
- * @param {number} staffId - The ID of the staff member.
- * @param {number} managerId - The ID of the staff member's manager.
- * @returns {Promise<Array|boolean>} - A promise that resolves to an array of created requests or false if requests already exist.
- */
-const createNewRequests = async (arrangementRequests, staffId, managerId) => {
-  try {
-    const requests = arrangementRequests.map((req) => ({
-      date: new Date(req.date),
-    }));
-    const existingRequests = await findExistingRequests({
-      staff_id: staffId,
-      requestSlots: requests,
-    });
-
-    checkIfDatesOverlap(existingRequests, arrangementRequests);
-
-    const reqArr = await ArrangementRequest.insertMany(
-      arrangementRequests.map((req) => ({
-        staff_id: staffId,
-        request_date: new Date(req.date),
-        status: "Pending",
-        manager_id: managerId,
-        request_time: req.time,
-        group_id: req.group_id || null,
-        reason: req.reason,
-      }))
-    );
-
-    if (reqArr.length > 0) {
-      await createAuditEntry(
-        reqArr,
-        staffId,
-        REQUEST_STATUS_NONE,
-        REQUEST_STATUS_PENDING
-      );
-    }
-  } catch (error) {
-    const msg = error.message.includes("Cannot apply")
-      ? error.message
-      : "Failed to create arrangement requests";
-    throw new Error(msg);
-  }
-};
-
 /**
  * Retrieves approved arrangement requests for a specific staff member between given dates.
  *
@@ -389,33 +368,6 @@ export const findExistingRequestsBetweenDates = async (
       },
       status: "Approved",
     });
-  } catch (error) {
-    throw new Error("Failed to fetch existing requests");
-  }
-};
-
-/**
- * Finds existing arrangement requests based on provided filters.
- * @param {Object} filters - The filters to apply.
- * @param {string} [filters.staff_id] - The ID of the staff member.
- * @param {Array<Object>} [filters.requestSlots] - An array of request slots, each containing date and time.
- * @returns {Promise<Array>} - A promise that resolves to an array of existing requests.
- */
-const findExistingRequests = async ({ staff_id, requestSlots }) => {
-  const query = {};
-
-  if (staff_id) {
-    query.staff_id = staff_id;
-  }
-
-  if (requestSlots && requestSlots.length > 0) {
-    query.$or = requestSlots.map((slot) => ({
-      request_date: slot.date,
-    }));
-  }
-
-  try {
-    return await ArrangementRequest.find(query);
   } catch (error) {
     throw new Error("Failed to fetch existing requests");
   }
@@ -549,6 +501,119 @@ export const extractIdsWithStatus = (reqArray, status) => {
 };
 
 /**
+ * Approves pending staff requests.
+ *
+ * This function takes a list of requests from the request body, checks if they are valid
+ * and have a "Pending" status, and then updates their status to "Approved". It responds with
+ * appropriate messages based on the outcome.
+ *
+ * @async
+ * @function approveStaffRequests
+ * @param {Object} req - The request object, containing the requests in the body.
+ * @param {Object} req.body - The body of the request.
+ * @param {Array} req.body.requests - An array of request objects.
+ * @param {Object} res - The response object, used to send responses to the client.
+ * @returns {Promise<void>} - Sends a response indicating success or failure of the operation.
+ * @throws {Error} - If there's an internal server error while processing the requests.
+ */
+export const approveStaffRequests = async (req, res) => {
+  const { requests } = req.body;
+
+  if (!Array.isArray(requests) || requests.length === 0) {
+    return responseUtils.handleBadRequest(
+      res,
+      "Please provide valid requests to approve"
+    );
+  }
+  const cleanedRequestsId = extractIdsWithStatus(requests, "Pending");
+
+  if (cleanedRequestsId.length == 0) {
+    return responseUtils.handleBadRequest(
+      res,
+      "Please provide at least one pending request to approve"
+    );
+  }
+
+  try {
+    await ArrangementRequest.updateMany(
+      { _id: { $in: cleanedRequestsId } },
+      {
+        status: "Approved",
+      }
+    );
+    return responseUtils.handleSuccessResponse(
+      res,
+      null,
+      "Requests have been approved successfully!"
+    );
+  } catch (error) {
+    return responseUtils.handleInternalServerError(
+      res,
+      "Internal server error"
+    );
+  }
+};
+
+/**
+ * Rejects a list of staff arrangement requests by updating their status to "Rejected" and recording the manager's reason.
+ *
+ * @async
+ * @function rejectStaffRequests
+ * @param {Object} req - Express request object containing the request data.
+ * @param {Array} req.body.requests - An array of arrangement requests to be rejected.
+ * @param {string} req.body.reason - The reason provided by the manager for the rejection.
+ * @param {Object} res - Express response object used to send the response back to the client.
+ * @returns {Promise<void>} A promise that resolves when the rejection process is completed.
+ * @throws {Error} Sends an appropriate HTTP response in case of validation failures or server errors.
+ */
+export const rejectStaffRequests = async (req, res) => {
+  const { requests, reason } = req.body;
+
+  if (!Array.isArray(requests) || requests.length === 0) {
+    return responseUtils.handleBadRequest(
+      res,
+      "Please provide valid requests to reject"
+    );
+  }
+
+  if (!reason || reason.trim() == "") {
+    return responseUtils.handleBadRequest(
+      res,
+      "Please provide a reason for rejection"
+    );
+  }
+
+  const cleanedRequestsId = extractIdsWithStatus(requests, "Pending");
+
+  if (cleanedRequestsId.length == 0) {
+    return responseUtils.handleBadRequest(
+      res,
+      "Please provide at least one pending request to reject"
+    );
+  }
+
+  try {
+    await ArrangementRequest.updateMany(
+      { _id: { $in: cleanedRequestsId } },
+      {
+        status: "Rejected",
+        manager_reason: reason,
+      }
+    );
+    return responseUtils.handleSuccessResponse(
+      res,
+      null,
+      "Requests have been rejected successfully!"
+    );
+  } catch (error) {
+    return responseUtils.handleInternalServerError(
+      res,
+      "Internal server error"
+    );
+  }
+};
+
+/**
  * Cancels staff arrangement requests based on request IDs provided in the request body.
  *
  * This function expects an array of request objects in the request body,
@@ -577,8 +642,11 @@ export const cancelStaffRequests = async (req, res) => {
   }
   const cleanedRequestsId = extractIdsWithStatus(requests, "Pending");
 
-  if (cleanedRequestsId.length == 0){
-    return responseUtils.handleBadRequest(res, "Please provide at least one pending request to cancel");
+  if (cleanedRequestsId.length == 0) {
+    return responseUtils.handleBadRequest(
+      res,
+      "Please provide at least one pending request to cancel"
+    );
   }
 
   try {
@@ -702,10 +770,13 @@ export const withdrawStaffRequests = async (req, res) => {
   }
   const cleanedRequestsId = extractIdsWithStatus(requests, "Approved");
 
-  if (cleanedRequestsId.length == 0){
-    return responseUtils.handleBadRequest(res, "Please provide at least one pending request to cancel");
+  if (cleanedRequestsId.length == 0) {
+    return responseUtils.handleBadRequest(
+      res,
+      "Please provide at least one pending request to cancel"
+    );
   }
-  
+
   try {
     await ArrangementRequest.updateMany(
       { _id: { $in: cleanedRequestsId } },
