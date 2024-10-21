@@ -263,8 +263,12 @@ export default {
         cleanedRequests = this.selectedRequest.filter((req) => req.status == 'Pending')
         this.approveArrangementRequest(cleanedRequests)
       } else if (event == 'Approve Withdrawal') {
+        cleanedRequests = this.selectedRequest.filter((req) => req.status == 'Pending Withdrawal')
+        this.ApproveWithdrawalRequests(cleanedRequests)
         console.log('approve withdrawal')
       } else if (event == 'Reject Withdrawal') {
+        cleanedRequests = this.selectedRequest.filter((req) => req.status == 'Pending Withdrawal')
+        this.RejectWithdrawalRequests(cleanedRequests)
         console.log('reject withdrawal')
       }
       this.isOpenOptions = false
@@ -445,6 +449,41 @@ export default {
       }
     },
 
+    async ApproveWithdrawalRequests(reqArray) {
+      try {
+        const response = await axios.patch(
+          'http://localhost:3001/arrangementRequests/approveWithdrawal',
+          {
+            requests: reqArray,
+          }
+        )
+        if (response.status === 200) {
+          alert(response.data.message)
+          this.fetchArrangementRequests()
+        }
+      } catch (error) {
+        const errorMessage = error.response?.data?.message || error.message
+        alert(`Error - ${errorMessage}`)
+      }
+    },
+
+    async RejectWithdrawalRequests(reqArray) {
+      try {
+        const response = await axios.patch(
+          'http://localhost:3001/arrangementRequests/rejectWithdrawal',
+          {
+            requests: reqArray,
+          }
+        )
+        if (response.status === 200) {
+          alert(response.data.message)
+          this.fetchArrangementRequests()
+        }
+      } catch (error) {
+        const errorMessage = error.response?.data?.message || error.message
+        alert(`Error - ${errorMessage}`)
+      }
+    },
     /**
      * Handles the emission of a request event and determines possible options
      * based on the request's type and status.
