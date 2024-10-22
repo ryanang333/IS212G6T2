@@ -798,6 +798,51 @@ export const withdrawStaffRequests = async (req, res) => {
   }
 };
 
+export const withdrawRequestsAsManager = async (req, res) => {
+  const { requests, reason } = req.body;
+
+  if (!Array.isArray(requests) || requests.length === 0) {
+    return responseUtils.handleBadRequest(
+      res,
+      "Please provide valid requests to withdraw"
+    );
+  }
+  if (!reason || reason.trim() === "") {
+    return responseUtils.handleBadRequest(
+      res,
+      "Please provide a valid reason to withdraw"
+    );
+  }
+  const cleanedRequestsId = extractIdsWithStatus(requests, "Approved");
+
+  if (cleanedRequestsId.length == 0) {
+    return responseUtils.handleBadRequest(
+      res,
+      "Please provide at least one pending request to cancel"
+    );
+  }
+
+  try {
+    await ArrangementRequest.updateMany(
+      { _id: { $in: cleanedRequestsId } },
+      {
+        status: "Withdrawn",
+        withdraw_reason: reason,
+      }
+    );
+    return responseUtils.handleSuccessResponse(
+      res,
+      null,
+      "Requests have been withdrawn successfully!"
+    );
+  } catch (error) {
+    return responseUtils.handleInternalServerError(
+      res,
+      "Internal server error"
+    );
+  }
+};
+
 export const updateIndividualRequestStatus = async (req, res) => {
   const { id } = req.params; // Extract the request ID from URL params
   const { status, withdraw_reason, manager_reason } = req.body; // Get the new status from the request body

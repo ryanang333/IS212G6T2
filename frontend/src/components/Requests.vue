@@ -256,6 +256,9 @@ export default {
       } else if (event == 'Withdraw') {
         cleanedRequests = this.selectedRequest.filter((req) => req.status == 'Approved')
         this.withdrawArrangementRequests(cleanedRequests)
+      } else if (event == 'Withdraw Approval') {
+        cleanedRequests = this.selectedRequest.filter((req) => req.status == 'Approved')
+        this.withdrawApprovedRequests(cleanedRequests)
       } else if (event == 'Reject Request') {
         cleanedRequests = this.selectedRequest.filter((req) => req.status == 'Pending')
         this.rejectArrangementRequest(cleanedRequests)
@@ -265,15 +268,43 @@ export default {
       } else if (event == 'Approve Withdrawal') {
         cleanedRequests = this.selectedRequest.filter((req) => req.status == 'Pending Withdrawal')
         this.ApproveWithdrawalRequests(cleanedRequests)
-        console.log('approve withdrawal')
       } else if (event == 'Reject Withdrawal') {
         cleanedRequests = this.selectedRequest.filter((req) => req.status == 'Pending Withdrawal')
         this.RejectWithdrawalRequests(cleanedRequests)
-        console.log('reject withdrawal')
       }
       this.isOpenOptions = false
     },
 
+    async withdrawApprovedRequests(reqArray) {
+      try {
+        const modalResponse = await this.showModal(
+          'Enter a reason for withdrawal',
+          'Cancel',
+          'Withdraw'
+        )
+        if (modalResponse.button === 'Cancel') {
+          return
+        }
+        try {
+          const response = await axios.patch(
+            'http://localhost:3001/arrangementRequests/managerwithdrawal',
+            {
+              requests: reqArray,
+              reason: modalResponse.input
+            }
+          )
+          if (response.status === 200) {
+            alert(response.data.message)
+            this.fetchArrangementRequests()
+          }
+        } catch (error) {
+          const errorMessage = error.response?.data?.message || error.message
+          alert(`Error - ${errorMessage}`)
+        }
+      } catch (error) {
+        console.error(error)
+      }
+    },
     /**
      * Rejects a list of arrangement requests after prompting the user for a rejection reason via a modal.
      *
@@ -314,7 +345,7 @@ export default {
         console.error(error)
       }
     },
-    
+
     /**
      * Approves a list of arrangement requests by sending them to the server for staff approval.
      *
@@ -545,6 +576,9 @@ export default {
             case 'Pending Withdrawal':
               possibleOptions.add('Approve Withdrawal')
               possibleOptions.add('Reject Withdrawal')
+              break
+            case 'Approved':
+              possibleOptions.add('Withdraw Approval')
               break
             default:
               break
@@ -851,7 +885,6 @@ export default {
           break
       }
       this.requests = filteredRequests
-      console.log(this.requests)
     }
   }
 }
