@@ -23,6 +23,5 @@ router.get("/teamschedule", getTeamSchedule);
 router.patch('/staffwithdrawal', withdrawStaffRequests);
 router.patch('/staffcancellation', cancelStaffRequests);
 router.patch('/approveWithdrawal',ApproveWithdrawalRequest)
-router.patch('/approveWithdrawal',ApproveWithdrawalRequest)
 router.patch('/rejectWithdrawal',RejectWithdrawalRequest)
 export default router;
