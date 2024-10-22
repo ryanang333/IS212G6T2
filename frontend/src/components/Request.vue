@@ -43,7 +43,11 @@
     >
       {{ node.withdraw_reason }}
     </td>
+    <td class="p-4 text-gray-600" v-else-if="node.status == 'Rejected'">
+      {{ node.manager_reason }}
+    </td>
     <td class="p-4 text-gray-600" v-else>{{ node.reason }}</td>
+
     <td class="p-4 text-gray-600">
       <span
         v-if="node.status == 'Pending'"
@@ -114,6 +118,9 @@
       v-if="child.status == 'Pending Withdrawal' || child.status == 'Withdrawn'"
     >
       {{ child.withdraw_reason }}
+    </td>
+    <td class="p-4 text-gray-600" v-else-if="child.status == 'Rejected'">
+      {{ child.manager_reason }}
     </td>
     <td class="p-4 text-gray-600" v-else>{{ child.reason }}</td>
     <td class="p-4 text-gray-600">

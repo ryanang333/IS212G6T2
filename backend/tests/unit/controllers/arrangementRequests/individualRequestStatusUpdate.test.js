@@ -1,4 +1,4 @@
-import { updateRequestStatus, updateIndividualRequestStatus } from '../../../../api/controllers/arrangementRequestsController';
+import { updateIndividualRequestStatus } from '../../../../api/controllers/arrangementRequestsController';
 import ArrangementRequest from '../../../../api/models/arrangementRequestsModel';
 import httpMocks from 'node-mocks-http';
 

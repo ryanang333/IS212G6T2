@@ -256,18 +256,122 @@ export default {
       } else if (event == 'Withdraw') {
         cleanedRequests = this.selectedRequest.filter((req) => req.status == 'Approved')
         this.withdrawArrangementRequests(cleanedRequests)
+      } else if (event == 'Withdraw Approval') {
+        cleanedRequests = this.selectedRequest.filter((req) => req.status == 'Approved')
+        this.withdrawApprovedRequests(cleanedRequests)
       } else if (event == 'Reject Request') {
-        console.log('reject req')
+        cleanedRequests = this.selectedRequest.filter((req) => req.status == 'Pending')
+        this.rejectArrangementRequest(cleanedRequests)
       } else if (event == 'Approve Request') {
-        console.log('approve req')
+        cleanedRequests = this.selectedRequest.filter((req) => req.status == 'Pending')
+        this.approveArrangementRequest(cleanedRequests)
       } else if (event == 'Approve Withdrawal') {
-        console.log('approve withdrawal')
+        cleanedRequests = this.selectedRequest.filter((req) => req.status == 'Pending Withdrawal')
+        this.ApproveWithdrawalRequests(cleanedRequests)
       } else if (event == 'Reject Withdrawal') {
-        console.log('reject withdrawal')
+        cleanedRequests = this.selectedRequest.filter((req) => req.status == 'Pending Withdrawal')
+        this.RejectWithdrawalRequests(cleanedRequests)
       }
       this.isOpenOptions = false
     },
 
+    async withdrawApprovedRequests(reqArray) {
+      try {
+        const modalResponse = await this.showModal(
+          'Enter a reason for withdrawal',
+          'Cancel',
+          'Withdraw'
+        )
+        if (modalResponse.button === 'Cancel') {
+          return
+        }
+        try {
+          const response = await axios.patch(
+            'http://localhost:3001/arrangementRequests/managerwithdrawal',
+            {
+              requests: reqArray,
+              reason: modalResponse.input
+            }
+          )
+          if (response.status === 200) {
+            alert(response.data.message)
+            this.fetchArrangementRequests()
+          }
+        } catch (error) {
+          const errorMessage = error.response?.data?.message || error.message
+          alert(`Error - ${errorMessage}`)
+        }
+      } catch (error) {
+        console.error(error)
+      }
+    },
+    /**
+     * Rejects a list of arrangement requests after prompting the user for a rejection reason via a modal.
+     *
+     * @async
+     * @function rejectArrangementRequest
+     * @param {Array} reqArray - An array of request objects to be rejected.
+     * @returns {Promise<void>} A promise that resolves when the server processes the rejection request.
+     * @throws {Error} Will throw an error if the request fails, or if the user cancels the modal input.
+     */
+    async rejectArrangementRequest(reqArray) {
+      try {
+        const modalResponse = await this.showModal(
+          'Enter a reason for rejection',
+          'Cancel',
+          'Reject'
+        )
+        if (modalResponse.button === 'Cancel') {
+          return
+        }
+        try {
+          console.log(reqArray)
+          const response = await axios.patch(
+            'http://localhost:3001/arrangementRequests/staffrejection',
+            {
+              requests: reqArray,
+              reason: modalResponse.input
+            }
+          )
+          if (response.status === 200) {
+            alert(response.data.message)
+            this.fetchArrangementRequests()
+          }
+        } catch (error) {
+          const errorMessage = error.response?.data?.message || error.message
+          alert(`Error - ${errorMessage}`)
+        }
+      } catch (error) {
+        console.error(error)
+      }
+    },
+
+    /**
+     * Approves a list of arrangement requests by sending them to the server for staff approval.
+     *
+     * @async
+     * @function approveArrangementRequest
+     * @param {Array} reqArray - An array of request objects to be approved.
+     * @returns {Promise<void>} A promise that resolves when the server responds to the approval request.
+     * @throws {Error} Will throw an error if the request fails, displaying an alert with the error message.
+     */
+    async approveArrangementRequest(reqArray) {
+      try {
+        const response = await axios.patch(
+          'http://localhost:3001/arrangementRequests/staffapproval',
+          {
+            requests: reqArray
+          }
+        )
+        if (response.status === 200) {
+          alert(response.data.message)
+          this.fetchArrangementRequests()
+        }
+      } catch (error) {
+        const errorMessage = error.response?.data?.message || error.message
+        alert(`Error - ${errorMessage}`)
+      }
+    },
     /**
      * Handles the process of withdrawing arrangement requests.
      * Displays a modal to the user to enter a reason for withdrawal.
@@ -363,6 +467,24 @@ export default {
         const response = await axios.patch(
           'http://localhost:3001/arrangementRequests/staffcancellation',
           {
+            requests: reqArray
+          }
+        )
+        if (response.status === 200) {
+          alert(response.data.message)
+          this.fetchArrangementRequests()
+        }
+      } catch (error) {
+        const errorMessage = error.response?.data?.message || error.message
+        alert(`Error - ${errorMessage}`)
+      }
+    },
+
+    async ApproveWithdrawalRequests(reqArray) {
+      try {
+        const response = await axios.patch(
+          'http://localhost:3001/arrangementRequests/approveWithdrawal',
+          {
             requests: reqArray,
           }
         )
@@ -376,6 +498,23 @@ export default {
       }
     },
 
+    async RejectWithdrawalRequests(reqArray) {
+      try {
+        const response = await axios.patch(
+          'http://localhost:3001/arrangementRequests/rejectWithdrawal',
+          {
+            requests: reqArray,
+          }
+        )
+        if (response.status === 200) {
+          alert(response.data.message)
+          this.fetchArrangementRequests()
+        }
+      } catch (error) {
+        const errorMessage = error.response?.data?.message || error.message
+        alert(`Error - ${errorMessage}`)
+      }
+    },
     /**
      * Handles the emission of a request event and determines possible options
      * based on the request's type and status.
@@ -438,6 +577,9 @@ export default {
               possibleOptions.add('Approve Withdrawal')
               possibleOptions.add('Reject Withdrawal')
               break
+            case 'Approved':
+              possibleOptions.add('Withdraw Approval')
+              break
             default:
               break
           }
@@ -471,9 +613,7 @@ export default {
           )
         }
         let data = response.data.data
-        console.log(data)
         this.fullRequests = this.convertToTreeData(data)
-        console.log(this.fullRequests)
         this.filterRequests()
       } catch (error) {
         const errorMessage = error.response?.data?.message || error.message
@@ -543,7 +683,6 @@ export default {
           requestsArr.push(...value)
         }
       }
-      console.log(requestsArr);
       return requestsArr
     },
 

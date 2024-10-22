@@ -1,4 +1,4 @@
-import { cancelStaffRequests } from "../../api/controllers/arrangementRequestsController.js";
+import { rejectStaffRequests } from "../../api/controllers/arrangementRequestsController.js";
 import mongoose from "mongoose";
 import httpMocks from "node-mocks-http";
 import ArrangementRequest from "../../api/models/arrangementRequestsModel.js";
@@ -25,21 +25,23 @@ afterEach(async () => {
   await ArrangementRequest.deleteMany({});
 });
 
-describe("cancelStaffRequests - Integration Test with MongoDB", () => {
+describe("rejectStaffRequests - Integration Test with MongoDB", () => {
   let req, res;
+  const reason = "Test rejection reason";
 
   beforeEach(() => {
     req = httpMocks.createRequest({
       method: "PATCH",
-      url: "/arrangementRequests/staffcancellation",
+      url: "/arrangementRequests/staffrejection",
       body: {
         requests: [],
+        reason: reason,
       },
     });
     res = httpMocks.createResponse();
   });
 
-  test("should update the status of an ad-hoc request to Cancelled successfully", async () => {
+  test("should update the status of an ad-hoc request to rejected successfully", async () => {
     const request1 = new ArrangementRequest({
       staff_id: 140881,
       request_date: new Date("2024-10-03T16:00:00.000Z"),
@@ -53,19 +55,21 @@ describe("cancelStaffRequests - Integration Test with MongoDB", () => {
 
     req.body.requests = [request1];
 
-    await cancelStaffRequests(req, res);
+    await rejectStaffRequests(req, res);
 
     const response = res._getJSONData();
     expect(res.statusCode).toBe(200);
     expect(response.message).toBe(
-      "Requests have been cancelled successfully!"
+      "Requests have been rejected successfully!"
     );
 
     const updatedRequest1 = await ArrangementRequest.findById(request1._id);
-    expect(updatedRequest1.status).toBe("Cancelled");
+
+    expect(updatedRequest1.status).toBe("Rejected");
+    expect(updatedRequest1.manager_reason).toBe(reason);
   });
 
-  test("should update the status of a regular request to Cancelled successfully", async () => {
+  test("should update the status of a regular request to rejected successfully", async () => {
     const request1 = new ArrangementRequest({
       staff_id: 140881,
       request_date: new Date("2024-10-03T16:00:00.000Z"),
@@ -84,25 +88,26 @@ describe("cancelStaffRequests - Integration Test with MongoDB", () => {
       request_time: "PM",
       reason: "Personal reasons",
     });
-
     await request1.save();
     await request2.save();
 
     req.body.requests = [request1, request2];
 
-    await cancelStaffRequests(req, res);
+    await rejectStaffRequests(req, res);
 
     const response = res._getJSONData();
     expect(res.statusCode).toBe(200);
     expect(response.message).toBe(
-      "Requests have been cancelled successfully!"
+      "Requests have been rejected successfully!"
     );
 
     const updatedRequest1 = await ArrangementRequest.findById(request1._id);
     const updatedRequest2 = await ArrangementRequest.findById(request2._id);
 
-    expect(updatedRequest1.status).toBe("Cancelled");
-    expect(updatedRequest2.status).toBe("Cancelled");
+    expect(updatedRequest1.status).toBe("Rejected");
+    expect(updatedRequest1.manager_reason).toBe(reason);
+    expect(updatedRequest2.status).toBe("Rejected");
+    expect(updatedRequest2.manager_reason).toBe(reason);
   });
 
   test("should return a 500 if database error occurs", async () => {
@@ -117,12 +122,13 @@ describe("cancelStaffRequests - Integration Test with MongoDB", () => {
         request_time: "PM",
         reason: "Test request 1",
         __v: 0,
+        manager_reason: "cancel lagh",
       },
     ];
     jest.spyOn(ArrangementRequest, "updateMany").mockImplementation(() => {
       throw new Error("Database error");
     });
-    await cancelStaffRequests(req, res);
+    await rejectStaffRequests(req, res);
     expect(res.statusCode).toBe(500);
   });
 
@@ -138,10 +144,10 @@ describe("cancelStaffRequests - Integration Test with MongoDB", () => {
         request_time: "PM",
         reason: "Test request 1",
         __v: 0,
-        withdraw_reason: "cancel lagh",
+        manager_reason: "cancel lagh",
       },
     ];
-    await cancelStaffRequests(req, res);
+    await rejectStaffRequests(req, res);
     expect(res.statusCode).toBe(400);
   });
 });

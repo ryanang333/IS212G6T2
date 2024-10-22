@@ -7,7 +7,8 @@ import {
   getOwnSchedule,
   getTeamSchedule,
   withdrawStaffRequests,
-  cancelStaffRequests
+  cancelStaffRequests,
+  withdrawRequestsAsManager
 } from "../controllers/arrangementRequestsController.js";
 
 const router = express.Router();
@@ -20,5 +21,6 @@ router.get("/myschedule", getOwnSchedule);
 router.get("/teamschedule", getTeamSchedule);
 router.patch('/staffwithdrawal', withdrawStaffRequests);
 router.patch('/staffcancellation', cancelStaffRequests);
+router.patch('/managerwithdrawal', withdrawRequestsAsManager);
 
 export default router;
