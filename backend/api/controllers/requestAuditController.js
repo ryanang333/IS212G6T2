@@ -56,29 +56,26 @@ export const fetchAuditLogs = async (req, res) => {
       };
     }
     
-
     if (staffId) {
       query.staff_id = staffId; // Filter by requester staff_id
     }
 
     // Fetch ArrangementRequest IDs based on filters
-    arrangementRequests = await ArrangementRequest.find(query).select('_id staff_id request_date manager_id');
+    arrangementRequests = await ArrangementRequest.find(query).select('_id staff_id request_date manager_id reason withdraw_reason manager_reason');
 
     // Fetch RequestAudit logs based on the filtered ArrangementRequest IDs or fetch all logs if no filters
-    let logs;
+    let logs = [];
     if (arrangementRequests.length) {
       logs = await RequestAudit.find({
         request_id: { $in: arrangementRequests.map(req => req._id) }
       }).populate({
         path: 'request_id',
-        select: 'staff_id request_date',
-      });
-    } else {
-      logs = await RequestAudit.find().populate({
-        path: 'request_id',
-        select: 'staff_id request_date',
+        select: 'staff_id request_date reason withdraw_reason manager_reason',
       });
     }
+
+    console.log('Arrangement Requests:', arrangementRequests.length);
+    console.log('Fetched Logs:', logs.length);
 
     // Map logs to the desired output format
     const formattedLogs = logs.map(log => ({
