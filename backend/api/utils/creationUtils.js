@@ -42,7 +42,7 @@ export const createNewCEORequests = async (arrangementRequests, staffId, manager
           reqArr,
           staffId,
           REQUEST_STATUS_NONE,
-          REQUEST_STATUS_PENDING
+          REQUEST_STATUS_APPROVED
         );
       }
       

@@ -16,6 +16,11 @@ import {
 export const REQUEST_STATUS_PENDING = "Pending";
 export const REQUEST_STATUS_NONE = "N/A";
 export const REQUEST_STATUS_APPROVED = "Approved";
+export const REQUEST_STATUS_REJECTED = "Rejected";
+export const REQUEST_STATUS_CANCELLED = "Cancelled";
+export const REQUEST_STATUS_PENDING_WITHDRAWAL = "Pending Withdrawal";
+export const REQUEST_STATUS_WITHDRAWN = "Withdrawn";
+
 
 /**
  * Creates temporary arrangement requests for a staff member.
@@ -535,12 +540,29 @@ export const approveStaffRequests = async (req, res) => {
   }
 
   try {
-    await ArrangementRequest.updateMany(
+    const previousRequests = await ArrangementRequest.find({
+      _id: { $in: cleanedRequestsId },
+    });
+
+    const updatedRequests = await ArrangementRequest.updateMany(
       { _id: { $in: cleanedRequestsId } },
       {
         status: "Approved",
       }
     );
+    console.log("this is previousRequests",previousRequests);
+    console.log("this is previousRequests.status",previousRequests.status);
+    if (updatedRequests.modifiedCount > 0) {
+      for (const request of requests) {
+        await createAuditEntry(
+          previousRequests,
+          request.manager_id,
+          REQUEST_STATUS_PENDING,
+          REQUEST_STATUS_APPROVED
+        );
+      };
+    }
+
     return responseUtils.handleSuccessResponse(
       res,
       null,
@@ -593,13 +615,29 @@ export const rejectStaffRequests = async (req, res) => {
   }
 
   try {
-    await ArrangementRequest.updateMany(
+    const previousRequests = await ArrangementRequest.find({
+      _id: { $in: cleanedRequestsId },
+    });
+
+    const updatedRequests = await ArrangementRequest.updateMany(
       { _id: { $in: cleanedRequestsId } },
       {
         status: "Rejected",
         manager_reason: reason,
       }
     );
+
+    if (updatedRequests.modifiedCount > 0) {
+      for (const request of requests) {
+        await createAuditEntry(
+          previousRequests,
+          request.manager_id,
+          REQUEST_STATUS_PENDING,
+          REQUEST_STATUS_REJECTED
+        );
+      };
+    }
+
     return responseUtils.handleSuccessResponse(
       res,
       null,
@@ -650,12 +688,28 @@ export const cancelStaffRequests = async (req, res) => {
   }
 
   try {
-    await ArrangementRequest.updateMany(
+    const previousRequests = await ArrangementRequest.find({
+      _id: { $in: cleanedRequestsId },
+    });
+
+    const updatedRequests = await ArrangementRequest.updateMany(
       { _id: { $in: cleanedRequestsId } },
       {
         status: "Cancelled",
       }
     );
+
+    if (updatedRequests.modifiedCount > 0) {
+      for (const request of requests) {
+        await createAuditEntry(
+          previousRequests,
+          request.staff_id,
+          REQUEST_STATUS_PENDING,
+          REQUEST_STATUS_CANCELLED
+        );
+      };
+    }
+
     return responseUtils.handleSuccessResponse(
       res,
       null,
@@ -685,12 +739,27 @@ export const ApproveWithdrawalRequest = async (req, res) => {
   }
 
   try {
-    await ArrangementRequest.updateMany(
+    const previousRequests = await ArrangementRequest.find({
+      _id: { $in: cleanedRequestsId },
+    });
+
+    const updatedRequests = await ArrangementRequest.updateMany(
       { _id: { $in: cleanedRequestsId } },
       {
         status: "Withdrawn",
       }
     );
+
+    if (updatedRequests.modifiedCount > 0) {
+      for (const request of requests) {
+        await createAuditEntry(
+          previousRequests,
+          request.manager_id,
+          REQUEST_STATUS_PENDING_WITHDRAWAL,
+          REQUEST_STATUS_APPROVED
+        );
+      };
+    }
     return responseUtils.handleSuccessResponse(
       res,
       null,
@@ -720,12 +789,28 @@ export const RejectWithdrawalRequest = async (req, res) => {
   }
 
   try {
-    await ArrangementRequest.updateMany(
+    const previousRequests = await ArrangementRequest.find({
+      _id: { $in: cleanedRequestsId },
+    });
+
+    const updatedRequests = await ArrangementRequest.updateMany(
       { _id: { $in: cleanedRequestsId } },
       {
         status: "Approved",
       }
     );
+
+    if (updatedRequests.modifiedCount > 0) {
+      for (const request of requests) {
+        await createAuditEntry(
+          previousRequests,
+          request.manager_id,
+          REQUEST_STATUS_PENDING_WITHDRAWAL,
+          REQUEST_STATUS_REJECTED
+        );
+      };
+    }
+
     return responseUtils.handleSuccessResponse(
       res,
       null,
@@ -778,13 +863,29 @@ export const withdrawStaffRequests = async (req, res) => {
   }
 
   try {
-    await ArrangementRequest.updateMany(
+    const previousRequests = await ArrangementRequest.find({
+      _id: { $in: cleanedRequestsId },
+    });
+
+    const updatedRequests = await ArrangementRequest.updateMany(
       { _id: { $in: cleanedRequestsId } },
       {
         status: "Pending Withdrawal",
         withdraw_reason: reason,
       }
     );
+
+    if (updatedRequests.modifiedCount > 0) {
+      for (const request of requests) {
+        await createAuditEntry(
+          previousRequests,
+          request.staff_id,
+          REQUEST_STATUS_APPROVED,
+          REQUEST_STATUS_PENDING_WITHDRAWAL
+        );
+      };
+    }
+
     return responseUtils.handleSuccessResponse(
       res,
       null,
@@ -823,13 +924,29 @@ export const withdrawRequestsAsManager = async (req, res) => {
   }
 
   try {
-    await ArrangementRequest.updateMany(
+    const previousRequests = await ArrangementRequest.find({
+      _id: { $in: cleanedRequestsId },
+    });
+
+    const updatedRequests = await ArrangementRequest.updateMany(
       { _id: { $in: cleanedRequestsId } },
       {
         status: "Withdrawn",
         withdraw_reason: reason,
       }
     );
+
+    if (updatedRequests.modifiedCount > 0) {
+      for (const request of requests) {
+        await createAuditEntry(
+          previousRequests,
+          request.manager_id,
+          REQUEST_STATUS_APPROVED,
+          REQUEST_STATUS_PENDING_WITHDRAWAL
+        );
+      };
+    }
+
     return responseUtils.handleSuccessResponse(
       res,
       null,
