@@ -8,6 +8,8 @@ import {
   getTeamSchedule,
   withdrawStaffRequests,
   cancelStaffRequests,
+  ApproveWithdrawalRequest,
+  RejectWithdrawalRequest,
   withdrawRequestsAsManager
 } from "../controllers/arrangementRequestsController.js";
 
@@ -21,6 +23,8 @@ router.get("/myschedule", getOwnSchedule);
 router.get("/teamschedule", getTeamSchedule);
 router.patch('/staffwithdrawal', withdrawStaffRequests);
 router.patch('/staffcancellation', cancelStaffRequests);
+router.patch('/approveWithdrawal',ApproveWithdrawalRequest)
+router.patch('/rejectWithdrawal',RejectWithdrawalRequest)
 router.patch('/managerwithdrawal', withdrawRequestsAsManager);
 
 export default router;
