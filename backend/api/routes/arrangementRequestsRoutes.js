@@ -10,6 +10,7 @@ import {
   cancelStaffRequests,
   ApproveWithdrawalRequest,
   RejectWithdrawalRequest,
+  withdrawRequestsAsManager
 } from "../controllers/arrangementRequestsController.js";
 
 const router = express.Router();
@@ -24,4 +25,6 @@ router.patch('/staffwithdrawal', withdrawStaffRequests);
 router.patch('/staffcancellation', cancelStaffRequests);
 router.patch('/approveWithdrawal',ApproveWithdrawalRequest)
 router.patch('/rejectWithdrawal',RejectWithdrawalRequest)
+router.patch('/managerwithdrawal', withdrawRequestsAsManager);
+
 export default router;
