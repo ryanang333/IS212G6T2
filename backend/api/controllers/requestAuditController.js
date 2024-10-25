@@ -21,8 +21,10 @@ export const createAuditEntry = async (requestArr, staffId, oldStatus, newStatus
       }))
     );
   } catch (error) {
-    console.error(error);
-    console.error("Failed to create audit logs...");
+    return responseUtils.handleInternalServerError(
+      res,
+      "Internal server error"
+    );
   }
 };
 
@@ -66,6 +68,7 @@ export const fetchAuditLogs = async (req, res) => {
     // Fetch RequestAudit logs based on the filtered ArrangementRequest IDs or fetch all logs if no filters
     let logs = [];
     if (arrangementRequests.length) {
+      console.log("in arrangementRequests.length block")
       logs = await RequestAudit.find({
         request_id: { $in: arrangementRequests.map(req => req._id) }
       }).populate({
@@ -102,7 +105,6 @@ export const fetchAuditLogs = async (req, res) => {
       logs: formattedLogs,
     });
   } catch (error) {
-    console.error('Error fetching audit logs:', error);
     res.status(500).json({ message: 'Internal server error' });
   }
 };
