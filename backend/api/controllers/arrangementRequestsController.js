@@ -883,7 +883,6 @@ export const updateIndividualRequestStatus = async (req, res) => {
     res.status(500).json({ message: "Internal server error" });
   }
 };
-
 /**
  * Automatically rejects pending staff arrangement requests if no action is taken by the manager
  * before the day prior to the requested date.
@@ -903,12 +902,11 @@ export const updateIndividualRequestStatus = async (req, res) => {
   try {
     const today = new Date();
     const rejectionDate = new Date(today);
-    rejectionDate.setDate(today.getDate() + 1); 
-    rejectionDate.setHours(0, 0, 0, 0); 
+    rejectionDate.setDate(today.getDate() + 2); 
+    rejectionDate.setUTCHours(0, 0, 0, 0); 
 
-   
-    const pendingRequests = await WFHRequest.find({
-      requested_date: rejectionDate,
+    const pendingRequests = await ArrangementRequest.find({
+      request_date: {$lte: rejectionDate},
       status: 'Pending'
     });
 
@@ -918,11 +916,12 @@ export const updateIndividualRequestStatus = async (req, res) => {
 
     
     const requestIds = pendingRequests.map(request => request._id);
-    await WFHRequest.updateMany(
+
+    await ArrangementRequest.updateMany(
       { _id: { $in: requestIds } },
       {
         status: 'Rejected',
-        rejection_reason: 'Auto-rejected by system due to lack of manager action',
+        manager_reason: 'Auto-rejected by system due to lack of manager action',
         updated_at: new Date() 
       }
     );
@@ -934,4 +933,6 @@ export const updateIndividualRequestStatus = async (req, res) => {
     return res.status(500).json({ message: 'Internal server error' });
   }
 };
+
+
 
