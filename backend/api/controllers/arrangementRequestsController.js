@@ -131,7 +131,7 @@ export const createRegArrangementRequests = async (req, res) => {
       allArrangementRequestsClean.push(...arrangementRequestsClean);
     }
 
-    // Check dates for all requests
+    // Function 1 - Check Date
     const validationResponse = checkDatesValidity(allArrangementRequestsClean);
     if (!validationResponse.isValid) {
       return responseUtils.handleBadRequest(
