@@ -550,8 +550,7 @@ export const approveStaffRequests = async (req, res) => {
         status: "Approved",
       }
     );
-    console.log("this is previousRequests",previousRequests);
-    console.log("this is previousRequests.status",previousRequests.status);
+  
     if (updatedRequests.modifiedCount > 0) {
       for (const request of requests) {
         await createAuditEntry(
