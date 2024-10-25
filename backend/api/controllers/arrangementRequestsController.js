@@ -883,3 +883,55 @@ export const updateIndividualRequestStatus = async (req, res) => {
     res.status(500).json({ message: "Internal server error" });
   }
 };
+
+/**
+ * Automatically rejects pending staff arrangement requests if no action is taken by the manager
+ * before the day prior to the requested date.
+ *
+ * This function checks for requests where the requested date is tomorrow, and if the request is 
+ * still in "Pending" status, it will automatically reject it. A reason is added to indicate 
+ * that the system performed the auto-rejection.
+ *
+ * @async
+ * @function autoRejectPendingRequests
+ * @param {Object} req - Express request object.
+ * @param {Object} res - Express response object.
+ * @returns {Promise<void>} Sends a success or error response depending on the outcome.
+ * @throws Will return an internal server error response if the database operation fails.
+ */
+ export const autoRejectPendingRequests = async (req, res) => {
+  try {
+    const today = new Date();
+    const rejectionDate = new Date(today);
+    rejectionDate.setDate(today.getDate() + 1); 
+    rejectionDate.setHours(0, 0, 0, 0); 
+
+   
+    const pendingRequests = await WFHRequest.find({
+      requested_date: rejectionDate,
+      status: 'Pending'
+    });
+
+    if (pendingRequests.length === 0) {
+      return res.status(200).json({ message: 'No pending requests for auto-rejection.' });
+    }
+
+    
+    const requestIds = pendingRequests.map(request => request._id);
+    await WFHRequest.updateMany(
+      { _id: { $in: requestIds } },
+      {
+        status: 'Rejected',
+        rejection_reason: 'Auto-rejected by system due to lack of manager action',
+        updated_at: new Date() 
+      }
+    );
+
+    return res.status(200).json({
+      message: `${pendingRequests.length} requests have been auto-rejected successfully.`
+    });
+  } catch (error) {
+    return res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
