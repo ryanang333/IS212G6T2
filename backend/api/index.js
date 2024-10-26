@@ -4,6 +4,7 @@ import cors from 'cors';
 import staffRoutes from './routes/staffRoutes.js';
 import arrangementRequestsRoutes from './routes/arrangementRequestsRoutes.js';
 import connectDB from '../config/db.config.js'; 
+import setupAutoRejectCronJob from './utils/cronJob.js';
 
 dotenv.config();
 
@@ -25,6 +26,7 @@ app.get("/", (req, res) => {
 app.use('/staff', staffRoutes);
 app.use('/arrangementRequests', arrangementRequestsRoutes);
 
+setupAutoRejectCronJob();
 
 app.listen(process.env.PORT, () => {
   console.log(`Server ready on port ${process.env.PORT}`);
