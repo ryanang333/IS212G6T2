@@ -27,8 +27,8 @@ router.patch('/staffapproval', approveStaffRequests);
 router.patch('/staffrejection', rejectStaffRequests);
 router.patch('/staffwithdrawal', withdrawStaffRequests);
 router.patch('/staffcancellation', cancelStaffRequests);
-router.patch('/approvewithdrawal', ApproveWithdrawalRequest);
-router.patch('/rejectwithdrawal', RejectWithdrawalRequest);
+router.patch('/approveWithdrawal',ApproveWithdrawalRequest)
+router.patch('/rejectWithdrawal',RejectWithdrawalRequest)
 router.patch('/managerwithdrawal', withdrawRequestsAsManager);
 
 export default router;
