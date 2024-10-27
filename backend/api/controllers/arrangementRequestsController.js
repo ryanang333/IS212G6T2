@@ -565,31 +565,29 @@ export const approveStaffRequests = async (req, res) => {
         };
       };
     } 
-
   
     if (updatedRequests.modifiedCount > 0) {
       for (const request of requests) {
-        await createAuditEntry(
-          previousRequests,
-          request.manager_id,
-          REQUEST_STATUS_PENDING,
-          REQUEST_STATUS_APPROVED
-        );
-      };
-
-      for (const request of requests) {
-        await createNotification({
-          request_id: request._id,
-          changed_by: request.manager_id,
-          created_at: request.request_date,
-          request_type: "Manager_Action",
-          receiver_id: request.staff_id,
-          old_status: REQUEST_STATUS_PENDING,
-          new_status: REQUEST_STATUS_APPROVED,
-          reason: request.manager_reason
-      });
-      };
-    }
+        console.log("Creating notification for request ID:", request._id);
+        try {
+          const notificationData = {
+            request_id: request._id,
+            changed_by: request.manager_id,
+            created_at: request.request_date,
+            request_type: "Manager_Action",
+            receiver_id: request.staff_id,
+            old_status: REQUEST_STATUS_PENDING,
+            new_status: REQUEST_STATUS_APPROVED,
+            reason: "N/A"
+          };
+          console.log("Notification Data:", notificationData);
+          await createNotification(notificationData);
+          console.log("Notification sent for request ID:", request._id);
+        } catch (notificationError) {
+          console.error("Error creating notification for request ID:", request._id, notificationError);
+        }
+      }      
+    }    
 
     return responseUtils.handleSuccessResponse(
       res,
@@ -672,16 +670,7 @@ export const rejectStaffRequests = async (req, res) => {
 
     if (updatedRequests.modifiedCount > 0) {
       for (const request of requests) {
-        await createAuditEntry(
-          previousRequests,
-          request.manager_id,
-          REQUEST_STATUS_PENDING,
-          REQUEST_STATUS_REJECTED
-        );
-      };
-
-      for (const request of requests) {
-        await createNotification({
+        const notificationData = {
           request_id: request._id,
           changed_by: request.manager_id,
           created_at: request.request_date,
@@ -690,9 +679,19 @@ export const rejectStaffRequests = async (req, res) => {
           old_status: REQUEST_STATUS_PENDING,
           new_status: REQUEST_STATUS_REJECTED,
           reason: reason
-      });
-      };
-    }
+        };
+        
+        console.log("Creating notification for rejected request ID:", request._id);
+        console.log("Notification Data:", notificationData);
+        
+        try {
+          await createNotification(notificationData);
+          console.log("Notification sent for rejected request ID:", request._id);
+        } catch (notificationError) {
+          console.error("Error creating notification for rejected request ID:", request._id, notificationError);
+        }
+      }
+    }     
 
     return responseUtils.handleSuccessResponse(
       res,
@@ -772,27 +771,28 @@ export const cancelStaffRequests = async (req, res) => {
 
     if (updatedRequests.modifiedCount > 0) {
       for (const request of requests) {
-        await createAuditEntry(
-          previousRequests,
-          request.staff_id,
-          REQUEST_STATUS_PENDING,
-          REQUEST_STATUS_CANCELLED
-        );
-      };
-
-      for (const request of requests) {
-        await createNotification({
+        const notificationData = {
           request_id: request._id,
           changed_by: request.staff_id,
           created_at: request.request_date,
           request_type: "Staff_Action",
           receiver_id: request.manager_id,
           old_status: REQUEST_STATUS_PENDING,
-          new_status: REQUEST_STATUS_APPROVED,
-          reason: request.reason
-      });
-      };
-    }
+          new_status: REQUEST_STATUS_CANCELLED,
+          reason: "N/A"
+        };
+        
+        console.log("Creating notification for approved request ID:", request._id);
+        console.log("Notification Data:", notificationData);
+        
+        try {
+          await createNotification(notificationData);
+          console.log("Notification sent for approved request ID:", request._id);
+        } catch (notificationError) {
+          console.error("Error creating notification for approved request ID:", request._id, notificationError);
+        }
+      }
+    }    
 
     return responseUtils.handleSuccessResponse(
       res,
@@ -850,16 +850,7 @@ export const ApproveWithdrawalRequest = async (req, res) => {
 
     if (updatedRequests.modifiedCount > 0) {
       for (const request of requests) {
-        await createAuditEntry(
-          previousRequests,
-          request.manager_id,
-          REQUEST_STATUS_PENDING_WITHDRAWAL,
-          REQUEST_STATUS_APPROVED
-        );
-      };
-
-      for (const request of requests) {
-        await createNotification({
+        const notificationData = {
           request_id: request._id,
           changed_by: request.manager_id,
           created_at: request.request_date,
@@ -867,10 +858,21 @@ export const ApproveWithdrawalRequest = async (req, res) => {
           receiver_id: request.staff_id,
           old_status: REQUEST_STATUS_PENDING_WITHDRAWAL,
           new_status: REQUEST_STATUS_APPROVED,
-          reason: request.manager_reason
-      });
-      };
+          reason: "N/A"
+        };
+        
+        console.log("Creating notification for approved withdrawal request ID:", request._id);
+        console.log("Notification Data:", notificationData);
+        
+        try {
+          await createNotification(notificationData);
+          console.log("Notification sent for approved withdrawal request ID:", request._id);
+        } catch (notificationError) {
+          console.error("Error creating notification for approved withdrawal request ID:", request._id, notificationError);
+        }
+      }
     }
+    
     return responseUtils.handleSuccessResponse(
       res,
       null,
@@ -928,16 +930,7 @@ export const RejectWithdrawalRequest = async (req, res) => {
 
     if (updatedRequests.modifiedCount > 0) {
       for (const request of requests) {
-        await createAuditEntry(
-          previousRequests,
-          request.manager_id,
-          REQUEST_STATUS_PENDING_WITHDRAWAL,
-          REQUEST_STATUS_REJECTED
-        );
-      };
-
-      for (const request of requests) {
-        await createNotification({
+        const notificationData = {
           request_id: request._id,
           changed_by: request.manager_id,
           created_at: request.request_date,
@@ -945,10 +938,20 @@ export const RejectWithdrawalRequest = async (req, res) => {
           receiver_id: request.staff_id,
           old_status: REQUEST_STATUS_PENDING_WITHDRAWAL,
           new_status: REQUEST_STATUS_REJECTED,
-          reason: request.manager_reason
-      });
-      };
-    }
+          reason: "N/A"
+        };
+        
+        console.log("Creating notification for rejected withdrawal request ID:", request._id);
+        console.log("Notification Data:", notificationData);
+        
+        try {
+          await createNotification(notificationData);
+          console.log("Notification sent for rejected withdrawal request ID:", request._id);
+        } catch (notificationError) {
+          console.error("Error creating notification for rejected withdrawal request ID:", request._id, notificationError);
+        }
+      }
+    }    
 
     return responseUtils.handleSuccessResponse(
       res,
@@ -1028,19 +1031,9 @@ export const withdrawStaffRequests = async (req, res) => {
       };
     } 
 
-
     if (updatedRequests.modifiedCount > 0) {
       for (const request of requests) {
-        await createAuditEntry(
-          previousRequests,
-          request.staff_id,
-          REQUEST_STATUS_APPROVED,
-          REQUEST_STATUS_PENDING_WITHDRAWAL
-        );
-      };
-
-      for (const request of requests) {
-        await createNotification({
+        const notificationData = {
           request_id: request._id,
           changed_by: request.staff_id,
           created_at: request.request_date,
@@ -1048,10 +1041,20 @@ export const withdrawStaffRequests = async (req, res) => {
           receiver_id: request.manager_id,
           old_status: REQUEST_STATUS_APPROVED,
           new_status: REQUEST_STATUS_PENDING_WITHDRAWAL,
-          reason: request.withdraw_reason
-      });
-      };
-    }
+          reason: reason
+        };
+        
+        console.log("Creating notification for pending withdrawal request ID:", request._id);
+        console.log("Notification Data:", notificationData);
+        
+        try {
+          await createNotification(notificationData);
+          console.log("Notification sent for pending withdrawal request ID:", request._id);
+        } catch (notificationError) {
+          console.error("Error creating notification for pending withdrawal request ID:", request._id, notificationError);
+        }
+      }
+    }    
 
     return responseUtils.handleSuccessResponse(
       res,
@@ -1120,27 +1123,28 @@ export const withdrawRequestsAsManager = async (req, res) => {
 
     if (updatedRequests.modifiedCount > 0) {
       for (const request of requests) {
-        await createAuditEntry(
-          previousRequests,
-          request.manager_id,
-          REQUEST_STATUS_APPROVED,
-          REQUEST_STATUS_PENDING_WITHDRAWAL
-        );
-      };
-
-      for (const request of requests) {
-        await createNotification({
+        const notificationData = {
           request_id: request._id,
           changed_by: request.manager_id,
           created_at: request.request_date,
           request_type: "Manager_Action",
           receiver_id: request.staff_id,
           old_status: REQUEST_STATUS_APPROVED,
-          new_status: REQUEST_STATUS_PENDING_WITHDRAWAL,
-          reason: request.withdraw_reason
-      });
-      };
-    }
+          new_status: REQUEST_STATUS_WITHDRAWN,
+          reason: reason
+        };
+        
+        console.log("Creating notification for approved withdrawal request ID:", request._id);
+        console.log("Notification Data:", notificationData);
+        
+        try {
+          await createNotification(notificationData);
+          console.log("Notification sent for approved withdrawal request ID:", request._id);
+        } catch (notificationError) {
+          console.error("Error creating notification for approved withdrawal request ID:", request._id, notificationError);
+        }
+      }
+    }    
 
     return responseUtils.handleSuccessResponse(
       res,

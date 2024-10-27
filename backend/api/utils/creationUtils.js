@@ -11,73 +11,71 @@ export const REQUEST_STATUS_APPROVED = "Approved";
  * Approves arrangement request instantly if staff is CEO.
  * @param {string} staffId - The ID of the staff member.
  * @param {Array<Object>} arrangementRequests - The array of arrangement request objects.
+ * @param {string} managerId - The ID of the manager.
  * @returns {Promise<Array|boolean>} - A promise that resolves to an array of approved requests or false if not the CEO.
  */
-
 export const createNewCEORequests = async (arrangementRequests, staffId, managerId) => {
-    try {
-      const requests = arrangementRequests.map((req) => ({
-        date: new Date(req.date),
-      }));
-      const existingRequests = await findExistingRequests({
+  try {
+    const requests = arrangementRequests.map((req) => ({
+      date: new Date(req.date),
+    }));
+
+    const existingRequests = await findExistingRequests({
+      staff_id: staffId,
+      requestSlots: requests,
+    });
+
+    checkIfDatesOverlap(existingRequests, arrangementRequests);
+
+    const reqArr = await ArrangementRequest.insertMany(
+      arrangementRequests.map((req) => ({
         staff_id: staffId,
-        requestSlots: requests,
-      });
-  
-      checkIfDatesOverlap(existingRequests, arrangementRequests);
-  
-      const reqArr = await ArrangementRequest.insertMany(
-        arrangementRequests.map((req) => ({
-          staff_id: staffId,
-          request_date: new Date(req.date),
-          status: "Approved",
-          manager_id: managerId,
-          request_time: req.time,
-          group_id: req.group_id || null,
-          reason: req.reason,
-        }))
-      );
-  
-      if (updatedRequests.modifiedCount > 0) {
-        for (const request of requests) {
-          try {
-    
-        const notificationPromises = reqArr.map(async (request) => {
-          const notificationData = {
-              request_id: request._id,
-              changed_by: staffId,
-              created_at: request.request_date,
-              request_type: "Staff_Action",
-              receiver_id: managerId,
-              old_status: REQUEST_STATUS_NONE,
-              new_status: REQUEST_STATUS_PENDING,
-              reason: request.reason,
-          };
+        request_date: new Date(req.date),
+        status: "Approved",
+        manager_id: managerId,
+        request_time: req.time,
+        group_id: req.group_id || null,
+        reason: req.reason,
+      }))
+    );
 
-          console.log("Notification Data for Created Request:", notificationData);
-          await createNotification(notificationData);
-        });
-
-        await Promise.all(notificationPromises);
-
-        await createAuditEntry(
-              previousRequests,
-              request.staff_id,
-              REQUEST_STATUS_APPROVED,
-              REQUEST_STATUS_PENDING_WITHDRAWAL
-            );
-          } catch (auditError) {
-          };
+    if (reqArr.length > 0) {
+      const notificationPromises = reqArr.map(async (request) => {
+        const notificationData = {
+          request_id: request._id,
+          changed_by: staffId,
+          created_at: request.request_date,
+          request_type: "Staff_Action",
+          receiver_id: managerId,
+          old_status: REQUEST_STATUS_NONE,
+          new_status: REQUEST_STATUS_PENDING,
+          reason: request.reason,
         };
-      } 
-      
-    } catch (error) {
-      const msg = error.message.includes("Cannot apply - CEO")
-        ? error.message
-        : "Failed to create arrangement requests - CEO";
-      throw new Error(msg);
+
+        console.log("Notification Data for Created Request:", notificationData);
+        await createNotification(notificationData);
+      });
+
+      await Promise.all(notificationPromises);
+
+      try {
+        await createAuditEntry(
+          reqArr,
+          staffId,
+          REQUEST_STATUS_NONE,
+          REQUEST_STATUS_APPROVED
+        );
+      } catch (auditError) {
+      }
     }
-  };
+  } catch (error) {
+    const msg = error.message.includes("Cannot apply - CEO")
+      ? error.message
+      : "Failed to create arrangement requests - CEO";
+    throw new Error(msg);
+  }
+};
+
 
 /**
  * Creates new arrangement requests if there are no existing requests for the specified slots.
@@ -109,30 +107,29 @@ export const createNewRequests = async (arrangementRequests, staffId, managerId)
           reason: req.reason,
         }))
       );
-  
-      if (updatedRequests.modifiedCount > 0) {
-        for (const request of requests) {
-          try {
-    
+
+      if (reqArr.length > 0) {
         const notificationPromises = reqArr.map(async (request) => {
           const notificationData = {
-              request_id: request._id,
-              changed_by: staffId,
-              created_at: request.request_date,
-              request_type: "Staff_Action",
-              receiver_id: managerId,
-              old_status: REQUEST_STATUS_NONE,
-              new_status: REQUEST_STATUS_PENDING,
-              reason: request.reason,
+            request_id: request._id,
+            changed_by: staffId,
+            created_at: request.request_date,
+            request_type: "Staff_Action",
+            receiver_id: managerId,
+            old_status: REQUEST_STATUS_NONE,
+            new_status: REQUEST_STATUS_PENDING,
+            reason: request.reason,
           };
-
+  
           console.log("Notification Data for Created Request:", notificationData);
           await createNotification(notificationData);
         });
-
-        await Promise.all(notificationPromises);
-
-        await createAuditEntry(
+  
+      await Promise.all(notificationPromises);
+  
+      if (reqArr.length > 0) {
+          try {
+            await createAuditEntry(
               previousRequests,
               request.staff_id,
               REQUEST_STATUS_APPROVED,
@@ -140,8 +137,7 @@ export const createNewRequests = async (arrangementRequests, staffId, managerId)
             );
           } catch (auditError) {
           };
-        };
-      } 
+      };
     } catch (error) {
       const msg = error.message.includes("Cannot apply")
         ? error.message

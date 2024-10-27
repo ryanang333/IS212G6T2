@@ -58,7 +58,7 @@ const router = createRouter({
     },
     {
       path: '/audit-logs',
-      name: 'staffrequests',
+      name: 'audit-logs',
       component: RequestAudit
     }
   ]

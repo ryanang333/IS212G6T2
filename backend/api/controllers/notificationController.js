@@ -56,13 +56,12 @@ export const createNotification = async (notificationData) => {
  */
 export const getNotifications = async (req, res) => {
   try {
-    const { staffId } = req.params;
+    const staffId = req.params.staffId;
 
     if (!staffId) {
       return responseUtils.handleBadRequest(res, "Staff ID is required");
     }
 
-    // Fetch all notifications for the specific staff ID
     const notifications = await Notification.find({
       receiver_id: staffId,
     })

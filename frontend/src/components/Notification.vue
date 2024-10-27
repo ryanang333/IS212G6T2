@@ -19,6 +19,11 @@
       </button>
     </div>
 
+    <!-- Error Message -->
+    <div v-if="errorMessage" class="text-red-500">
+      {{ errorMessage }}
+    </div>
+
     <!-- My Notifications Content -->
     <div v-if="activeTab === 'myNotifications'">
       <h2 class="text-lg font-semibold mb-2">My Notifications</h2>
@@ -28,7 +33,7 @@
             <p><strong>Old Status:</strong> {{ notification.old_status }}</p>
             <p><strong>New Status:</strong> {{ notification.new_status }}</p>
             <p><strong>Message:</strong> {{ formatNotification(notification) }}</p>
-            <p><strong>Notification Timestamp:</strong> {{ new Date(notification.created_at).toLocaleString() }}</p>
+            <p><strong>Notification Timestamp:</strong> {{ new Date(notification.change_timestamp).toLocaleString() }}</p>
           </div>
         </li>
       </ul>
@@ -43,7 +48,7 @@
             <p><strong>Old Status:</strong> {{ notification.old_status }}</p>
             <p><strong>New Status:</strong> {{ notification.new_status }}</p>
             <p><strong>Message:</strong> {{ formatNotification(notification) }}</p>
-            <p><strong>Notification Timestamp:</strong> {{ new Date(notification.created_at).toLocaleString() }}</p>
+            <p><strong>Notification Timestamp:</strong> {{ new Date(notification.change_timestamp).toLocaleString() }}</p>
           </div>
         </li>
       </ul>
@@ -62,23 +67,26 @@ export default {
       managerNotifications: [],
       activeTab: 'myNotifications',
       staffId: null,
+      errorMessage: null, // Error message state
     };
   },
   mounted() {
     this.staffId = getInStorage('staff_id');
-    // Fetch notifications
+    console.log("Staff ID:", this.staffId); // Debugging output
     this.fetchNotifications();
   },
   methods: {
     async fetchNotifications() {
       try {
         const response = await axios.get(`http://localhost:3001/notifications/staff/${this.staffId}`);
-        
+        console.log("API Response:", response); // Debugging output
+
         // Populate My Notifications and Manager Notifications based on request_type
         this.myNotifications = response.data.data.filter(notification => notification.request_type === 'Manager_Action');
         this.managerNotifications = response.data.data.filter(notification => notification.request_type === 'Staff_Action');
       } catch (error) {
         console.error("Error fetching notifications:", error);
+        this.errorMessage = "Failed to fetch notifications. Please try again later."; // Update the error message
       }
     },
     formatNotification(notification) {

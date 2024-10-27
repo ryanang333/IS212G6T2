@@ -28,17 +28,18 @@ const notificationSchema = new Schema({
   },
   old_status: {
     type: String,
-    enum: ["N/A", "Pending", "Approved", "Rejected", "Canceled", "Withdrawn"],
+    enum: ["N/A", "Pending", "Approved", "Rejected", "Cancelled", "Withdrawn", "Pending Withdrawal"],
     required: true,
   },
   new_status: {
     type: String,
-    enum: ["N/A", "Pending", "Approved", "Rejected", "Canceled", "Withdrawn"],
+    enum: ["N/A", "Pending", "Approved", "Rejected", "Cancelled", "Withdrawn", "Pending Withdrawal"],
     required: true,
   },
   reason:{
     type: String,
     maxLength: 100,
+    default: ""
   },
   created_at: {
     type: Date,
