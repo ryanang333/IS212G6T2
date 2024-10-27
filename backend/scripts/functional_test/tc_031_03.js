@@ -5,10 +5,10 @@ import RequestAudit from "../../api/models/requestAuditModel.js";
 import Staff from "../../api/models/staffModel.js";
 import app from "./backend_start.js";
 
-console.log("Running! TC_031_01");
+console.log("Running! TC_031_03");
 
 (async () => {
-  await connectDB("031_01");
+  await connectDB("031_03");
 
   await populateData();
 
@@ -23,53 +23,52 @@ console.log("Running! TC_031_01");
       console.log("Server closed");
       process.exit(0);
     });
-  };8
+  };
   process.on("SIGINT", shutdown);
   process.on("SIGTERM", shutdown);
 })();
 
 const populateData = async () => {
-    await Promise.all([populateStaff()])
-    //await Promise.all([populateStaff(), populateRequests(), populateAuditLogs()]);
+    await Promise.all([populateStaff(), populateRequests(), populateAuditLogs()]);
   };
 
-  // const populateRequests = async () => {
-  //   try {
-  //     await ArrangementRequest.insertMany([
-  //       { 
-  //         _id: "123456789012345678901231",
-  //         staff_id: 140008, 
-  //         request_date: new Date("2024-12-01T08:00:00"), 
-  //         request_time: "AM", 
-  //         reason: "test", 
-  //         status: "Pending", 
-  //         manager_id: 140001, 
-  //         group_id: "test group_id",
-  //       },
-  //     ]);
+  const populateRequests = async () => {
+    try {
+      await ArrangementRequest.insertMany([
+        { 
+          _id: "123456789012345678901231",
+          staff_id: 140008,
+          request_date: new Date("2024-12-01T08:00:00"), 
+          request_time: "AM", 
+          reason: "test", 
+          status: "Pending", 
+          manager_id: 140001, 
+          group_id: "test group_id",
+        },
+      ]);
   
-  //     console.log("Request data inserted successfully");
-  //   } catch (error) {
-  //     console.error("Error inserting request data:", error);
-  //   }
-  // };
+      console.log("Request data inserted successfully");
+    } catch (error) {
+      console.error("Error inserting request data:", error);
+    }
+  };
 
-  // const populateAuditLogs = async () => {
-  //   try {
-  //     await RequestAudit.insertMany([
-  //       {
-  //         request_id: "123456789012345678901231",
-  //         changed_by: 140008,
-  //         old_status: "N/A",
-  //         new_status: "Pending",
-  //         change_timestamp: new Date("2024-12-01T08:00:00"),
-  //       },
-  //     ]);
-  //     console.log("Audit log data inserted successfully");
-  //   } catch (error) {
-  //     console.error("Error inserting audit log data:", error);
-  //   }
-  // };
+  const populateAuditLogs = async () => {
+    try {
+      await RequestAudit.insertMany([
+        {
+          request_id: "123456789012345678901231",
+          changed_by: 140008,
+          old_status: "N/A",
+          new_status: "Pending",
+          change_timestamp: new Date("2024-12-01T08:00:00"),
+        },
+      ]);
+      console.log("Audit log data inserted successfully");
+    } catch (error) {
+      console.error("Error inserting audit log data:", error);
+    }
+  };
 
   const populateStaff = async () => {
     try {
