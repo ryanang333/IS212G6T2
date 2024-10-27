@@ -42,7 +42,7 @@ describe("createRegArrangementRequests - Integration Test with MongoDB", () => {
         arrangementRequests: [
           {
             id: 1,
-            startDate: "2024-11-01",
+            date: "2024-11-01",
             recurringInterval: "1week",
             time: "Full Day",
             numEvents: 3,

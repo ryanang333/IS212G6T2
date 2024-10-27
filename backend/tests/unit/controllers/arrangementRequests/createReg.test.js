@@ -18,7 +18,7 @@ describe("createRegArrangementRequests", () => {
         arrangementRequests: [
           {
             id: 1,
-            startDate: "2024-10-25",
+            date: "2024-10-25",
             recurringInterval: "1 week",
             numEvents: 3, // numEvents must be greater than 1
             reason: "Work from home",
@@ -115,7 +115,7 @@ describe("createRegArrangementRequests", () => {
     const cleanedRequests = [
       {
         id: 1,
-        startDate: "2024-10-25",
+        date: "2024-10-25",
         recurringInterval: "1 week",
         numEvents: 3,
         reason: "Work from home",
@@ -124,7 +124,7 @@ describe("createRegArrangementRequests", () => {
       },
       {
         id: 1,
-        startDate: "2024-10-25",
+        date: "2024-10-25",
         recurringInterval: "1 week",
         numEvents: 3,
         reason: "Work from home",
@@ -133,7 +133,7 @@ describe("createRegArrangementRequests", () => {
       },
       {
         id: 1,
-        startDate: "2024-10-25",
+        date: "2024-10-25",
         recurringInterval: "1 week",
         numEvents: 3,
         reason: "Work from home",
