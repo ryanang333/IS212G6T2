@@ -857,7 +857,7 @@ export const ApproveWithdrawalRequest = async (req, res) => {
           request_type: "Manager_Action",
           receiver_id: request.staff_id,
           old_status: REQUEST_STATUS_PENDING_WITHDRAWAL,
-          new_status: REQUEST_STATUS_APPROVED,
+          new_status: REQUEST_STATUS_WITHDRAWN,
           reason: "N/A"
         };
         
@@ -937,7 +937,7 @@ export const RejectWithdrawalRequest = async (req, res) => {
           request_type: "Manager_Action",
           receiver_id: request.staff_id,
           old_status: REQUEST_STATUS_PENDING_WITHDRAWAL,
-          new_status: REQUEST_STATUS_REJECTED,
+          new_status: REQUEST_STATUS_APPROVED,
           reason: "N/A"
         };
         
