@@ -90,19 +90,17 @@ export const createNewRequests = async (arrangementRequests, staffId, managerId)
         }))
       );
   
-      if (updatedRequests.modifiedCount > 0) {
-        for (const request of requests) {
+      if (reqArr.length > 0) {
           try {
             await createAuditEntry(
-              previousRequests,
-              request.staff_id,
-              REQUEST_STATUS_APPROVED,
-              REQUEST_STATUS_PENDING_WITHDRAWAL
+              reqArr,
+              staffId,
+              REQUEST_STATUS_NONE,
+              REQUEST_STATUS_PENDING
             );
           } catch (auditError) {
           };
-        };
-      } 
+      };
     } catch (error) {
       const msg = error.message.includes("Cannot apply")
         ? error.message
