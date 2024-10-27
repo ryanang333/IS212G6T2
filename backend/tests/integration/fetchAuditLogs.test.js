@@ -1,5 +1,5 @@
 import mongoose from 'mongoose';
-import { MongoMemoryServer } from 'mongodb-memory-server';
+import { MongoMemoryServer } from 'mongodb-memory-server-core';
 import request from 'supertest';
 import app from '../../api/index';  // Assuming this is your Express app entry point
 import ArrangementRequest from "../../api/models/arrangementRequestsModel.js";
