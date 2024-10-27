@@ -930,6 +930,7 @@ export const updateIndividualRequestStatus = async (req, res) => {
       message: `${pendingRequests.length} requests have been auto-rejected successfully.`
     });
   } catch (error) {
+    console.error(error.message);
     return res.status(500).json({ message: 'Internal server error' });
     
   }
