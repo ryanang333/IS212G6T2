@@ -11,7 +11,7 @@
       <li><router-link to="/inbox" class="text-white hover:underline">Inbox</router-link></li>
 
       <li v-if="role === '1'">
-        <router-link to="/audit-logs" class="text-white hover:underline">Audit Logs</router-link>
+        <router-link to="/audit-logs" class="text-white hover:underline">Records</router-link>
       </li>
 
       <li v-if="role === '3' || role === '1'">
