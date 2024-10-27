@@ -91,7 +91,7 @@ export default {
     },
     formatNotification(notification) {
       const formattedDate = new Date(notification.created_at).toLocaleDateString();
-      const reasonPhrase = notification.reason ? ` due to ${notification.reason}` : '';
+      const reasonPhrase = notification.reason && notification.reason !== 'N/A' ? ` due to ${notification.reason}` : '';
 
       if (notification.old_status === 'N/A') {
         return `Arrangement Request for date ${formattedDate} has been submitted by Staff ID ${notification.changed_by}${reasonPhrase}. The status has been changed to ${(notification.new_status).toLowerCase()}.`;

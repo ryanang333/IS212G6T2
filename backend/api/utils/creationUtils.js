@@ -125,19 +125,18 @@ export const createNewRequests = async (arrangementRequests, staffId, managerId)
           await createNotification(notificationData);
         });
   
-      await Promise.all(notificationPromises);
+        await Promise.all(notificationPromises);
   
-      if (reqArr.length > 0) {
-          try {
-            await createAuditEntry(
-              previousRequests,
-              request.staff_id,
-              REQUEST_STATUS_APPROVED,
-              REQUEST_STATUS_PENDING_WITHDRAWAL
-            );
-          } catch (auditError) {
-          };
-      };
+        try {
+          await createAuditEntry(
+            reqArr,
+            staffId,
+            REQUEST_STATUS_NONE,
+            REQUEST_STATUS_APPROVED
+          );
+        } catch (auditError) {
+        }
+      }
     } catch (error) {
       const msg = error.message.includes("Cannot apply")
         ? error.message
