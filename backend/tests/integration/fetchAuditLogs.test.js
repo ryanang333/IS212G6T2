@@ -6,8 +6,10 @@ import ArrangementRequest from "../../api/models/arrangementRequestsModel.js";
 import RequestAudit from '../../api/models/requestAuditModel';
 
 let mongoServer;
+let server;
 
 beforeAll(async () => {
+  // Start MongoMemoryServer for in-memory MongoDB
   mongoServer = await MongoMemoryServer.create();
   const uri = mongoServer.getUri();
 
@@ -16,17 +18,29 @@ beforeAll(async () => {
     await mongoose.disconnect();
   }
 
+  // Connect to the in-memory MongoDB instance
   await mongoose.connect(uri, {
     useNewUrlParser: true,
     useUnifiedTopology: true,
   });
+
+  // Start the server on a random port
+  server = app.listen(0);  // 0 allows the OS to assign a random available port
 });
 
 afterAll(async () => {
-  // Clear the in-memory database and disconnect from MongoDB
+  // Close MongoDB connection and stop in-memory server
   await mongoose.connection.dropDatabase();
   await mongoose.connection.close();
   await mongoServer.stop();
+
+  // Close the Express server, awaiting the close event
+  await new Promise((resolve, reject) => {
+    server.close((err) => {
+      if (err) return reject(err);
+      resolve();
+    });
+  });
 });
 
 afterEach(async () => {
@@ -48,7 +62,6 @@ describe('Functional Test for fetchAuditLogs', () => {
       withdraw_reason: null,
       manager_reason: null,
       request_time: 'Full Day', 
-
     });
 
     // Step 2: Insert mock audit log into the real database
@@ -145,7 +158,7 @@ describe('Functional Test for fetchAuditLogs', () => {
       reason: 'Test reason',
       withdraw_reason: null,
       manager_reason: null,
-      request_time: 'Full Day', 
+      request_time: 'Full Day',
     });
 
     // Step 2: Insert mock audit log into the real database

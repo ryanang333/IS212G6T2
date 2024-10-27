@@ -28,8 +28,10 @@ app.use('/arrangementRequests', arrangementRequestsRoutes);
 app.use('/requestAudit', requestAuditRoutes);
 
 
-app.listen(process.env.PORT, () => {
-  console.log(`Server ready on port ${process.env.PORT}`);
-});
+if (process.env.NODE_ENV !== 'test') {
+  app.listen(process.env.PORT, () => {
+    console.log(`Server ready on port ${process.env.PORT}`);
+  });
+}
 
 export default app;
