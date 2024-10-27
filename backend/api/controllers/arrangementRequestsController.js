@@ -755,7 +755,7 @@ export const ApproveWithdrawalRequest = async (req, res) => {
           previousRequests,
           request.manager_id,
           REQUEST_STATUS_PENDING_WITHDRAWAL,
-          REQUEST_STATUS_APPROVED
+          REQUEST_STATUS_WITHDRAWN
         );
       };
     }
@@ -805,7 +805,7 @@ export const RejectWithdrawalRequest = async (req, res) => {
           previousRequests,
           request.manager_id,
           REQUEST_STATUS_PENDING_WITHDRAWAL,
-          REQUEST_STATUS_REJECTED
+          REQUEST_STATUS_APPROVED
         );
       };
     }
