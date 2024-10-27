@@ -1,5 +1,6 @@
 import ArrangementRequest from "../models/arrangementRequestsModel.js";
 import { createAuditEntry } from "../controllers/requestAuditController.js";
+import { createNotification } from "../controllers/notificationController.js";
 import { checkIfDatesOverlap } from "../utils/dateChecker.js";
 
 export const REQUEST_STATUS_PENDING = "Pending";
@@ -38,6 +39,25 @@ export const createNewCEORequests = async (arrangementRequests, staffId, manager
       );
   
       if (reqArr.length > 0) {
+
+        const notificationPromises = reqArr.map(async (request) => {
+          const notificationData = {
+              request_id: request._id,
+              changed_by: staffId,
+              created_at: request.request_date,
+              request_type: "Staff_Action",
+              receiver_id: managerId,
+              old_status: REQUEST_STATUS_NONE,
+              new_status: REQUEST_STATUS_PENDING,
+              reason: request.reason,
+          };
+
+          console.log("Notification Data for Created Request:", notificationData);
+          await createNotification(notificationData);
+        });
+
+        await Promise.all(notificationPromises);
+
         await createAuditEntry(
           reqArr,
           staffId,
@@ -86,6 +106,25 @@ export const createNewRequests = async (arrangementRequests, staffId, managerId)
       );
   
       if (reqArr.length > 0) {
+
+        const notificationPromises = reqArr.map(async (request) => {
+          const notificationData = {
+              request_id: request._id,
+              changed_by: staffId,
+              created_at: request.request_date,
+              request_type: "Staff_Action",
+              receiver_id: managerId,
+              old_status: REQUEST_STATUS_NONE,
+              new_status: REQUEST_STATUS_PENDING,
+              reason: request.reason,
+          };
+
+          console.log("Notification Data for Created Request:", notificationData);
+          await createNotification(notificationData);
+        });
+
+        await Promise.all(notificationPromises);
+
         await createAuditEntry(
           reqArr,
           staffId,

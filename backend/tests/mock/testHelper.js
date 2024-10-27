@@ -211,3 +211,48 @@ export const mockStaffByDept = [
     __v: 0,
   },
 ];
+
+export const mockNotification = {
+  _id: new Types.ObjectId("66fe5b8756686491085b1316"),
+  staff_id: 140881,
+  type: "Work From Home",
+  message: "Your WFH request has been approved.",
+  status: "Unread",
+  created_at: new Date("2024-10-08T10:00:00.000Z"),
+  updated_at: new Date("2024-10-08T10:00:00.000Z"),
+};
+
+export const mockNotificationList = [
+  {
+    _id: new Types.ObjectId("66fe5b8756686491085b1317"),
+    staff_id: 140881,
+    type: "Work From Home",
+    message: "Your WFH request has been approved.",
+    status: "Unread",
+    created_at: new Date("2024-10-08T10:00:00.000Z"),
+    updated_at: new Date("2024-10-08T10:00:00.000Z"),
+  },
+  {
+    _id: new Types.ObjectId("66fe5b8756686491085b1318"),
+    staff_id: 140001,
+    type: "Leave",
+    message: "Your leave request has been denied.",
+    status: "Read",
+    created_at: new Date("2024-10-07T10:00:00.000Z"),
+    updated_at: new Date("2024-10-07T10:00:00.000Z"),
+  },
+  {
+    _id: new Types.ObjectId("66fe5b8756686491085b1319"),
+    staff_id: 140002,
+    type: "General",
+    message: "New company policy has been released.",
+    status: "Unread",
+    created_at: new Date("2024-10-06T10:00:00.000Z"),
+    updated_at: new Date("2024-10-06T10:00:00.000Z"),
+  },
+];
+
+export const mockNotificationUpdate = {
+  _id: mockNotification._id,
+  status: "Read",
+};

@@ -1,5 +1,6 @@
 import ArrangementRequest from "../models/arrangementRequestsModel.js";
 import { getStaffDetails, getStaffIdsByDept } from "./staffController.js";
+import { createNotification } from "./notificationController.js";
 import { createAuditEntry } from "./requestAuditController.js";
 import {
   checkDatesValidity,
@@ -16,6 +17,11 @@ import {
 export const REQUEST_STATUS_PENDING = "Pending";
 export const REQUEST_STATUS_NONE = "N/A";
 export const REQUEST_STATUS_APPROVED = "Approved";
+export const REQUEST_STATUS_REJECTED = "Rejected";
+export const REQUEST_STATUS_CANCELLED = "Cancelled";
+export const REQUEST_STATUS_PENDING_WITHDRAWAL = "Pending Withdrawal";
+export const REQUEST_STATUS_WITHDRAWN = "Withdrawn";
+
 
 /**
  * Creates temporary arrangement requests for a staff member.
@@ -535,12 +541,41 @@ export const approveStaffRequests = async (req, res) => {
   }
 
   try {
-    await ArrangementRequest.updateMany(
+    const previousRequests = await ArrangementRequest.find({
+      _id: { $in: cleanedRequestsId },
+    });
+
+    const updatedRequests = await ArrangementRequest.updateMany(
       { _id: { $in: cleanedRequestsId } },
       {
         status: "Approved",
       }
     );
+  
+    if (updatedRequests.modifiedCount > 0) {
+      for (const request of requests) {
+        await createAuditEntry(
+          previousRequests,
+          request.manager_id,
+          REQUEST_STATUS_PENDING,
+          REQUEST_STATUS_APPROVED
+        );
+      };
+
+      for (const request of requests) {
+        await createNotification({
+          request_id: request._id,
+          changed_by: request.manager_id,
+          created_at: request.request_date,
+          request_type: "Manager_Action",
+          receiver_id: request.staff_id,
+          old_status: REQUEST_STATUS_PENDING,
+          new_status: REQUEST_STATUS_APPROVED,
+          reason: request.manager_reason
+      });
+      };
+    }
+
     return responseUtils.handleSuccessResponse(
       res,
       null,
@@ -593,13 +628,42 @@ export const rejectStaffRequests = async (req, res) => {
   }
 
   try {
-    await ArrangementRequest.updateMany(
+    const previousRequests = await ArrangementRequest.find({
+      _id: { $in: cleanedRequestsId },
+    });
+
+    const updatedRequests = await ArrangementRequest.updateMany(
       { _id: { $in: cleanedRequestsId } },
       {
         status: "Rejected",
         manager_reason: reason,
       }
     );
+
+    if (updatedRequests.modifiedCount > 0) {
+      for (const request of requests) {
+        await createAuditEntry(
+          previousRequests,
+          request.manager_id,
+          REQUEST_STATUS_PENDING,
+          REQUEST_STATUS_REJECTED
+        );
+      };
+
+      for (const request of requests) {
+        await createNotification({
+          request_id: request._id,
+          changed_by: request.manager_id,
+          created_at: request.request_date,
+          request_type: "Manager_Action",
+          receiver_id: request.staff_id,
+          old_status: REQUEST_STATUS_PENDING,
+          new_status: REQUEST_STATUS_REJECTED,
+          reason: reason
+      });
+      };
+    }
+
     return responseUtils.handleSuccessResponse(
       res,
       null,
@@ -650,12 +714,41 @@ export const cancelStaffRequests = async (req, res) => {
   }
 
   try {
-    await ArrangementRequest.updateMany(
+    const previousRequests = await ArrangementRequest.find({
+      _id: { $in: cleanedRequestsId },
+    });
+
+    const updatedRequests = await ArrangementRequest.updateMany(
       { _id: { $in: cleanedRequestsId } },
       {
         status: "Cancelled",
       }
     );
+
+    if (updatedRequests.modifiedCount > 0) {
+      for (const request of requests) {
+        await createAuditEntry(
+          previousRequests,
+          request.staff_id,
+          REQUEST_STATUS_PENDING,
+          REQUEST_STATUS_CANCELLED
+        );
+      };
+
+      for (const request of requests) {
+        await createNotification({
+          request_id: request._id,
+          changed_by: request.staff_id,
+          created_at: request.request_date,
+          request_type: "Staff_Action",
+          receiver_id: request.manager_id,
+          old_status: REQUEST_STATUS_PENDING,
+          new_status: REQUEST_STATUS_APPROVED,
+          reason: request.reason
+      });
+      };
+    }
+
     return responseUtils.handleSuccessResponse(
       res,
       null,
@@ -685,12 +778,40 @@ export const ApproveWithdrawalRequest = async (req, res) => {
   }
 
   try {
-    await ArrangementRequest.updateMany(
+    const previousRequests = await ArrangementRequest.find({
+      _id: { $in: cleanedRequestsId },
+    });
+
+    const updatedRequests = await ArrangementRequest.updateMany(
       { _id: { $in: cleanedRequestsId } },
       {
         status: "Withdrawn",
       }
     );
+
+    if (updatedRequests.modifiedCount > 0) {
+      for (const request of requests) {
+        await createAuditEntry(
+          previousRequests,
+          request.manager_id,
+          REQUEST_STATUS_PENDING_WITHDRAWAL,
+          REQUEST_STATUS_APPROVED
+        );
+      };
+
+      for (const request of requests) {
+        await createNotification({
+          request_id: request._id,
+          changed_by: request.manager_id,
+          created_at: request.request_date,
+          request_type: "Manager_Action",
+          receiver_id: request.staff_id,
+          old_status: REQUEST_STATUS_PENDING_WITHDRAWAL,
+          new_status: REQUEST_STATUS_APPROVED,
+          reason: request.manager_reason
+      });
+      };
+    }
     return responseUtils.handleSuccessResponse(
       res,
       null,
@@ -720,12 +841,41 @@ export const RejectWithdrawalRequest = async (req, res) => {
   }
 
   try {
-    await ArrangementRequest.updateMany(
+    const previousRequests = await ArrangementRequest.find({
+      _id: { $in: cleanedRequestsId },
+    });
+
+    const updatedRequests = await ArrangementRequest.updateMany(
       { _id: { $in: cleanedRequestsId } },
       {
         status: "Approved",
       }
     );
+
+    if (updatedRequests.modifiedCount > 0) {
+      for (const request of requests) {
+        await createAuditEntry(
+          previousRequests,
+          request.manager_id,
+          REQUEST_STATUS_PENDING_WITHDRAWAL,
+          REQUEST_STATUS_REJECTED
+        );
+      };
+
+      for (const request of requests) {
+        await createNotification({
+          request_id: request._id,
+          changed_by: request.manager_id,
+          created_at: request.request_date,
+          request_type: "Manager_Action",
+          receiver_id: request.staff_id,
+          old_status: REQUEST_STATUS_PENDING_WITHDRAWAL,
+          new_status: REQUEST_STATUS_REJECTED,
+          reason: request.manager_reason
+      });
+      };
+    }
+
     return responseUtils.handleSuccessResponse(
       res,
       null,
@@ -778,13 +928,42 @@ export const withdrawStaffRequests = async (req, res) => {
   }
 
   try {
-    await ArrangementRequest.updateMany(
+    const previousRequests = await ArrangementRequest.find({
+      _id: { $in: cleanedRequestsId },
+    });
+
+    const updatedRequests = await ArrangementRequest.updateMany(
       { _id: { $in: cleanedRequestsId } },
       {
         status: "Pending Withdrawal",
         withdraw_reason: reason,
       }
     );
+
+    if (updatedRequests.modifiedCount > 0) {
+      for (const request of requests) {
+        await createAuditEntry(
+          previousRequests,
+          request.staff_id,
+          REQUEST_STATUS_APPROVED,
+          REQUEST_STATUS_PENDING_WITHDRAWAL
+        );
+      };
+
+      for (const request of requests) {
+        await createNotification({
+          request_id: request._id,
+          changed_by: request.staff_id,
+          created_at: request.request_date,
+          request_type: "Staff_Action",
+          receiver_id: request.manager_id,
+          old_status: REQUEST_STATUS_APPROVED,
+          new_status: REQUEST_STATUS_PENDING_WITHDRAWAL,
+          reason: request.withdraw_reason
+      });
+      };
+    }
+
     return responseUtils.handleSuccessResponse(
       res,
       null,
@@ -823,13 +1002,42 @@ export const withdrawRequestsAsManager = async (req, res) => {
   }
 
   try {
-    await ArrangementRequest.updateMany(
+    const previousRequests = await ArrangementRequest.find({
+      _id: { $in: cleanedRequestsId },
+    });
+
+    const updatedRequests = await ArrangementRequest.updateMany(
       { _id: { $in: cleanedRequestsId } },
       {
         status: "Withdrawn",
         withdraw_reason: reason,
       }
     );
+
+    if (updatedRequests.modifiedCount > 0) {
+      for (const request of requests) {
+        await createAuditEntry(
+          previousRequests,
+          request.manager_id,
+          REQUEST_STATUS_APPROVED,
+          REQUEST_STATUS_PENDING_WITHDRAWAL
+        );
+      };
+
+      for (const request of requests) {
+        await createNotification({
+          request_id: request._id,
+          changed_by: request.manager_id,
+          created_at: request.request_date,
+          request_type: "Manager_Action",
+          receiver_id: request.staff_id,
+          old_status: REQUEST_STATUS_APPROVED,
+          new_status: REQUEST_STATUS_PENDING_WITHDRAWAL,
+          reason: request.withdraw_reason
+      });
+      };
+    }
+
     return responseUtils.handleSuccessResponse(
       res,
       null,

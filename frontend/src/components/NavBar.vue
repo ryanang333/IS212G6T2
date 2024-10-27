@@ -8,7 +8,7 @@
         <router-link to="/myrequests" class="text-white hover:underline">My Requests</router-link>
       </li>
       <li><router-link to="/schedule" class="text-white hover:underline">Schedule</router-link></li>
-      <li><router-link to="/inbox" class="text-white hover:underline">Inbox</router-link></li>
+      <li><router-link to="/notifications" class="text-white hover:underline">Inbox</router-link></li>
 
       <li v-if="role === '1'">
         <router-link to="/audit-logs" class="text-white hover:underline">Audit Logs</router-link>
