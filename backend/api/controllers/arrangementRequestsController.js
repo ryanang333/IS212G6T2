@@ -21,7 +21,6 @@ export const REQUEST_STATUS_CANCELLED = "Cancelled";
 export const REQUEST_STATUS_PENDING_WITHDRAWAL = "Pending Withdrawal";
 export const REQUEST_STATUS_WITHDRAWN = "Withdrawn";
 
-
 /**
  * Creates temporary arrangement requests for a staff member.
  * @param {Object} req - The request object.
@@ -112,7 +111,7 @@ export const createRegArrangementRequests = async (req, res) => {
       const groupID = uuidv4();
 
       // Convert the recurring weeks into individual dates for each arrangement request
-      const startDate = new Date(arrangementRequestDirty.startDate);
+      const startDate = new Date(arrangementRequestDirty.date);
       const recurringInterval = parseInt(
         arrangementRequestDirty.recurringInterval.replace("week", ""),
         10
@@ -135,8 +134,8 @@ export const createRegArrangementRequests = async (req, res) => {
       // Add the cleaned requests for this arrangement request to the main array
       allArrangementRequestsClean.push(...arrangementRequestsClean);
     }
-
-    // Check dates for all requests
+    
+    // Function 1 - Check Date
     const validationResponse = checkDatesValidity(allArrangementRequestsClean);
     if (!validationResponse.isValid) {
       return responseUtils.handleBadRequest(
