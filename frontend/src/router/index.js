@@ -50,6 +50,16 @@ const router = createRouter({
       path: '/staffrequests',
       name: 'staffrequests',
       component: ViewStaffRequests
+    },
+    {
+      path: '/notifications',
+      name: 'notifications',
+      component: NotificationInbox
+    },
+    {
+      path: '/audit-logs',
+      name: 'staffrequests',
+      component: RequestAudit
     }
   ]
 })
