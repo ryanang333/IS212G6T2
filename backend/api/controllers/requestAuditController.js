@@ -68,7 +68,6 @@ export const fetchAuditLogs = async (req, res) => {
     // Fetch RequestAudit logs based on the filtered ArrangementRequest IDs or fetch all logs if no filters
     let logs = [];
     if (arrangementRequests.length) {
-      console.log("in arrangementRequests.length block")
       logs = await RequestAudit.find({
         request_id: { $in: arrangementRequests.map(req => req._id) }
       }).populate({
@@ -77,8 +76,6 @@ export const fetchAuditLogs = async (req, res) => {
       });
     }
 
-    console.log('Arrangement Requests:', arrangementRequests.length);
-    console.log('Fetched Logs:', logs.length);
 
     // Map logs to the desired output format
     const formattedLogs = logs.map(log => ({
