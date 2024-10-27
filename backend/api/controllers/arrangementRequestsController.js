@@ -553,14 +553,17 @@ export const approveStaffRequests = async (req, res) => {
   
     if (updatedRequests.modifiedCount > 0) {
       for (const request of requests) {
-        await createAuditEntry(
-          previousRequests,
-          request.manager_id,
-          REQUEST_STATUS_PENDING,
-          REQUEST_STATUS_APPROVED
-        );
+        try {
+          await createAuditEntry(
+            previousRequests,
+            request.manager_id,
+            REQUEST_STATUS_PENDING,
+            REQUEST_STATUS_APPROVED
+          );
+        } catch (auditError) {
+        };
       };
-    }
+    } 
 
     return responseUtils.handleSuccessResponse(
       res,
@@ -628,14 +631,17 @@ export const rejectStaffRequests = async (req, res) => {
 
     if (updatedRequests.modifiedCount > 0) {
       for (const request of requests) {
-        await createAuditEntry(
-          previousRequests,
-          request.manager_id,
-          REQUEST_STATUS_PENDING,
-          REQUEST_STATUS_REJECTED
-        );
+        try {
+          await createAuditEntry(
+            previousRequests,
+            request.manager_id,
+            REQUEST_STATUS_PENDING,
+            REQUEST_STATUS_REJECTED
+          );
+        } catch (auditError) {
+        };
       };
-    }
+    } 
 
     return responseUtils.handleSuccessResponse(
       res,
@@ -700,14 +706,17 @@ export const cancelStaffRequests = async (req, res) => {
 
     if (updatedRequests.modifiedCount > 0) {
       for (const request of requests) {
-        await createAuditEntry(
-          previousRequests,
-          request.staff_id,
-          REQUEST_STATUS_PENDING,
-          REQUEST_STATUS_CANCELLED
-        );
+        try {
+          await createAuditEntry(
+            previousRequests,
+            request.staff_id,
+            REQUEST_STATUS_PENDING,
+            REQUEST_STATUS_CANCELLED
+          );
+        } catch (auditError) {
+        };
       };
-    }
+    } 
 
     return responseUtils.handleSuccessResponse(
       res,
@@ -751,14 +760,17 @@ export const ApproveWithdrawalRequest = async (req, res) => {
 
     if (updatedRequests.modifiedCount > 0) {
       for (const request of requests) {
-        await createAuditEntry(
-          previousRequests,
-          request.manager_id,
-          REQUEST_STATUS_PENDING_WITHDRAWAL,
-          REQUEST_STATUS_WITHDRAWN
-        );
+        try {
+          await createAuditEntry(
+            previousRequests,
+            request.manager_id,
+            REQUEST_STATUS_PENDING_WITHDRAWAL,
+            REQUEST_STATUS_WITHDRAWN
+          );
+        } catch (auditError) {
+        };
       };
-    }
+    } 
     return responseUtils.handleSuccessResponse(
       res,
       null,
@@ -801,14 +813,17 @@ export const RejectWithdrawalRequest = async (req, res) => {
 
     if (updatedRequests.modifiedCount > 0) {
       for (const request of requests) {
-        await createAuditEntry(
-          previousRequests,
-          request.manager_id,
-          REQUEST_STATUS_PENDING_WITHDRAWAL,
-          REQUEST_STATUS_APPROVED
-        );
+        try {
+          await createAuditEntry(
+            previousRequests,
+            request.manager_id,
+            REQUEST_STATUS_PENDING_WITHDRAWAL,
+            REQUEST_STATUS_APPROVED
+          );
+        } catch (auditError) {
+        };
       };
-    }
+    } 
 
     return responseUtils.handleSuccessResponse(
       res,
@@ -876,14 +891,17 @@ export const withdrawStaffRequests = async (req, res) => {
 
     if (updatedRequests.modifiedCount > 0) {
       for (const request of requests) {
-        await createAuditEntry(
-          previousRequests,
-          request.staff_id,
-          REQUEST_STATUS_APPROVED,
-          REQUEST_STATUS_PENDING_WITHDRAWAL
-        );
+        try {
+          await createAuditEntry(
+            previousRequests,
+            request.staff_id,
+            REQUEST_STATUS_APPROVED,
+            REQUEST_STATUS_PENDING_WITHDRAWAL
+          );
+        } catch (auditError) {
+        };
       };
-    }
+    } 
 
     return responseUtils.handleSuccessResponse(
       res,
@@ -937,14 +955,17 @@ export const withdrawRequestsAsManager = async (req, res) => {
 
     if (updatedRequests.modifiedCount > 0) {
       for (const request of requests) {
-        await createAuditEntry(
-          previousRequests,
-          request.manager_id,
-          REQUEST_STATUS_APPROVED,
-          REQUEST_STATUS_PENDING_WITHDRAWAL
-        );
+        try {
+          await createAuditEntry(
+            previousRequests,
+            request.manager_id,
+            REQUEST_STATUS_APPROVED,
+            REQUEST_STATUS_WITHDRAWN
+          );
+        } catch (auditError) {
+        };
       };
-    }
+    } 
 
     return responseUtils.handleSuccessResponse(
       res,
