@@ -38,8 +38,10 @@ export const createNewCEORequests = async (arrangementRequests, staffId, manager
         }))
       );
   
-      if (reqArr.length > 0) {
-
+      if (updatedRequests.modifiedCount > 0) {
+        for (const request of requests) {
+          try {
+    
         const notificationPromises = reqArr.map(async (request) => {
           const notificationData = {
               request_id: request._id,
@@ -59,12 +61,15 @@ export const createNewCEORequests = async (arrangementRequests, staffId, manager
         await Promise.all(notificationPromises);
 
         await createAuditEntry(
-          reqArr,
-          staffId,
-          REQUEST_STATUS_NONE,
-          REQUEST_STATUS_PENDING
-        );
-      }
+              previousRequests,
+              request.staff_id,
+              REQUEST_STATUS_APPROVED,
+              REQUEST_STATUS_PENDING_WITHDRAWAL
+            );
+          } catch (auditError) {
+          };
+        };
+      } 
       
     } catch (error) {
       const msg = error.message.includes("Cannot apply - CEO")
@@ -105,8 +110,10 @@ export const createNewRequests = async (arrangementRequests, staffId, managerId)
         }))
       );
   
-      if (reqArr.length > 0) {
-
+      if (updatedRequests.modifiedCount > 0) {
+        for (const request of requests) {
+          try {
+    
         const notificationPromises = reqArr.map(async (request) => {
           const notificationData = {
               request_id: request._id,
@@ -126,12 +133,15 @@ export const createNewRequests = async (arrangementRequests, staffId, managerId)
         await Promise.all(notificationPromises);
 
         await createAuditEntry(
-          reqArr,
-          staffId,
-          REQUEST_STATUS_NONE,
-          REQUEST_STATUS_PENDING
-        );
-      }
+              previousRequests,
+              request.staff_id,
+              REQUEST_STATUS_APPROVED,
+              REQUEST_STATUS_PENDING_WITHDRAWAL
+            );
+          } catch (auditError) {
+          };
+        };
+      } 
     } catch (error) {
       const msg = error.message.includes("Cannot apply")
         ? error.message

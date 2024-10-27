@@ -554,6 +554,21 @@ export const approveStaffRequests = async (req, res) => {
   
     if (updatedRequests.modifiedCount > 0) {
       for (const request of requests) {
+        try {
+          await createAuditEntry(
+            previousRequests,
+            request.manager_id,
+            REQUEST_STATUS_PENDING,
+            REQUEST_STATUS_APPROVED
+          );
+        } catch (auditError) {
+        };
+      };
+    } 
+
+  
+    if (updatedRequests.modifiedCount > 0) {
+      for (const request of requests) {
         await createAuditEntry(
           previousRequests,
           request.manager_id,
@@ -642,6 +657,21 @@ export const rejectStaffRequests = async (req, res) => {
 
     if (updatedRequests.modifiedCount > 0) {
       for (const request of requests) {
+        try {
+          await createAuditEntry(
+            previousRequests,
+            request.manager_id,
+            REQUEST_STATUS_PENDING,
+            REQUEST_STATUS_REJECTED
+          );
+        } catch (auditError) {
+        };
+      };
+    } 
+
+
+    if (updatedRequests.modifiedCount > 0) {
+      for (const request of requests) {
         await createAuditEntry(
           previousRequests,
           request.manager_id,
@@ -727,6 +757,21 @@ export const cancelStaffRequests = async (req, res) => {
 
     if (updatedRequests.modifiedCount > 0) {
       for (const request of requests) {
+        try {
+          await createAuditEntry(
+            previousRequests,
+            request.staff_id,
+            REQUEST_STATUS_PENDING,
+            REQUEST_STATUS_CANCELLED
+          );
+        } catch (auditError) {
+        };
+      };
+    } 
+
+
+    if (updatedRequests.modifiedCount > 0) {
+      for (const request of requests) {
         await createAuditEntry(
           previousRequests,
           request.staff_id,
@@ -791,6 +836,20 @@ export const ApproveWithdrawalRequest = async (req, res) => {
 
     if (updatedRequests.modifiedCount > 0) {
       for (const request of requests) {
+        try {
+          await createAuditEntry(
+            previousRequests,
+            request.manager_id,
+            REQUEST_STATUS_PENDING_WITHDRAWAL,
+            REQUEST_STATUS_WITHDRAWN
+          );
+        } catch (auditError) {
+        };
+      };
+    } 
+
+    if (updatedRequests.modifiedCount > 0) {
+      for (const request of requests) {
         await createAuditEntry(
           previousRequests,
           request.manager_id,
@@ -851,6 +910,21 @@ export const RejectWithdrawalRequest = async (req, res) => {
         status: "Approved",
       }
     );
+
+    if (updatedRequests.modifiedCount > 0) {
+      for (const request of requests) {
+        try {
+          await createAuditEntry(
+            previousRequests,
+            request.manager_id,
+            REQUEST_STATUS_PENDING_WITHDRAWAL,
+            REQUEST_STATUS_APPROVED
+          );
+        } catch (auditError) {
+        };
+      };
+    } 
+
 
     if (updatedRequests.modifiedCount > 0) {
       for (const request of requests) {
@@ -942,6 +1016,21 @@ export const withdrawStaffRequests = async (req, res) => {
 
     if (updatedRequests.modifiedCount > 0) {
       for (const request of requests) {
+        try {
+          await createAuditEntry(
+            previousRequests,
+            request.staff_id,
+            REQUEST_STATUS_APPROVED,
+            REQUEST_STATUS_PENDING_WITHDRAWAL
+          );
+        } catch (auditError) {
+        };
+      };
+    } 
+
+
+    if (updatedRequests.modifiedCount > 0) {
+      for (const request of requests) {
         await createAuditEntry(
           previousRequests,
           request.staff_id,
@@ -1013,6 +1102,21 @@ export const withdrawRequestsAsManager = async (req, res) => {
         withdraw_reason: reason,
       }
     );
+
+    if (updatedRequests.modifiedCount > 0) {
+      for (const request of requests) {
+        try {
+          await createAuditEntry(
+            previousRequests,
+            request.manager_id,
+            REQUEST_STATUS_APPROVED,
+            REQUEST_STATUS_WITHDRAWN
+          );
+        } catch (auditError) {
+        };
+      };
+    } 
+
 
     if (updatedRequests.modifiedCount > 0) {
       for (const request of requests) {

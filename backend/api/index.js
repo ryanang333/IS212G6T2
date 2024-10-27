@@ -3,6 +3,7 @@ import express from 'express';
 import cors from 'cors';
 import staffRoutes from './routes/staffRoutes.js';
 import arrangementRequestsRoutes from './routes/arrangementRequestsRoutes.js';
+import requestAuditRoutes from './routes/requestAuditRoutes.js';
 import connectDB from '../config/db.config.js'; 
 import notificationRoutes from './routes/notificationRoutes.js'
 
@@ -25,10 +26,13 @@ app.get("/", (req, res) => {
 
 app.use('/staff', staffRoutes);
 app.use('/arrangementRequests', arrangementRequestsRoutes);
+app.use('/requestAudit', requestAuditRoutes);
 app.use('/notifications', notificationRoutes);
 
-app.listen(process.env.PORT, () => {
-  console.log(`Server ready on port ${process.env.PORT}`);
-});
+if (process.env.NODE_ENV !== 'test') {
+  app.listen(process.env.PORT, () => {
+    console.log(`Server ready on port ${process.env.PORT}`);
+  });
+}
 
 export default app;

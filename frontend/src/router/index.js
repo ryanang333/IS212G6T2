@@ -7,6 +7,7 @@ import Schedule from '../views/Schedule.vue'
 import Hello from '../views/Hello.vue'
 import ViewMyRequests from '@/views/ViewMyRequests.vue'
 import ViewStaffRequests from '@/views/ViewStaffRequests.vue'
+import RequestAudit from '@/views/RequestAudit.vue'
 import NotificationInbox from '@/views/ViewMyNotifications.vue'
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -49,11 +50,6 @@ const router = createRouter({
       path: '/staffrequests',
       name: 'staffrequests',
       component: ViewStaffRequests
-    },
-    {
-      path: '/notifications',
-      name: 'notifications',
-      component: NotificationInbox
     }
   ]
 })
