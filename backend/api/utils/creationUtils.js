@@ -266,3 +266,4 @@ export const findExistingRequests = async ({ staff_id, requestSlots }) => {
   //     throw new Error("Failed to approve request for CEO"); // Optional: You can throw a more descriptive error
   //   }
   // };
+  

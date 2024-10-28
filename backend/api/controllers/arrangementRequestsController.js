@@ -1212,3 +1212,52 @@ export const updateIndividualRequestStatus = async (req, res) => {
     res.status(500).json({ message: "Internal server error" });
   }
 };
+/**
+ * Automatically rejects pending staff arrangement requests if no action is taken by the manager
+ * before the day prior to the requested date.
+ *
+ * This function checks for requests where the requested date is tomorrow, and if the request is 
+ * still in "Pending" status, it will automatically reject it. A reason is added to indicate 
+ * that the system performed the auto-rejection.
+ *
+ * @async
+ * @function autoRejectPendingRequests
+ */
+ export const autoRejectPendingRequests = async () => {
+  try {
+    const today = new Date();
+    const rejectionDate = new Date(today);
+    rejectionDate.setDate(today.getDate() + 2); 
+    rejectionDate.setUTCHours(0, 0, 0, 0); 
+
+    const pendingRequests = await ArrangementRequest.find({
+      request_date: {$lte: rejectionDate},
+      status: 'Pending'
+    });
+
+    if (pendingRequests.length === 0) {
+      console.log('No pending requests for auto-rejection.')
+      
+    }
+
+    
+    const requestIds = pendingRequests.map(request => request._id);
+
+    await ArrangementRequest.updateMany(
+      { _id: { $in: requestIds } },
+      {
+        status: 'Rejected',
+        manager_reason: 'Auto-rejected by system due to lack of manager action',
+        updated_at: new Date() 
+      }
+    );
+    console.log(`${pendingRequests.length} requests have been auto-rejected successfully.`);
+    
+  } catch (error) {
+    console.error(error.message);
+    
+  }
+};
+
+
+

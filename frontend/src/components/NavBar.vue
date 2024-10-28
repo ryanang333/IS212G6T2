@@ -2,6 +2,9 @@
   <nav class="bg-gray-800 p-4">
     <ul class="flex space-x-4">
       <li>
+        <router-link to="/login" class="text-white hover:underline">LogOut</router-link>
+      </li>
+      <li>
         <router-link to="/apply" class="text-white hover:underline">Make Request</router-link>
       </li>
       <li>

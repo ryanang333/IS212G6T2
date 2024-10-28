@@ -54,7 +54,7 @@ describe('Creation Utils Test Suite', () => {
                 expect.any(Array),
                 mockStaffId,
                 'N/A',
-                'Pending'
+                'Approved'
             );
         });
     
@@ -100,7 +100,7 @@ describe('Creation Utils Test Suite', () => {
                 expect.any(Array),
                 mockStaffId,
                 'N/A',
-                'Pending'
+                'Approved'
             );
         });
     
