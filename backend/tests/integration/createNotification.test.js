@@ -1,12 +1,10 @@
+import { createNotification } from "../../api/controllers/notificationController.js";
 import mongoose from "mongoose";
 import httpMocks from "node-mocks-http";
-import { createNotification } from "../../api/controllers/notificationController.js";
 import Notification from "../../api/models/notificationModel.js";
-import { MongoMemoryServer } from "mongodb-memory-server-core";
+import { MongoMemoryServer } from 'mongodb-memory-server-core';
 
 let mongoServer;
-
-jest.setTimeout(120000);
 
 beforeAll(async () => {
   mongoServer = await MongoMemoryServer.create();
@@ -24,41 +22,107 @@ afterEach(async () => {
   await Notification.deleteMany({});
 });
 
-describe("createNotification - Integration Test", () => {
+describe("Notification Creation - Integration Tests", () => {
   let req, res;
 
   beforeEach(() => {
+    res = httpMocks.createResponse();
+  });
+
+  const testCases = [
+    { 
+      description: "manager approves (Pending -> Approved)", 
+      old_status: "Pending", 
+      new_status: "Approved",
+      request_type: "Manager_Action"
+    },
+    { 
+      description: "manager rejects (Pending -> Rejected)", 
+      old_status: "Pending", 
+      new_status: "Rejected",
+      request_type: "Manager_Action"
+    },
+    { 
+      description: "manager withdraws (Approved -> Withdrawn)", 
+      old_status: "Approved", 
+      new_status: "Withdrawn",
+      request_type: "Manager_Action"
+    },
+    { 
+      description: "staff creates a request (N/A -> Pending)", 
+      old_status: "N/A", 
+      new_status: "Pending",
+      request_type: "Staff_Action"
+    },
+    { 
+      description: "staff requests to withdraw (Approved -> Pending Withdrawal)", 
+      old_status: "Approved", 
+      new_status: "Pending Withdrawal",
+      request_type: "Staff_Action"
+    },
+    { 
+      description: "manager accepts pending withdrawal (Pending Withdrawal -> Withdrawn)", 
+      old_status: "Pending Withdrawal", 
+      new_status: "Withdrawn",
+      request_type: "Manager_Action"
+    },
+    { 
+      description: "manager rejects pending withdrawal (Pending Withdrawal -> Approved)", 
+      old_status: "Pending Withdrawal", 
+      new_status: "Approved",
+      request_type: "Manager_Action"
+    }
+  ];
+
+  testCases.forEach(({ description, old_status, new_status, request_type }) => {
+    test(`should create notification when ${description}`, async () => {
+      req = httpMocks.createRequest({
+        method: "POST",
+        url: "/notifications",
+        body: {
+          request_id: new mongoose.Types.ObjectId(),
+          changed_by: 140881,
+          receiver_id: 140882,
+          old_status: old_status,
+          new_status: new_status,
+          created_at: new Date(),
+          reason: "Status updated by manager/staff",
+          request_type: request_type,
+        },
+      });
+
+      await createNotification(req.body);
+
+      const notification = await Notification.findOne({
+        changed_by: 140881,
+        receiver_id: 140882,
+        old_status: old_status,
+        new_status: new_status
+      });
+
+      expect(notification).toBeTruthy();
+      expect(notification.receiver_id).toBe(140882);
+      expect(notification.old_status).toBe(old_status);
+      expect(notification.new_status).toBe(new_status);
+      expect(notification.request_type).toBe(request_type);
+      expect(notification.reason).toBe("Status updated by manager/staff");
+    });
+  });
+
+  test("should return a 400 if required fields are missing", async () => {
     req = httpMocks.createRequest({
       method: "POST",
       url: "/notifications",
       body: {
-        recipient_type: "staff",
-        recipient_id: "140881",
-        request_type: "Work From Home",
-        request_date_time: new Date(),
-        status: "Pending",
-        reason: "Health reasons",
-        notification_message: "Your WFH request is pending.",
+        changed_by: 140881,
+        receiver_id: 140882,
+        old_status: "Pending",
+        new_status: "Approved",
+        reason: "Approved by manager",
+        request_type: "Manager_Action",
       },
     });
-    res = httpMocks.createResponse();
-  });
 
-  test("should create a new notification and return 201 on success", async () => {
-    await createNotification(req, res);
-    const response = res._getJSONData();
-    
-    expect(res.statusCode).toBe(201);
-    expect(response.data).toHaveProperty("_id");
-    expect(response.data.recipient_id).toBe("140881");
-  });
-
-  test("should return 400 if required fields are missing", async () => {
-    req.body = {};  // Empty body to simulate missing fields
-    await createNotification(req, res);
-    const response = res._getData();
-
-    expect(res.statusCode).toBe(400);
-    expect(response).toContain("Missing required fields");
+    await expect(createNotification(req.body)).rejects.toThrow("Missing required fields");
   });
 });

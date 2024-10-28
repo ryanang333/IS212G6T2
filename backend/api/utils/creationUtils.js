@@ -48,7 +48,7 @@ export const createNewCEORequests = async (arrangementRequests, staffId, manager
           request_type: "Staff_Action",
           receiver_id: managerId,
           old_status: REQUEST_STATUS_NONE,
-          new_status: REQUEST_STATUS_PENDING,
+          new_status: REQUEST_STATUS_APPROVED,
           reason: request.reason,
         };
 
@@ -63,7 +63,7 @@ export const createNewCEORequests = async (arrangementRequests, staffId, manager
           reqArr,
           staffId,
           REQUEST_STATUS_NONE,
-          REQUEST_STATUS_PENDING
+          REQUEST_STATUS_APPROVED
         );
       } catch (auditError) {
       }
