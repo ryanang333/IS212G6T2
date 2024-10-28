@@ -174,7 +174,7 @@ export const getWeekStartAndEnd = (requestDate) => {
  * @param {Array<Object>} [filters.requestSlots] - An array of request slots, each containing date and time.
  * @returns {Promise<Array>} - A promise that resolves to an array of existing requests.
  */
-const findExistingRequests = async ({ staff_id, requestSlots }) => {
+export const findExistingRequests = async ({ staff_id, requestSlots }) => {
     const query = {};
   
     if (staff_id) {

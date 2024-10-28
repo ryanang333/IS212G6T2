@@ -30,13 +30,13 @@ export const REQUEST_STATUS_WITHDRAWN = "Withdrawn";
 export const createTempArrangementRequests = async (req, res) => {
   try {
     const { staffId, arrangementRequests } = req.body;
-    console.log("Received request body:", req.body);
-    console.log("Staff ID:", staffId);
-    console.log("Arrangement requests:", arrangementRequests);
+    // console.log("Received request body:", req.body);
+    // console.log("Staff ID:", staffId);
+    // console.log("Arrangement requests:", arrangementRequests);
 
     // Function 1 - Check Date
     const validationResponse = checkDatesValidity(arrangementRequests);
-    console.log("Date validation response:", validationResponse);
+    // console.log("Date validation response:", validationResponse);
     if (!validationResponse.isValid) {
       console.log("Invalid dates in arrangement request:", validationResponse);
       return responseUtils.handleBadRequest(
@@ -47,16 +47,16 @@ export const createTempArrangementRequests = async (req, res) => {
 
     // Function 2 - Get Staff Details
     const staff = await getStaffDetails(staffId);
-    console.log("Staff details fetched:", staff);
+    // console.log("Staff details fetched:", staff);
     if (!staff) {
-      console.log("Staff not found:", staffId);
+      // console.log("Staff not found:", staffId);
       return responseUtils.handleNotFound(res, "Staff does not exist!");
     }
 
     // Function 3 - CEO?
     console.log("Staff position:", staff.position);
     if (staff.position === "MD") {
-      console.log("Staff is a CEO/MD, creating CEO requests...");
+      // console.log("Staff is a CEO/MD, creating CEO requests...");
       await createNewCEORequests(
         arrangementRequests,
         staffId,
@@ -70,40 +70,40 @@ export const createTempArrangementRequests = async (req, res) => {
     }
 
     // Function 4 - Not CEO!
-    console.log("Staff is not a CEO, creating regular requests...");
+    // console.log("Staff is not a CEO, creating regular requests...");
     const createdRequests = await createNewRequests(
       arrangementRequests,
       staff.staff_id,
       staff.reporting_manager
     );
-    console.log("Created arrangement requests:", createdRequests);
+    // console.log("Created arrangement requests:", createdRequests);
 
     // Function 5 - More Than 2 WFH?
     const weeksWithTooManyRequests = await checkWFHRequestsPerWeek(
       arrangementRequests,
       staffId
     );
-    console.log("Weeks with too many requests:", weeksWithTooManyRequests);
+    // console.log("Weeks with too many requests:", weeksWithTooManyRequests);
 
     let alertMessage = "Request created successfully!";
     if (weeksWithTooManyRequests.size > 0) {
       alertMessage = `Notice! You have more than 2 requests in the week(s) of [${[
         ...weeksWithTooManyRequests,
       ].join(", ")}]. Request will be processed and manager will be notified.`;
-      console.log("Alert message due to WFH limit:", alertMessage);
+      // console.log("Alert message due to WFH limit:", alertMessage);
     }
 
     // Done!
-    console.log("Sending success response...");
+    // console.log("Sending success response...");
     return responseUtils.handleCreatedResponse(
       res,
       createdRequests,
       alertMessage
     );
   } catch (error) {
-    console.error("Error occurred:", error);
+    // console.error("Error occurred:", error);
     if (error.message.includes("Cannot apply")) {
-      console.log("Conflict error:", error.message);
+      // console.log("Conflict error:", error.message);
       return responseUtils.handleConflict(res, error.message);
     }
     console.log("Internal server error:", error.message);
