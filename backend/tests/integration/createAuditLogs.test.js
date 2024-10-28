@@ -119,6 +119,61 @@ describe("createAuditLogs - Integration Test with MongoDB", () => {
     });
 });
 
+describe("createAuditLogs - Integration Test with MongoDB", () => {
+
+    test("should create an audit log when new requests are created", async () => {
+        const staffId = 140008;
+        const managerId = 140001;
+    
+        const arrangementRequests = [
+          {
+            date: '2025-01-01T00:00:00.000Z',
+            time: 'AM',
+            reason: 'Test reason',
+            group_id: null,
+          },
+        ];
+    
+        await createNewRequests(arrangementRequests, staffId, managerId);
+    
+        const createdRequests = await ArrangementRequest.find({ staff_id: staffId });
+        expect(createdRequests.length).toBe(1);
+        expect(createdRequests[0].reason).toBe('Test reason');
+    
+        const auditLogs = await RequestAudit.find({ changed_by: staffId });
+        expect(auditLogs.length).toBe(1);
+        expect(auditLogs[0].request_id.toString()).toBe(createdRequests[0]._id.toString());
+        expect(auditLogs[0].old_status).toBe('N/A');
+        expect(auditLogs[0].new_status).toBe('Pending');
+    });
+
+    test("should create an audit log when new CEO requests are created", async () => {
+        const staffId = 130002;
+        const managerId = 130002;
+    
+        const arrangementRequests = [
+          {
+            date: '2025-01-01T00:00:00.000Z',
+            time: 'AM',
+            reason: 'Test reason',
+            group_id: null,
+          },
+        ];
+    
+        await createNewCEORequests(arrangementRequests, staffId, managerId);
+    
+        const createdRequests = await ArrangementRequest.find({ staff_id: staffId });
+        expect(createdRequests.length).toBe(1);
+        expect(createdRequests[0].reason).toBe('Test reason');
+
+        const auditLogs = await RequestAudit.find({ changed_by: staffId });
+        expect(auditLogs.length).toBe(1);
+        expect(auditLogs[0].request_id.toString()).toBe(createdRequests[0]._id.toString());
+        expect(auditLogs[0].old_status).toBe('N/A');
+        expect(auditLogs[0].new_status).toBe('Approved');
+    });
+});
+
 describe("Approve AuditLogs - Integration Test with MongoDB", () => {
 
     let req, res;
