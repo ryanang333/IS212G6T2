@@ -38,7 +38,7 @@ export const createTempArrangementRequests = async (req, res) => {
     const validationResponse = checkDatesValidity(arrangementRequests);
     // console.log("Date validation response:", validationResponse);
     if (!validationResponse.isValid) {
-      console.log("Invalid dates in arrangement request:", validationResponse);
+      // console.log("Invalid dates in arrangement request:", validationResponse);
       return responseUtils.handleBadRequest(
         res,
         "Arrangement request dates are invalid!"
@@ -54,7 +54,7 @@ export const createTempArrangementRequests = async (req, res) => {
     }
 
     // Function 3 - CEO?
-    console.log("Staff position:", staff.position);
+    // console.log("Staff position:", staff.position);
     if (staff.position === "MD") {
       // console.log("Staff is a CEO/MD, creating CEO requests...");
       await createNewCEORequests(
@@ -162,7 +162,7 @@ export const createRegArrangementRequests = async (req, res) => {
     if (!staff) {
       return responseUtils.handleNotFound(res, "Staff does not exist!");
     }
-    console.log(staff);
+    
 
     // Function 3 - CEO?
     if (staff.position === "MD") {
@@ -183,7 +183,7 @@ export const createRegArrangementRequests = async (req, res) => {
       staff.staff_id,
       staff.reporting_manager
     );
-    console.log(createdRequests);
+    
 
     // Function 5 - More Than 2 WFH?
     const weeksWithTooManyRequests = await checkWFHRequestsPerWeek(
