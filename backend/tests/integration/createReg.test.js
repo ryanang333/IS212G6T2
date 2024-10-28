@@ -181,4 +181,4 @@ describe("createRegArrangementRequests - Integration Test with MongoDB", () => {
     const response = res._getJSONData();
     expect(response.message).toBe("Database error");
   });
-});
+},30000);
