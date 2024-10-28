@@ -893,12 +893,8 @@ export const updateIndividualRequestStatus = async (req, res) => {
  *
  * @async
  * @function autoRejectPendingRequests
- * @param {Object} req - Express request object.
- * @param {Object} res - Express response object.
- * @returns {Promise<void>} Sends a success or error response depending on the outcome.
- * @throws Will return an internal server error response if the database operation fails.
  */
- export const autoRejectPendingRequests = async (req, res) => {
+ export const autoRejectPendingRequests = async () => {
   try {
     const today = new Date();
     const rejectionDate = new Date(today);
@@ -911,7 +907,8 @@ export const updateIndividualRequestStatus = async (req, res) => {
     });
 
     if (pendingRequests.length === 0) {
-      return res.status(200).json({ message: 'No pending requests for auto-rejection.' });
+      console.log('No pending requests for auto-rejection.')
+      
     }
 
     
@@ -925,13 +922,10 @@ export const updateIndividualRequestStatus = async (req, res) => {
         updated_at: new Date() 
       }
     );
-
-    return res.status(200).json({
-      message: `${pendingRequests.length} requests have been auto-rejected successfully.`
-    });
+    console.log(`${pendingRequests.length} requests have been auto-rejected successfully.`);
+    
   } catch (error) {
     console.error(error.message);
-    return res.status(500).json({ message: 'Internal server error' });
     
   }
 };

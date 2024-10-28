@@ -17,12 +17,9 @@ console.log("Running Auto-Reject Functional Test!");
   const server = app.listen(process.env.PORT, () => {
     console.log(`Server ready on port ${process.env.PORT}`);
   });
-  // await new Promise(r => setTimeout(r, 40000));
+  await new Promise(r => setTimeout(r, 40000));
 
-  app.get('/autoRejectPendingRequests', (req, res) => {
-    autoRejectPendingRequests(req, res);
-    // console.log("here");
-  });
+  await autoRejectPendingRequests();
 
   // await verifyAutoRejectResults();
 
