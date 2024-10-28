@@ -63,7 +63,7 @@ export const createNewCEORequests = async (arrangementRequests, staffId, manager
           reqArr,
           staffId,
           REQUEST_STATUS_NONE,
-          REQUEST_STATUS_APPROVED
+          REQUEST_STATUS_PENDING
         );
       } catch (auditError) {
       }
@@ -132,7 +132,7 @@ export const createNewRequests = async (arrangementRequests, staffId, managerId)
             reqArr,
             staffId,
             REQUEST_STATUS_NONE,
-            REQUEST_STATUS_APPROVED
+            REQUEST_STATUS_PENDING
           );
         } catch (auditError) {
         }
@@ -212,7 +212,7 @@ export const getWeekStartAndEnd = (requestDate) => {
  * @param {Array<Object>} [filters.requestSlots] - An array of request slots, each containing date and time.
  * @returns {Promise<Array>} - A promise that resolves to an array of existing requests.
  */
-const findExistingRequests = async ({ staff_id, requestSlots }) => {
+export const findExistingRequests = async ({ staff_id, requestSlots }) => {
     const query = {};
   
     if (staff_id) {
