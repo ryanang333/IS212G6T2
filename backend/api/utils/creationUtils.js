@@ -38,13 +38,16 @@ export const createNewCEORequests = async (arrangementRequests, staffId, manager
       );
   
       if (reqArr.length > 0) {
-        await createAuditEntry(
-          reqArr,
-          staffId,
-          REQUEST_STATUS_NONE,
-          REQUEST_STATUS_PENDING
-        );
-      }
+        try {
+          await createAuditEntry(
+            reqArr,
+            staffId,
+            REQUEST_STATUS_NONE,
+            REQUEST_STATUS_APPROVED
+          );
+        } catch (auditError) {
+        };
+    };
       
     } catch (error) {
       const msg = error.message.includes("Cannot apply - CEO")
@@ -86,13 +89,16 @@ export const createNewRequests = async (arrangementRequests, staffId, managerId)
       );
   
       if (reqArr.length > 0) {
-        await createAuditEntry(
-          reqArr,
-          staffId,
-          REQUEST_STATUS_NONE,
-          REQUEST_STATUS_PENDING
-        );
-      }
+          try {
+            await createAuditEntry(
+              reqArr,
+              staffId,
+              REQUEST_STATUS_NONE,
+              REQUEST_STATUS_PENDING
+            );
+          } catch (auditError) {
+          };
+      };
     } catch (error) {
       const msg = error.message.includes("Cannot apply")
         ? error.message

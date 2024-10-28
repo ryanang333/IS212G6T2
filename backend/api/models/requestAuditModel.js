@@ -20,12 +20,12 @@ const requestAuditSchema = new Schema(
     },
     old_status: {
       type: String,
-      enum: ["N/A", "Pending", "Approved", "Rejected", "Canceled", "Withdrawn"],
+      enum: ["N/A", "Pending", "Approved", "Rejected", "Cancelled", "Pending Withdrawal", "Withdrawn"],
       required: true,
     },
     new_status: {
       type: String,
-      enum: ["N/A", "Pending", "Approved", "Rejected", "Canceled", "Withdrawn"],
+      enum: ["N/A", "Pending", "Approved", "Rejected", "Cancelled", "Pending Withdrawal", "Withdrawn"],
       required: true,
     },
   },

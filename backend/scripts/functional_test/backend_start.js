@@ -3,6 +3,7 @@ import express from 'express';
 import cors from 'cors';
 import staffRoutes from '../../api/routes/staffRoutes.js';
 import arrangementRequestsRoutes from '../../api/routes/arrangementRequestsRoutes.js';
+import requestAuditRoutes from '../../api/routes/requestAuditRoutes.js';
 
 dotenv.config();
 const app = express();
@@ -20,5 +21,6 @@ app.get("/", (req, res) => {
 
 app.use('/staff', staffRoutes);
 app.use('/arrangementRequests', arrangementRequestsRoutes);
+app.use('/requestAudit', requestAuditRoutes);
 
 export default app;
