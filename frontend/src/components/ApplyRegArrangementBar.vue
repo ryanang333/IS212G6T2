@@ -98,7 +98,7 @@ export default {
        * If value prop is not provided, initializes with an object containing null values.
        * @type {Object}
        */
-      localData: this.value || { id: null, startDate: null, numEvents: null, recurringInterval: null, time: null, reason: null }
+      localData: this.value || { id: null, date: null, numEvents: null, recurringInterval: null, time: null, reason: null }
     }
   },
   methods: {

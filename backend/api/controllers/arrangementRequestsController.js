@@ -21,7 +21,6 @@ export const REQUEST_STATUS_CANCELLED = "Cancelled";
 export const REQUEST_STATUS_PENDING_WITHDRAWAL = "Pending Withdrawal";
 export const REQUEST_STATUS_WITHDRAWN = "Withdrawn";
 
-
 /**
  * Creates temporary arrangement requests for a staff member.
  * @param {Object} req - The request object.
@@ -31,27 +30,33 @@ export const REQUEST_STATUS_WITHDRAWN = "Withdrawn";
 export const createTempArrangementRequests = async (req, res) => {
   try {
     const { staffId, arrangementRequests } = req.body;
-    console.log(arrangementRequests);
+    // console.log("Received request body:", req.body);
+    // console.log("Staff ID:", staffId);
+    // console.log("Arrangement requests:", arrangementRequests);
 
     // Function 1 - Check Date
     const validationResponse = checkDatesValidity(arrangementRequests);
+    // console.log("Date validation response:", validationResponse);
     if (!validationResponse.isValid) {
+      // console.log("Invalid dates in arrangement request:", validationResponse);
       return responseUtils.handleBadRequest(
         res,
         "Arrangement request dates are invalid!"
       );
     }
-    console.log(validationResponse);
 
     // Function 2 - Get Staff Details
     const staff = await getStaffDetails(staffId);
+    // console.log("Staff details fetched:", staff);
     if (!staff) {
+      // console.log("Staff not found:", staffId);
       return responseUtils.handleNotFound(res, "Staff does not exist!");
     }
-    console.log(staff);
 
     // Function 3 - CEO?
+    // console.log("Staff position:", staff.position);
     if (staff.position === "MD") {
+      // console.log("Staff is a CEO/MD, creating CEO requests...");
       await createNewCEORequests(
         arrangementRequests,
         staffId,
@@ -63,41 +68,49 @@ export const createTempArrangementRequests = async (req, res) => {
         "Request(s) have been instantly approved for CEO!"
       );
     }
-    console.log(staff.position);
 
     // Function 4 - Not CEO!
+    // console.log("Staff is not a CEO, creating regular requests...");
     const createdRequests = await createNewRequests(
       arrangementRequests,
       staff.staff_id,
       staff.reporting_manager
     );
-    console.log(createdRequests);
+    // console.log("Created arrangement requests:", createdRequests);
 
     // Function 5 - More Than 2 WFH?
     const weeksWithTooManyRequests = await checkWFHRequestsPerWeek(
       arrangementRequests,
       staffId
     );
+    // console.log("Weeks with too many requests:", weeksWithTooManyRequests);
+
     let alertMessage = "Request created successfully!";
     if (weeksWithTooManyRequests.size > 0) {
       alertMessage = `Notice! You have more than 2 requests in the week(s) of [${[
         ...weeksWithTooManyRequests,
       ].join(", ")}]. Request will be processed and manager will be notified.`;
+      // console.log("Alert message due to WFH limit:", alertMessage);
     }
 
     // Done!
+    // console.log("Sending success response...");
     return responseUtils.handleCreatedResponse(
       res,
       createdRequests,
       alertMessage
     );
   } catch (error) {
+    // console.error("Error occurred:", error);
     if (error.message.includes("Cannot apply")) {
+      // console.log("Conflict error:", error.message);
       return responseUtils.handleConflict(res, error.message);
     }
+    console.log("Internal server error:", error.message);
     return responseUtils.handleInternalServerError(res, error.message);
   }
 };
+
 
 export const createRegArrangementRequests = async (req, res) => {
   try {
@@ -112,7 +125,7 @@ export const createRegArrangementRequests = async (req, res) => {
       const groupID = uuidv4();
 
       // Convert the recurring weeks into individual dates for each arrangement request
-      const startDate = new Date(arrangementRequestDirty.startDate);
+      const startDate = new Date(arrangementRequestDirty.date);
       const recurringInterval = parseInt(
         arrangementRequestDirty.recurringInterval.replace("week", ""),
         10
@@ -135,8 +148,8 @@ export const createRegArrangementRequests = async (req, res) => {
       // Add the cleaned requests for this arrangement request to the main array
       allArrangementRequestsClean.push(...arrangementRequestsClean);
     }
-
-    // Check dates for all requests
+    
+    // Function 1 - Check Date
     const validationResponse = checkDatesValidity(allArrangementRequestsClean);
     if (!validationResponse.isValid) {
       return responseUtils.handleBadRequest(
@@ -149,7 +162,7 @@ export const createRegArrangementRequests = async (req, res) => {
     if (!staff) {
       return responseUtils.handleNotFound(res, "Staff does not exist!");
     }
-    console.log(staff);
+    
 
     // Function 3 - CEO?
     if (staff.position === "MD") {
@@ -170,7 +183,7 @@ export const createRegArrangementRequests = async (req, res) => {
       staff.staff_id,
       staff.reporting_manager
     );
-    console.log(createdRequests);
+    
 
     // Function 5 - More Than 2 WFH?
     const weeksWithTooManyRequests = await checkWFHRequestsPerWeek(
