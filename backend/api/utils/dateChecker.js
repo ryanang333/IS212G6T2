@@ -188,5 +188,3 @@ export const checkIfDatesOverlap = (existingRequests, arrangementRequests) => {
     }
   }
 };
-
-
