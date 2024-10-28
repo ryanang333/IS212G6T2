@@ -1,5 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import ArrangementRequest from '../views/ArrangementRequests.vue'
+import SubmittedView from '../views/SubmittedView.vue'
 import ApplyArrangement from '../views/ApplyArrangement.vue'
 import Login from '../views/Login.vue'
 import { isAuthenticated } from '../utils/localStorage'
