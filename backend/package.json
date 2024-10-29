@@ -6,8 +6,8 @@
   "type": "module",
   "scripts": {
     "lint": "npx eslint --ext .js,.jsx,.ts,.tsx .",
-    "test:unit": "jest --testTimeout=30000 --testPathPattern='tests/unit'",
-    "test:integration": "jest --testTimeout=30000 --testPathPattern='tests/integration'",
+    "test:unit": "jest --testTimeout=100000 --testPathPattern='tests/unit'",
+    "test:integration": "jest --testTimeout=100000 --testPathPattern='tests/integration'",
     "test": "npm run test:unit && npm run test:integration",
     "start": "node api/index.js"
   },

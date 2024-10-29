@@ -23,8 +23,8 @@ const connectDB = async () => {
     await mongoose.connect(mongoURI, {
       useNewUrlParser: true,
       useUnifiedTopology: true,
-      serverSelectionTimeoutMS: 30000,
-      socketTimeoutMS: 45000,
+      serverSelectionTimeoutMS: 100000,
+      socketTimeoutMS: 100000,
     });
 
     await mongoose.connect(mongoURI);
