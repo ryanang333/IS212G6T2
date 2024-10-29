@@ -581,7 +581,6 @@ export const approveStaffRequests = async (req, res) => {
   
     if (updatedRequests.modifiedCount > 0) {
       for (const request of requests) {
-        console.log("Creating notification for request ID:", request._id);
         try {
           const notificationData = {
             request_id: request._id,
@@ -593,9 +592,7 @@ export const approveStaffRequests = async (req, res) => {
             new_status: REQUEST_STATUS_APPROVED,
             reason: "N/A"
           };
-          console.log("Notification Data:", notificationData);
           await createNotification(notificationData);
-          console.log("Notification sent for request ID:", request._id);
         } catch (notificationError) {
           console.error("Error creating notification for request ID:", request._id, notificationError);
         }
@@ -694,12 +691,8 @@ export const rejectStaffRequests = async (req, res) => {
           reason: reason
         };
         
-        console.log("Creating notification for rejected request ID:", request._id);
-        console.log("Notification Data:", notificationData);
-        
         try {
           await createNotification(notificationData);
-          console.log("Notification sent for rejected request ID:", request._id);
         } catch (notificationError) {
           console.error("Error creating notification for rejected request ID:", request._id, notificationError);
         }
@@ -795,12 +788,9 @@ export const cancelStaffRequests = async (req, res) => {
           reason: "N/A"
         };
         
-        console.log("Creating notification for approved request ID:", request._id);
-        console.log("Notification Data:", notificationData);
         
         try {
           await createNotification(notificationData);
-          console.log("Notification sent for approved request ID:", request._id);
         } catch (notificationError) {
           console.error("Error creating notification for approved request ID:", request._id, notificationError);
         }
@@ -873,13 +863,9 @@ export const ApproveWithdrawalRequest = async (req, res) => {
           new_status: REQUEST_STATUS_WITHDRAWN,
           reason: "N/A"
         };
-        
-        console.log("Creating notification for approved withdrawal request ID:", request._id);
-        console.log("Notification Data:", notificationData);
-        
+
         try {
           await createNotification(notificationData);
-          console.log("Notification sent for approved withdrawal request ID:", request._id);
         } catch (notificationError) {
           console.error("Error creating notification for approved withdrawal request ID:", request._id, notificationError);
         }
@@ -954,12 +940,8 @@ export const RejectWithdrawalRequest = async (req, res) => {
           reason: "N/A"
         };
         
-        console.log("Creating notification for rejected withdrawal request ID:", request._id);
-        console.log("Notification Data:", notificationData);
-        
         try {
           await createNotification(notificationData);
-          console.log("Notification sent for rejected withdrawal request ID:", request._id);
         } catch (notificationError) {
           console.error("Error creating notification for rejected withdrawal request ID:", request._id, notificationError);
         }
@@ -1057,12 +1039,8 @@ export const withdrawStaffRequests = async (req, res) => {
           reason: reason
         };
         
-        console.log("Creating notification for pending withdrawal request ID:", request._id);
-        console.log("Notification Data:", notificationData);
-        
         try {
           await createNotification(notificationData);
-          console.log("Notification sent for pending withdrawal request ID:", request._id);
         } catch (notificationError) {
           console.error("Error creating notification for pending withdrawal request ID:", request._id, notificationError);
         }
@@ -1146,13 +1124,10 @@ export const withdrawRequestsAsManager = async (req, res) => {
           new_status: REQUEST_STATUS_WITHDRAWN,
           reason: reason
         };
-        
-        console.log("Creating notification for approved withdrawal request ID:", request._id);
-        console.log("Notification Data:", notificationData);
+      
         
         try {
           await createNotification(notificationData);
-          console.log("Notification sent for approved withdrawal request ID:", request._id);
         } catch (notificationError) {
           console.error("Error creating notification for approved withdrawal request ID:", request._id, notificationError);
         }
