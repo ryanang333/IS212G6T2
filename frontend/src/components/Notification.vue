@@ -33,7 +33,7 @@
             <p><strong>Old Status:</strong> {{ notification.old_status }}</p>
             <p><strong>New Status:</strong> {{ notification.new_status }}</p>
             <p><strong>Message:</strong> {{ formatNotification(notification) }}</p>
-            <p><strong>Notification Timestamp:</strong> {{ new Date(notification.change_timestamp).toLocaleString() }}</p>
+            <p><strong>Notification Timestamp:</strong> {{ new Date(notification.created_at).toLocaleString() }}</p>
           </div>
         </li>
       </ul>
@@ -48,7 +48,7 @@
             <p><strong>Old Status:</strong> {{ notification.old_status }}</p>
             <p><strong>New Status:</strong> {{ notification.new_status }}</p>
             <p><strong>Message:</strong> {{ formatNotification(notification) }}</p>
-            <p><strong>Notification Timestamp:</strong> {{ new Date(notification.change_timestamp).toLocaleString() }}</p>
+            <p><strong>Notification Timestamp:</strong> {{ new Date(notification.created_at).toLocaleString() }}</p>
           </div>
         </li>
       </ul>
@@ -82,8 +82,8 @@ export default {
         console.log("API Response:", response); // Debugging output
 
         // Populate My Notifications and Manager Notifications based on request_type
-        this.myNotifications = response.data.data.filter(notification => notification.request_type === 'Manager_Action');
-        this.managerNotifications = response.data.data.filter(notification => notification.request_type === 'Staff_Action');
+        this.myNotifications = response.data.notifications.filter(notification => notification.request_type === 'Manager_Action');
+        this.managerNotifications = response.data.notifications.filter(notification => notification.request_type === 'Staff_Action');
       } catch (error) {
         console.error("Error fetching notifications:", error);
         this.errorMessage = "Failed to fetch notifications. Please try again later."; // Update the error message
