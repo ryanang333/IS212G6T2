@@ -1,212 +1,104 @@
-// import mongoose from 'mongoose';
-// import { MongoMemoryServer } from 'mongodb-memory-server-core';
-// import request from 'supertest';
-// import app from '../../api/index';
-// import ArrangementRequest from "../../api/models/arrangementRequestsModel.js";
-// import Notification from '../../api/models/notificationModel.js';
+import { getNotifications } from "../../api/controllers/notificationController.js";
+import mongoose from "mongoose";
+import httpMocks from "node-mocks-http";
+import Notification from "../../api/models/notificationModel.js";
+import { MongoMemoryServer } from "mongodb-memory-server-core";
 
-// let mongoServer;
-// let server;
+let mongoServer;
 
-// beforeAll(async () => {
-//   mongoServer = await MongoMemoryServer.create();
-//   const uri = mongoServer.getUri();
+beforeAll(async () => {
+  mongoServer = await MongoMemoryServer.create();
+  const mongoURI = mongoServer.getUri();
+  await mongoose.connect(mongoURI);
+});
 
-//   if (mongoose.connection.readyState !== 0) {
-//     await mongoose.disconnect();
-//   }
+afterAll(async () => {
+  await mongoose.connection.dropDatabase();
+  await mongoose.connection.close();
+  await mongoServer.stop();
+});
 
-//   await mongoose.connect(uri, {
-//     useNewUrlParser: true,
-//     useUnifiedTopology: true,
-//   });
+afterEach(async () => {
+  await Notification.deleteMany({});
+});
 
-//   server = app.listen(0);
-// });
+describe("getNotifications - Integration Test with MongoDB", () => {
+  let req, res;
 
-// afterAll(async () => {
-//   await mongoose.connection.dropDatabase();
-//   await mongoose.connection.close();
-//   await mongoServer.stop();
+  beforeEach(() => {
+    req = httpMocks.createRequest({
+      method: "GET",
+      url: "/notifications/staff/140881",
+      params: {
+        staffId: 140881,
+      },
+    });
+    res = httpMocks.createResponse();
+  });
 
-//   await new Promise((resolve, reject) => {
-//     server.close((err) => {
-//       if (err) return reject(err);
-//       resolve();
-//     });
-//   });
-// });
+  test("should fetch notification logs if notifications are found", async () => {
+    const notification = new Notification({
+      request_id: new mongoose.Types.ObjectId(),
+      request_type: "Manager_Action",
+      changed_by: 140008,
+      receiver_id: 140881,
+      old_status: "Pending",
+      new_status: "Approved",
+      change_timestamp: new Date("2024-10-04T12:00:00.000Z"),
+      reason: "Request approved",
+    });
+    await notification.save();
 
-// afterEach(async () => {
-//   await ArrangementRequest.deleteMany({});
-//   await Notification.deleteMany({});
-// });
+    await getNotifications(req, res);
 
-// describe('Functional Test for getNotification', () => {
-//   test('should fetch notification logs if arrangement requests are found', async () => {
-//     const mockArrangementRequest = await ArrangementRequest.create({
-//       _id: new mongoose.Types.ObjectId(),
-//       staff_id: 140008,
-//       request_date: new Date('2025-01-01T00:00:00.000Z'),
-//       status: 'Pending',
-//       manager_id: 140008,
-//       reason: 'Test reason',
-//       withdraw_reason: null,
-//       manager_reason: null,
-//       request_time: 'Full Day',
-//     });
+    const response = res._getJSONData();
+    
+    // Assertions
+    expect(res.statusCode).toBe(200);
+    expect(response.message).toBe("Notifications fetched successfully!");
+    expect(response.notifications).toHaveLength(1);
+    expect(response.notifications[0]).toMatchObject({
+      request_id: notification.request_id.toString(),
+      request_type: notification.request_type,
+      changed_by: notification.changed_by,
+      receiver_id: notification.receiver_id,
+      old_status: notification.old_status,
+      new_status: notification.new_status,
+      change_timestamp: notification.change_timestamp.toISOString(),
+      reason: notification.reason,
+    });
+  });
 
-//     await Notification.create({
-//       _id: new mongoose.Types.ObjectId(),
-//       request_id: mockArrangementRequest._id,
-//       request_type: 'Manager_Action',
-//       changed_by: 140008,
-//       receiver_id: 140009,
-//       old_status: 'Pending',
-//       new_status: 'Approved',
-//       change_timestamp: new Date('2025-01-01T12:00:00.000Z'),
-//       reason: 'Status update',
-//     });
+  test("should return a 404 if no notifications are found", async () => {
+    await getNotifications(req, res);
 
-//     const res = await request(app)
-//       .get('/notifications')
-//       .query({
-//         startDate: '2024-05-05',
-//         endDate: '2025-05-06',
-//         staffId: 140008,
-//       })
-//       .expect(200);
+    expect(res.statusCode).toBe(404);
+    expect(res._getJSONData()).toMatchObject({
+      message: 'No notifications found for this staff member',
+    });
+  });
 
-//     expect(res.body).toMatchObject({
-//       count: 1,
-//       logs: [
-//         {
-//           _id: expect.any(String),
-//           request_id: {
-//             _id: mockArrangementRequest._id.toString(),
-//             staff_id: 140008,
-//             request_date: mockArrangementRequest.request_date.toISOString(),
-//             reason: 'Test reason',
-//             withdraw_reason: null,
-//             manager_reason: null,
-//           },
-//           changed_by: 140008,
-//           change_timestamp: new Date('2025-01-01T12:00:00.000Z').toISOString(),
-//           old_status: 'Pending',
-//           new_status: 'Approved',
-//           request_type: 'Manager_Action',
-//           receiver_id: 140009,
-//           reason: 'Status update',
-//         },
-//       ],
-//     });
-//   });
+  test("should return a 400 if staff ID is not provided", async () => {
+    req.params.staffId = undefined;
 
-//   test('should return an empty array if no notification logs match', async () => {
-//     const res = await request(app)
-//       .get('/notifications')
-//       .query({
-//         startDate: '2024-05-05',
-//         endDate: '2025-05-06',
-//         staffId: 140008,
-//       })
-//       .expect(200);
+    await getNotifications(req, res);
 
-//     expect(res.body).toMatchObject({
-//       count: 0,
-//       logs: [],
-//     });
-//   });
+    expect(res.statusCode).toBe(400);
+    expect(res._getJSONData()).toMatchObject({
+      message: 'Staff ID is required',
+    });
+  });
 
-//   test('should return an empty array if no arrangement requests are found', async () => {
-//     const res = await request(app)
-//       .get('/notifications')
-//       .query({
-//         startDate: '2024-05-05',
-//         endDate: '2025-05-06',
-//         staffId: 140008,
-//       })
-//       .expect(200);
+  test("should handle a database error gracefully", async () => {
+    jest.spyOn(Notification, "find").mockImplementationOnce(() => {
+      throw new Error("Database error");
+    });
 
-//     expect(res.body).toMatchObject({
-//       count: 0,
-//       logs: [],
-//     });
-//   });
+    await getNotifications(req, res);
 
-//   test('should handle partial query when only staffId is provided', async () => {
-//     const mockArrangementRequest = await ArrangementRequest.create({
-//       _id: new mongoose.Types.ObjectId(),
-//       staff_id: 140008,
-//       request_date: new Date('2025-01-01T00:00:00.000Z'),
-//       status: 'Pending',
-//       manager_id: 140008,
-//       reason: 'Test reason',
-//       withdraw_reason: null,
-//       manager_reason: null,
-//       request_time: 'Full Day',
-//     });
-
-//     await Notification.create({
-//       _id: new mongoose.Types.ObjectId(),
-//       request_id: mockArrangementRequest._id,
-//       request_type: 'Manager_Action',
-//       changed_by: 140008,
-//       receiver_id: 140009,
-//       old_status: 'Pending',
-//       new_status: 'Approved',
-//       change_timestamp: new Date('2025-01-01T12:00:00.000Z'),
-//       reason: 'Status update',
-//     });
-
-//     const res = await request(app)
-//       .get('/notifications')
-//       .query({
-//         staffId: 140008,
-//       })
-//       .expect(200);
-
-//     expect(res.body).toMatchObject({
-//       count: 1,
-//       logs: [
-//         {
-//           _id: expect.any(String),
-//           request_id: {
-//             _id: mockArrangementRequest._id.toString(),
-//             staff_id: 140008,
-//             request_date: mockArrangementRequest.request_date.toISOString(),
-//             reason: 'Test reason',
-//             withdraw_reason: null,
-//             manager_reason: null,
-//           },
-//           changed_by: 140008,
-//           change_timestamp: new Date('2025-01-01T12:00:00.000Z').toISOString(),
-//           old_status: 'Pending',
-//           new_status: 'Approved',
-//           request_type: 'Manager_Action',
-//           receiver_id: 140009,
-//           reason: 'Status update',
-//         },
-//       ],
-//     });
-//   });
-
-//   test('should handle a database error gracefully', async () => {
-//     jest.spyOn(ArrangementRequest, 'find').mockImplementationOnce(() => {
-//       throw new Error("Database error");
-//     });
-
-//     const res = await request(app)
-//       .get('/notifications')
-//       .query({
-//         startDate: '2024-05-05',
-//         endDate: '2025-05-06',
-//         staffId: 140008,
-//       })
-//       .expect(500);
-
-//     expect(res.body).toMatchObject({
-//       message: "Internal server error",
-//     });
-//   });
-// });
+    expect(res.statusCode).toBe(500);
+    expect(res._getJSONData()).toMatchObject({
+      message: "An error occurred while fetching notifications.",
+    });
+  });
+});

@@ -1,79 +1,83 @@
-import mongoose from 'mongoose';
-import { getNotifications } from '../../../../api/controllers/notificationController.js'; // Replace with your actual path
-import Notification from '../../../../api/models/notificationModel.js'; // Replace with your actual path
+import { getNotifications } from "../../../../api/controllers/notificationController.js";
+import Notification from "../../../../api/models/notificationModel.js";
+import httpMocks from "node-mocks-http";
+import { mockNotificationWithChangedBy } from "../../../mock/testHelper.js";
 
-jest.mock('../../../../api/models/notificationModel.js');
+jest.mock("../../../../api/models/notificationModel.js");
 
-describe('getNotifications', () => {
+describe("getNotifications", () => {
+  let req, res;
+
   beforeEach(() => {
+    req = httpMocks.createRequest({
+      method: "GET",
+      url: "/notifications/staff/101",
+      params: {
+        staffId: "101",
+      },
+    });
+    res = httpMocks.createResponse();
+  });
+
+  afterEach(() => {
     jest.clearAllMocks();
   });
 
-  it('should fetch notifications for a staff member', async () => {
+  test("should return a 400 if staff ID is not provided", async () => {
+    req.params.staffId = null;
+    await getNotifications(req, res);
+
+    expect(res.statusCode).toBe(400);
+    const response = res._getJSONData();
+    expect(response).toEqual({ message: 'Staff ID is required' });
+  });
+
+  test("should return a 200 and fetched notifications on success", async () => {
     const mockNotifications = [
-      { _id: 1, receiver_id: 1, request: { request_id: 'abc' }, changedBy: { staff_id: 2 } },
-      { _id: 2, receiver_id: 1, request: { request_id: 'def' }, changedBy: { staff_id: 3 } },
+      mockNotificationWithChangedBy,
+      { request_id: "60d5ec49b09e3c001c8e4b51", changed_by: 101, receiver_id: 101 },
     ];
-
-    Notification.find.mockResolvedValue(mockNotifications);
-
-    const mockReq = { params: { staffId: 1 } };
-    const mockRes = {
-      json: jest.fn(),
-      status: jest.fn().mockReturnThis()
-    };
-
-    await getNotifications(mockReq, mockRes);
-
-    expect(Notification.find).toHaveBeenCalledWith({ receiver_id: 1 });
-    expect(mockRes.status).toHaveBeenCalledWith(200);
-    expect(mockRes.json).toHaveBeenCalledWith(mockNotifications);
+  
+    Notification.find.mockReturnValue({
+      populate: jest.fn().mockResolvedValue(mockNotifications),
+    });
+  
+    await getNotifications(req, res);
+  
+    expect(Notification.find).toHaveBeenCalledWith({ receiver_id: req.params.staffId });
+    expect(res.statusCode).toBe(200);
+  
+    const response = res._getJSONData();
+    expect(response).toEqual({
+      message: "Notifications fetched successfully!",
+      notifications: expect.arrayContaining(mockNotifications),
+    });
   });
+  
+  test("should return a 404 if no notifications found", async () => {
+    Notification.find.mockReturnValue({
+      populate: jest.fn().mockResolvedValue([]),
+    });
+  
+    await getNotifications(req, res);
+  
+    expect(res.statusCode).toBe(404);
+    const response = res._getJSONData();
+    expect(response).toEqual({ message: 'No notifications found for this staff member' });
+  });  
 
-  it('should handle error with proper response', async () => {
-    const mockReq = { params: { staffId: 1 } };
-    const mockRes = {
-      json: jest.fn(),
-      status: jest.fn().mockReturnThis()
-    };
+  test("should return a 500 if an error occurs during fetching", async () => {
+    const errorMessage = "An error occurred while fetching notifications.";
+    Notification.find.mockReturnValueOnce({
+      populate: jest.fn().mockImplementationOnce(() => {
+        throw new Error(errorMessage);
+      }),
+    });
 
-    const mockError = new Error('Database error');
+    await getNotifications(req, res);
 
-    Notification.find.mockRejectedValue(mockError);
-
-    await getNotifications(mockReq, mockRes);
-
-    expect(Notification.find).toHaveBeenCalledWith({ receiver_id: 1 });
-    expect(mockRes.status).toHaveBeenCalledWith(500);
-    expect(mockRes.json).toHaveBeenCalledWith({ error: 'Internal server error' });
-  });
-
-  it('should handle missing staff ID with bad request response', async () => {
-    const mockReq = {};
-    const mockRes = {
-      json: jest.fn(),
-      status: jest.fn().mockReturnThis()
-    };
-
-    await getNotifications(mockReq, mockRes);
-
-    expect(mockRes.status).toHaveBeenCalledWith(400);
-    expect(mockRes.json).toHaveBeenCalledWith({ error: 'Staff ID is required' });
-  });
-
-  it('should handle empty notifications', async () => {
-    const mockReq = { params: { staffId: 1 } };
-    const mockRes = {
-      json: jest.fn(),
-      status: jest.fn().mockReturnThis()
-    };
-
-    Notification.find.mockResolvedValue([]);
-
-    await getNotifications(mockReq, mockRes);
-
-    expect(Notification.find).toHaveBeenCalledWith({ receiver_id: 1 });
-    expect(mockRes.status).toHaveBeenCalledWith(404);
-    expect(mockRes.json).toHaveBeenCalledWith({ error: 'No notifications found for this staff member' });
+    expect(res.statusCode).toBe(500);
+    const response = res._getJSONData();
+    expect(response).toEqual({ message: "An error occurred while fetching notifications." });
   });
 });

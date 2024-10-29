@@ -1,5 +1,4 @@
 import Notification from "../models/notificationModel.js";
-import * as responseUtils from "../utils/responseUtils.js";
 
 /**
  * Creates a new notification entry in the database.
@@ -56,24 +55,25 @@ export const createNotification = async (notificationData) => {
  */
 export const getNotifications = async (req, res) => {
   try {
-    const staffId = req.params.staffId;
+    const { staffId } = req.params;
 
     if (!staffId) {
-      return responseUtils.handleBadRequest(res, "Staff ID is required");
+      return res.status(400).json({ message: 'Staff ID is required' });
     }
 
-    const notifications = await Notification.find({
-      receiver_id: staffId,
-    })
-    .populate("request", "request_id")
-    .populate("changedBy", "staff_id");
+    const notifications = await Notification.find({ receiver_id: staffId }).populate('changed_by');
 
-    if (!notifications.length) {
-      return responseUtils.handleNotFound(res, "No notifications found for this staff member");
+    if (!notifications || notifications.length === 0) {
+      return res.status(404).json({ message: 'No notifications found for this staff member' });
     }
 
-    return responseUtils.handleSuccessResponse(res, notifications, "Notifications fetched successfully!");
+    return res.status(200).json({
+      message: "Notifications fetched successfully!",
+      notifications,
+    });
   } catch (error) {
-    return responseUtils.handleInternalServerError(res, error.message);
+    console.error("Error fetching notifications:", error);
+    return res.status(500).json({ message: "An error occurred while fetching notifications." });
   }
 };
+

@@ -1,47 +1,70 @@
-const mongoose = require('mongoose');
-const sinon = require('sinon');
+import { createNotification } from "../../../../api/controllers/notificationController.js";
+import Notification from "../../../../api/models/notificationModel.js";
 
-const Notification = require('../../../../api/models/notificationModel.js'); // Replace with your path
-const { createNotification } = require('../../../../api/controllers/notificationController.js'); // Replace with your path
+jest.mock("../../../../api/models/notificationModel.js");
 
-describe('createNotification', () => {
-  beforeEach(() => {
-    sinon.stub(mongoose, 'connect').resolves(); // Mock mongoose connection
-  });
-
+describe("createNotification", () => {
   afterEach(() => {
-    sinon.restore(); // Restore original mongoose behavior
+    jest.clearAllMocks();
   });
 
-  it('should create a new notification', async () => {
-    const mockData = {
-      request_id: new mongoose.Types.ObjectId(),
-      changed_by: 1,
-      receiver_id: 2,
-      old_status: 'Pending',
-      new_status: 'Approved',
+  test("should create a notification successfully", async () => {
+    const mockNotificationData = {
+      request_id: "60d5ec49b09e3c001c8e4b51",
+      changed_by: 101,
+      receiver_id: 202,
+      old_status: "Pending",
+      new_status: "Approved",
       created_at: new Date(),
-      reason: 'Manager approved the request.',
-      request_type: 'Manager_Action',
+      reason: "Approved by manager",
+      request_type: "Manager_Action",
     };
 
-    sinon.stub(Notification.prototype, 'save').resolves(mockData); // Mock save method
+    const mockSavedNotification = {
+      ...mockNotificationData,
+      _id: "60d5ec49b09e3c001c8e4b52",
+    };
 
-    const savedNotification = await createNotification(mockData);
+    Notification.mockImplementation(() => ({
+      save: jest.fn().mockResolvedValue(mockSavedNotification),
+    }));
 
-    expect(savedNotification).toEqual(mockData);
-    expect(Notification.prototype.save.calledOnce).toBe(true);
+    const result = await createNotification(mockNotificationData);
+
+    expect(Notification).toHaveBeenCalledWith(mockNotificationData);
+    expect(result).toEqual(mockSavedNotification);
   });
 
-  it('should throw error for missing fields', async () => {
-    const incompleteData = {
-      request_id: new mongoose.Types.ObjectId(),
-      changed_by: 1,
-      receiver_id: 2,
-      old_status: 'Pending',
-      new_status: 'Approved',
+  test("should throw an error if required fields are missing", async () => {
+    const incompleteNotificationData = {
+      changed_by: 101,
+      receiver_id: 202,
+      old_status: "Pending",
+      new_status: "Approved",
+      created_at: new Date(),
+      reason: "Approved by manager",
+      request_type: "Manager_Action",
     };
 
-    await expect(createNotification(incompleteData)).rejects.toThrowError('Missing required fields');
+    await expect(createNotification(incompleteNotificationData)).rejects.toThrow("Missing required fields: request_id, changed_by, receiver_id, old_status, new_status, created_at, and request_type are all required.");
+  });
+
+  test("should throw an error if save operation fails", async () => {
+    const mockNotificationData = {
+      request_id: "60d5ec49b09e3c001c8e4b51",
+      changed_by: 101,
+      receiver_id: 202,
+      old_status: "Pending",
+      new_status: "Approved",
+      created_at: new Date(),
+      reason: "Approved by manager",
+      request_type: "Manager_Action",
+    };
+
+    Notification.mockImplementation(() => ({
+      save: jest.fn().mockRejectedValue(new Error("Database error")),
+    }));
+
+    await expect(createNotification(mockNotificationData)).rejects.toThrow("Failed to create notification: Database error");
   });
 });
