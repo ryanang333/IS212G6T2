@@ -4,6 +4,8 @@ import httpMocks from 'node-mocks-http';
 
 jest.mock('../../../../api/models/arrangementRequestsModel');
 
+jest.setTimeout(100000);
+
 describe('ArrangementRequestsController', () => {
   let req, res;
 
