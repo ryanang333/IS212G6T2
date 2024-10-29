@@ -36,6 +36,7 @@ export const createNewCEORequests = async (arrangementRequests, staffId, manager
         request_time: req.time,
         group_id: req.group_id || null,
         reason: req.reason,
+        request_id: req._id
       }))
     );
 
@@ -49,7 +50,7 @@ export const createNewCEORequests = async (arrangementRequests, staffId, manager
           receiver_id: managerId,
           old_status: REQUEST_STATUS_NONE,
           new_status: REQUEST_STATUS_APPROVED,
-          reason: request.reason,
+          reason: "N/A",
         };
 
         console.log("Notification Data for Created Request:", notificationData);
