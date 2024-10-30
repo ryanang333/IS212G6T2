@@ -7,6 +7,9 @@ import { isAuthenticated } from '../utils/localStorage'
 import Schedule from '../views/Schedule.vue'
 import Hello from '../views/Hello.vue'
 import NotificationInbox from '@/views/ViewMyNotifications.vue'
+import ViewMyRequests from '@/views/ViewMyRequests.vue' 
+import ViewStaffRequests from '@/views/ViewStaffRequests.vue' 
+import RequestAudit from '@/views/RequestAudit.vue' 
 
 const ROLES = {
   HR_SENIOR_MGMT: 1,
