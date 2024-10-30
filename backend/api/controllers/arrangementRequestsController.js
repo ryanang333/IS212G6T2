@@ -1,5 +1,6 @@
 import ArrangementRequest from "../models/arrangementRequestsModel.js";
 import { getStaffDetails, getStaffIdsByDept } from "./staffController.js";
+import { createNotification } from "./notificationController.js";
 import { createAuditEntry } from "./requestAuditController.js";
 import {
   checkDatesValidity,
@@ -577,6 +578,26 @@ export const approveStaffRequests = async (req, res) => {
         };
       };
     } 
+  
+    if (updatedRequests.modifiedCount > 0) {
+      for (const request of requests) {
+        try {
+          const notificationData = {
+            request_id: request._id,
+            changed_by: request.manager_id,
+            created_at: request.request_date,
+            request_type: "Manager_Action",
+            receiver_id: request.staff_id,
+            old_status: REQUEST_STATUS_PENDING,
+            new_status: REQUEST_STATUS_APPROVED,
+            reason: "N/A"
+          };
+          await createNotification(notificationData);
+        } catch (notificationError) {
+          console.error("Error creating notification for request ID:", request._id, notificationError);
+        }
+      }      
+    }    
 
     return responseUtils.handleSuccessResponse(
       res,
@@ -656,6 +677,28 @@ export const rejectStaffRequests = async (req, res) => {
       };
     } 
 
+
+    if (updatedRequests.modifiedCount > 0) {
+      for (const request of requests) {
+        const notificationData = {
+          request_id: request._id,
+          changed_by: request.manager_id,
+          created_at: request.request_date,
+          request_type: "Manager_Action",
+          receiver_id: request.staff_id,
+          old_status: REQUEST_STATUS_PENDING,
+          new_status: REQUEST_STATUS_REJECTED,
+          reason: reason
+        };
+        
+        try {
+          await createNotification(notificationData);
+        } catch (notificationError) {
+          console.error("Error creating notification for rejected request ID:", request._id, notificationError);
+        }
+      }
+    }     
+
     return responseUtils.handleSuccessResponse(
       res,
       null,
@@ -731,6 +774,29 @@ export const cancelStaffRequests = async (req, res) => {
       };
     } 
 
+
+    if (updatedRequests.modifiedCount > 0) {
+      for (const request of requests) {
+        const notificationData = {
+          request_id: request._id,
+          changed_by: request.staff_id,
+          created_at: request.request_date,
+          request_type: "Staff_Action",
+          receiver_id: request.manager_id,
+          old_status: REQUEST_STATUS_PENDING,
+          new_status: REQUEST_STATUS_CANCELLED,
+          reason: "N/A"
+        };
+        
+        
+        try {
+          await createNotification(notificationData);
+        } catch (notificationError) {
+          console.error("Error creating notification for approved request ID:", request._id, notificationError);
+        }
+      }
+    }    
+
     return responseUtils.handleSuccessResponse(
       res,
       null,
@@ -784,6 +850,28 @@ export const ApproveWithdrawalRequest = async (req, res) => {
         };
       };
     } 
+
+    if (updatedRequests.modifiedCount > 0) {
+      for (const request of requests) {
+        const notificationData = {
+          request_id: request._id,
+          changed_by: request.manager_id,
+          created_at: request.request_date,
+          request_type: "Manager_Action",
+          receiver_id: request.staff_id,
+          old_status: REQUEST_STATUS_PENDING_WITHDRAWAL,
+          new_status: REQUEST_STATUS_WITHDRAWN,
+          reason: "N/A"
+        };
+
+        try {
+          await createNotification(notificationData);
+        } catch (notificationError) {
+          console.error("Error creating notification for approved withdrawal request ID:", request._id, notificationError);
+        }
+      }
+    }
+    
     return responseUtils.handleSuccessResponse(
       res,
       null,
@@ -837,6 +925,28 @@ export const RejectWithdrawalRequest = async (req, res) => {
         };
       };
     } 
+
+
+    if (updatedRequests.modifiedCount > 0) {
+      for (const request of requests) {
+        const notificationData = {
+          request_id: request._id,
+          changed_by: request.manager_id,
+          created_at: request.request_date,
+          request_type: "Manager_Action",
+          receiver_id: request.staff_id,
+          old_status: REQUEST_STATUS_PENDING_WITHDRAWAL,
+          new_status: REQUEST_STATUS_APPROVED,
+          reason: "N/A"
+        };
+        
+        try {
+          await createNotification(notificationData);
+        } catch (notificationError) {
+          console.error("Error creating notification for rejected withdrawal request ID:", request._id, notificationError);
+        }
+      }
+    }    
 
     return responseUtils.handleSuccessResponse(
       res,
@@ -916,6 +1026,27 @@ export const withdrawStaffRequests = async (req, res) => {
       };
     } 
 
+    if (updatedRequests.modifiedCount > 0) {
+      for (const request of requests) {
+        const notificationData = {
+          request_id: request._id,
+          changed_by: request.staff_id,
+          created_at: request.request_date,
+          request_type: "Staff_Action",
+          receiver_id: request.manager_id,
+          old_status: REQUEST_STATUS_APPROVED,
+          new_status: REQUEST_STATUS_PENDING_WITHDRAWAL,
+          reason: reason
+        };
+        
+        try {
+          await createNotification(notificationData);
+        } catch (notificationError) {
+          console.error("Error creating notification for pending withdrawal request ID:", request._id, notificationError);
+        }
+      }
+    }    
+
     return responseUtils.handleSuccessResponse(
       res,
       null,
@@ -979,6 +1110,29 @@ export const withdrawRequestsAsManager = async (req, res) => {
         };
       };
     } 
+
+
+    if (updatedRequests.modifiedCount > 0) {
+      for (const request of requests) {
+        const notificationData = {
+          request_id: request._id,
+          changed_by: request.manager_id,
+          created_at: request.request_date,
+          request_type: "Manager_Action",
+          receiver_id: request.staff_id,
+          old_status: REQUEST_STATUS_APPROVED,
+          new_status: REQUEST_STATUS_WITHDRAWN,
+          reason: reason
+        };
+      
+        
+        try {
+          await createNotification(notificationData);
+        } catch (notificationError) {
+          console.error("Error creating notification for approved withdrawal request ID:", request._id, notificationError);
+        }
+      }
+    }    
 
     return responseUtils.handleSuccessResponse(
       res,

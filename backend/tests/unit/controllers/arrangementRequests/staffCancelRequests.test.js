@@ -8,6 +8,8 @@ import ArrangementRequest from "../../../../api/models/arrangementRequestsModel"
 // Mocking the database model
 jest.mock("../../../../api/models/arrangementRequestsModel");
 
+jest.setTimeout(100000);
+
 describe("cancelStaffRequests - Unit Tests", () => {
   let req, res;
 

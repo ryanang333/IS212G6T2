@@ -5,6 +5,7 @@ import staffRoutes from './routes/staffRoutes.js';
 import arrangementRequestsRoutes from './routes/arrangementRequestsRoutes.js';
 import requestAuditRoutes from './routes/requestAuditRoutes.js';
 import connectDB from '../config/db.config.js'; 
+import notificationRoutes from './routes/notificationRoutes.js'
 import setupAutoRejectCronJob from './utils/cronJob.js';
 // import session from 'express-session';
 // import RedisStore from 'connect-redis';
@@ -87,6 +88,7 @@ app.get("/", (req, res) => {
 app.use('/staff', staffRoutes);
 app.use('/arrangementRequests', arrangementRequestsRoutes);
 app.use('/requestAudit', requestAuditRoutes);
+app.use('/notifications', notificationRoutes);
 
 setupAutoRejectCronJob();
 
