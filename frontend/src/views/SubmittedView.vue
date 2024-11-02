@@ -249,6 +249,7 @@ import { getInStorage } from '../utils/localStorage.js'
 export default {
   data() {
     return {
+      backendURL: import.meta.env.VITE_BACKEND_ENDPOINT,
       submitted_view: [],
       staff_id: '',
       showFilterModal: false,
@@ -293,7 +294,7 @@ export default {
 
       this.loading = true
       try {
-        const response = await axios.get('http://localhost:3001/arrangementRequests/staff', {
+        const response = await axios.get(`${this.backendURL}/arrangementRequests/staff`, {
           params: { staff_id: this.staff_id }
         })
 
@@ -306,7 +307,6 @@ export default {
     },
 
     handleResponse(data) {
-      console.log('Fetched arrangement requests:', data)
 
       if (data.length === 0) {
         this.submitted_view = []
@@ -434,22 +434,12 @@ export default {
       if (!Array.isArray(requestIds)) {
         requestIds = [requestIds] // Convert to array if it's a single ID
       }
-      console.log('Opening confirmation for request(s):', requestIds)
       this.activeRequestId = null // Clear the single request ID
 
       this.activeRequestIds = requestIds // Store the array of IDs
       this.confirmationVisible = true
     },
     checkRequestId(request) {
-      console.log('Request:', request)
-      if (request._id) {
-        this.openConfirmationSingle(request._id)
-      } else {
-        console.error('Request ID is undefined')
-      }
-    },
-    checkRequestId(request) {
-      console.log('Request:', request)
       if (request._id) {
         this.openConfirmationSingle(request._id)
       } else {
@@ -462,7 +452,6 @@ export default {
         console.error('Request ID is not defined')
         return
       }
-      console.log('Opening confirmation for individual request:', requestId)
       this.confirmationVisible = true
       this.activeRequestId = requestId // Store the single request ID
       this.activeRequestIds = [] // Clear the group request array
@@ -493,13 +482,12 @@ export default {
         }
 
         // Send the filtered approved request IDs in the body
-        const response = await axios.patch(`http://localhost:3001/arrangementRequests/withdrawal`, {
+        const response = await axios.patch(`${this.backendURL}/arrangementRequests/withdrawal`, {
           requestIds,
           status: 'Pending Withdrawal',
           withdraw_reason: this.withdrawalReason
         })
 
-        console.log('Requests status updated successfully:', response.data)
         this.fetchArrangementRequests() // Refresh the request list
         this.closeConfirmation()
       } catch (error) {
