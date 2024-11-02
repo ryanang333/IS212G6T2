@@ -230,38 +230,4 @@ export const findExistingRequests = async ({ staff_id, requestSlots }) => {
     }
   };
 
-// export const approveIfCEO = async (staffId, arrangementRequests) => {
-  //   try {
-  //     if (staffId === 140001) { // Should replace this hardcoded value with smth else e.g. position?
-  //       // Instantly approve the request if the staff is CEO
-  //       const reqArr = await ArrangementRequest.insertMany(
-  //         arrangementRequests.map((req) => ({
-  //           staff_id: staffId,
-  //           request_date: new Date(req.date),
-  //           status: "Approved", // Instantly approve
-  //           manager_id: staffId, // Use staffId dynamically
-  //           request_time: req.time,
-  //           group_id: req.group_id || null,
-  //           reason: req.reason,
-  //         }))
-  //       );
-  
-  //       if (reqArr.length > 0) {
-  //         await createAuditEntry(
-  //           reqArr,
-  //           staffId,
-  //           REQUEST_STATUS_NONE,
-  //           REQUEST_STATUS_APPROVED
-  //         );
-  //       }
-        
-  //       return true; // Return success
-  //     }
-  //     return false; // Not CEO, no instant approval
-  
-  //   } catch (error) {
-  //     console.error("Error in approving CEO request: ", error);
-  //     throw new Error("Failed to approve request for CEO"); // Optional: You can throw a more descriptive error
-  //   }
-  // };
   

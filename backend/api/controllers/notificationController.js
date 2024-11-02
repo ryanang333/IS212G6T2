@@ -72,7 +72,6 @@ export const getNotifications = async (req, res) => {
       notifications,
     });
   } catch (error) {
-    console.error("Error fetching notifications:", error);
     return res.status(500).json({ message: "An error occurred while fetching notifications." });
   }
 };

@@ -88,7 +88,6 @@ export const createTempArrangementRequests = async (req, res) => {
       alertMessage
     );
   } catch (error) {
-    // console.error("Error occurred:", error);
     if (error.message.includes("Cannot apply")) {
       return responseUtils.handleConflict(res, error.message);
     }
@@ -578,7 +577,6 @@ export const approveStaffRequests = async (req, res) => {
           };
           await createNotification(notificationData);
         } catch (notificationError) {
-          console.error("Error creating notification for request ID:", request._id, notificationError);
         }
       }      
     }    
@@ -678,7 +676,6 @@ export const rejectStaffRequests = async (req, res) => {
         try {
           await createNotification(notificationData);
         } catch (notificationError) {
-          console.error("Error creating notification for rejected request ID:", request._id, notificationError);
         }
       }
     }     
@@ -776,7 +773,6 @@ export const cancelStaffRequests = async (req, res) => {
         try {
           await createNotification(notificationData);
         } catch (notificationError) {
-          console.error("Error creating notification for approved request ID:", request._id, notificationError);
         }
       }
     }    
@@ -851,7 +847,6 @@ export const ApproveWithdrawalRequest = async (req, res) => {
         try {
           await createNotification(notificationData);
         } catch (notificationError) {
-          console.error("Error creating notification for approved withdrawal request ID:", request._id, notificationError);
         }
       }
     }
@@ -927,7 +922,6 @@ export const RejectWithdrawalRequest = async (req, res) => {
         try {
           await createNotification(notificationData);
         } catch (notificationError) {
-          console.error("Error creating notification for rejected withdrawal request ID:", request._id, notificationError);
         }
       }
     }    
@@ -1026,7 +1020,6 @@ export const withdrawStaffRequests = async (req, res) => {
         try {
           await createNotification(notificationData);
         } catch (notificationError) {
-          console.error("Error creating notification for pending withdrawal request ID:", request._id, notificationError);
         }
       }
     }    
@@ -1113,7 +1106,6 @@ export const withdrawRequestsAsManager = async (req, res) => {
         try {
           await createNotification(notificationData);
         } catch (notificationError) {
-          console.error("Error creating notification for approved withdrawal request ID:", request._id, notificationError);
         }
       }
     }    
@@ -1211,7 +1203,6 @@ export const updateIndividualRequestStatus = async (req, res) => {
     );
     
   } catch (error) {
-    console.error(error.message);
     
   }
 };
