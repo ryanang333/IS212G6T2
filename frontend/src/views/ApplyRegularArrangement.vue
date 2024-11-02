@@ -70,7 +70,8 @@ export default {
     return {
       counter: 0, //Variable used to keep track of the unique ID of each request in the frontend
       arrangements: [],
-      staffId: '' //fetch from local storage after authentication is implemented
+      staffId: '', //fetch from local storage after authentication is implemented
+      backendURL: import.meta.env.VITE_BACKEND_ENDPOINT,
     }
   },
   computed: {
@@ -111,7 +112,7 @@ export default {
         arrangementRequests: this.arrangements
       }
       try {
-        const response = await axios.post('http://localhost:3001/arrangementRequests/reg', data)
+        const response = await axios.post(`${this.backendURL}/arrangementRequests/reg`, data)
         if (response.status === 201) {
           alert(response.data.message)
         }

@@ -54,12 +54,6 @@ const router = createRouter({
       component: Hello,
       meta: { requiresAuth: true }
     },
-    // {
-    //   path: '/cancel',
-    //   name: 'cancel',
-    //   component: Cancel ,
-    //   meta: { requiresAuth: true },
-    // }
     {
       path: '/myrequests',
       name: 'myrequests',

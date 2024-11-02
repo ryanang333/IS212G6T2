@@ -53,7 +53,6 @@ export const createNewCEORequests = async (arrangementRequests, staffId, manager
           reason: "N/A",
         };
 
-        console.log("Notification Data for Created Request:", notificationData);
         await createNotification(notificationData);
       });
 
@@ -122,7 +121,6 @@ export const createNewRequests = async (arrangementRequests, staffId, managerId)
             reason: request.reason,
           };
   
-          console.log("Notification Data for Created Request:", notificationData);
           await createNotification(notificationData);
         });
   
@@ -182,7 +180,6 @@ export const findExistingRequestsForPendingAndAccepted = async (staffId, weekSta
         });
         
     } catch (error) {
-        console.log(error)
         throw new Error("Failed to fetch existing requests (Ryan's Function)");
     }
 };

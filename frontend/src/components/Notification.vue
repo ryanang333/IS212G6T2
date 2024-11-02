@@ -68,18 +68,17 @@ export default {
       activeTab: 'myNotifications',
       staffId: null,
       errorMessage: null, // Error message state
+      backendURL: import.meta.env.VITE_BACKEND_ENDPOINT,
     };
   },
   mounted() {
     this.staffId = getInStorage('staff_id');
-    console.log("Staff ID:", this.staffId); // Debugging output
     this.fetchNotifications();
   },
   methods: {
     async fetchNotifications() {
       try {
-        const response = await axios.get(`http://localhost:3001/notifications/staff/${this.staffId}`);
-        console.log("API Response:", response); // Debugging output
+        const response = await axios.get(`${this.backendURL}/notifications/staff/${this.staffId}`);
 
         // Populate My Notifications and Manager Notifications based on request_type
         this.myNotifications = response.data.notifications.filter(notification => notification.request_type === 'Manager_Action');
