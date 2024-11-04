@@ -6,7 +6,7 @@ import connectDB from "../../config/db.config.js";
 // Connect to MongoDB
 connectDB();
 
-const csvFilePath = "./scripts/employeenew.csv";
+const csvFilePath = "./scripts/staff_data/employeenew.csv";
 
 const importCSV = async () => {
   const results = [];

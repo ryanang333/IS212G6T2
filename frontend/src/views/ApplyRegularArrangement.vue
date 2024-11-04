@@ -81,7 +81,7 @@ export default {
      * Else 'Submit Request'
      */
     submitButtonText() {
-      return this.staffId === '00001' ? 'Apply' : 'Submit Request' // use 0001 for now
+      return this.staffId === '130002' ? 'Apply' : 'Submit Request';
     }
   },
   methods: {

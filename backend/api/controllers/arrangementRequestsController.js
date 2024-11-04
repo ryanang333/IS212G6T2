@@ -3,8 +3,7 @@ import { getStaffDetails, getStaffIdsByDept } from "./staffController.js";
 import { createNotification } from "./notificationController.js";
 import { createAuditEntry } from "./requestAuditController.js";
 import {
-  checkDatesValidity,
-  checkIfDatesOverlap,
+  checkDatesValidity
 } from "../utils/dateChecker.js";
 import * as responseUtils from "../utils/responseUtils.js";
 import { v4 as uuidv4 } from "uuid"; // Used to generate group_id
@@ -1174,23 +1173,21 @@ export const updateIndividualRequestStatus = async (req, res) => {
  * @async
  * @function autoRejectPendingRequests
  */
- export const autoRejectPendingRequests = async () => {
+export const autoRejectPendingRequests = async () => {
   try {
     const today = new Date();
     const rejectionDate = new Date(today);
-    rejectionDate.setDate(today.getDate() + 2); 
-    rejectionDate.setUTCHours(0, 0, 0, 0); 
-
+    rejectionDate.setUTCHours(16, 0, 0, 0); 
+    rejectionDate.setUTCDate(today.getUTCDate() + 1); 
     const pendingRequests = await ArrangementRequest.find({
       request_date: {$lte: rejectionDate},
       status: 'Pending'
     });
 
     if (pendingRequests.length === 0) {
-      
+      return;
     }
 
-    
     const requestIds = pendingRequests.map(request => request._id);
 
     await ArrangementRequest.updateMany(
@@ -1198,14 +1195,14 @@ export const updateIndividualRequestStatus = async (req, res) => {
       {
         status: 'Rejected',
         manager_reason: 'Auto-rejected by system due to lack of manager action',
-        updated_at: new Date() 
       }
     );
-    
+
   } catch (error) {
-    
+    console.error('Error auto-rejecting pending requests:', error);
   }
 };
+
 
 
 
