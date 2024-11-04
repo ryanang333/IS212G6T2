@@ -29,11 +29,11 @@
 </template>
 
 <script>
+import { getInStorage } from '../utils/localStorage.js';
 export default {
-  props: {
-    role: {
-      type: String,
-      required: true
+  data(){
+    return{
+      role: '',
     }
   },
   methods: {
@@ -41,6 +41,9 @@ export default {
       localStorage.clear()
       this.$router.push('/login')
     }
+  },
+  mounted(){
+    this.role = getInStorage('role');
   }
 }
 </script>
