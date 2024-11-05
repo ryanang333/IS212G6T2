@@ -132,6 +132,7 @@ export default {
       totalRecordsLength: 0,
       totalHomeAM: 0,
       totalHomePM: 0,
+      backendURL: import.meta.env.VITE_BACKEND_ENDPOINT,
     }
   },
   props: ['date', 'department', 'tabSelected'],
@@ -164,7 +165,7 @@ export default {
     async getDeptData(department) {
       this.selectedDepartment = department
       try {
-        const response = await axios.get(`http://localhost:3001/arrangementRequests/teamschedule`, {
+        const response = await axios.get(`${this.backendURL}/arrangementRequests/teamschedule`, {
           params: {
             startDate: this.date,
             endDate: this.date,

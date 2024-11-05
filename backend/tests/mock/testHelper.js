@@ -211,3 +211,15 @@ export const mockStaffByDept = [
     __v: 0,
   },
 ];
+
+export const mockNotificationWithChangedBy = {
+  request_id: "60d5ec49b09e3c001c8e4b51",
+  request_type: "Manager_Action",
+  changed_by: 101,
+  receiver_id: 140881,
+  change_timestamp: new Date().toISOString(),
+  old_status: "Pending",
+  new_status: "Approved",
+  reason: "Approved by manager",
+  created_at: new Date().toISOString(),
+};

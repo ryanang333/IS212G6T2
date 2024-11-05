@@ -67,7 +67,8 @@ import { saveInStorage } from '../utils/localStorage'
 export default {
   data() {
     return {
-      staffId: null
+      staffId: null,
+      backendURL: import.meta.env.VITE_BACKEND_ENDPOINT,
     }
   },
   methods: {
@@ -88,8 +89,7 @@ export default {
         return
       }
       try {
-        console.log(this.staffId)
-        const response = await axios.get(`http://localhost:3001/staff?staff_id=${this.staffId}`)
+        const response = await axios.get(`${this.backendURL}/staff?staff_id=${this.staffId}`)
         if (response.status === 200) {
           const { data } = response
           saveInStorage(data.data)

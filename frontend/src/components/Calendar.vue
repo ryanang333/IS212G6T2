@@ -26,6 +26,7 @@ import OptionsModal from './OptionsModal.vue'
 export default {
   data() {
     return {
+      backendURL: import.meta.env.VITE_BACKEND_ENDPOINT,
       events: [],
       showScheduleModal: false,
       startDate: null,
@@ -140,7 +141,7 @@ export default {
      */
     async fetchDepartmentData() {
       try {
-        const response = await axios.get('http://localhost:3001/staff/department')
+        const response = await axios.get(`${this.backendURL}/staff/department`)
         this.departments = response.data.data
       } catch (error) {
         const errorMessage = error.response?.data?.message || error.message
@@ -157,7 +158,7 @@ export default {
     async fetchData() {
       try {
         if (this.tab === 'isOwn') {
-          const response = await axios.get(`http://localhost:3001/arrangementRequests/myschedule`, {
+          const response = await axios.get(`${this.backendURL}/arrangementRequests/myschedule`, {
             params: {
               staff_id: this.staffId,
               startDate: this.startDate,

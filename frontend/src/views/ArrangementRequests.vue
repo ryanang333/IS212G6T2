@@ -253,6 +253,7 @@ import { getInStorage } from '../utils/localStorage.js'
 export default {
   data() {
     return {
+      backendURL: import.meta.env.VITE_BACKEND_ENDPOINT,
       manager_id: null,
       arrangementRequests: [],
       selectedRequests: [],
@@ -339,10 +340,9 @@ export default {
       }
       try {
         const response = await axios.get(
-          `http://localhost:3001/arrangementRequests?manager_id=${this.manager_id}`
+          `${this.backendURL}/arrangementRequests?manager_id=${this.manager_id}`
         )
         //const requests = response.data;
-        console.log('Fetched arrangement requests:', response.data) // Log the fetched data
 
         if (response.data.message) {
           this.arrangementRequests = []
@@ -384,14 +384,12 @@ export default {
 
     async approveRequest(requestId) {
       try {
-        const response = await axios.post(`http://localhost:3001/arrangementRequests/approve`, {
+        const response = await axios.post(`${this.backendURL}/arrangementRequests/approve`, {
           requestId
         })
-        console.log('Request approved:', response.data)
         await this.fetchArrangementRequests()
         location.reload() // Refresh the page
       } catch (error) {
-        console.log('approve error')
         console.error('Error approving request:', error)
       }
     },
@@ -409,12 +407,11 @@ export default {
       }
 
       try {
-        const response = await axios.post(`http://localhost:3001/arrangementRequests/reject`, {
+        const response = await axios.post(`${this.backendURL}/arrangementRequests/reject`, {
           requestId: this.requestToRejectId, // The request to reject
           reason: this.rejectionReason // The reason provided by the user
         })
 
-        console.log('Request rejected:', response.data)
         this.showRejectModal = false // Close the modal after rejection
         this.fetchArrangementRequests() // Refresh the request list
         location.reload()
@@ -434,14 +431,13 @@ export default {
 
       try {
         const response = await axios.post(
-          `http://localhost:3001/arrangementRequests/approveSelected`,
+          `${this.backendURL}/arrangementRequests/approveSelected`,
           {
             requestIds: selectedRequestIds,
             managerId: this.manager_id // Ensure the managerId is being sent here
           }
         )
 
-        console.log('Selected requests approved:', response.data)
         this.selectedRequests = [] // Clear the selected requests after approval
         this.fetchArrangementRequests() // Refresh the data
         location.reload()
@@ -461,14 +457,13 @@ export default {
 
       try {
         const response = await axios.post(
-          `http://localhost:3001/arrangementRequests/rejectSelected`,
+          `${this.backendURL}/arrangementRequests/rejectSelected`,
           {
             requestIds: selectedRequestIds,
             reason: this.rejectionReason
           }
         )
 
-        console.log('Selected requests rejected:', response.data)
         this.fetchArrangementRequests() // Refresh the data
         this.selectedRequests = [] // Clear the selected requests
         location.reload()
@@ -482,12 +477,11 @@ export default {
       if (confirm(`Are you sure you want to approve all requests in this group?`)) {
         try {
           const response = await axios.post(
-            `http://localhost:3001/arrangementRequests/approveGroup`,
+            `${this.backendURL}/arrangementRequests/approveGroup`,
             {
               requestIds: groupRequests.map((req) => req._id)
             }
           )
-          console.log('Group requests approved:', response.data)
           this.fetchArrangementRequests() // Refresh the data
           location.reload()
         } catch (error) {
@@ -512,12 +506,11 @@ export default {
       const groupRequests = this.groupedRequests[groupId] // Get the requests in the selected group
 
       try {
-        const response = await axios.post(`http://localhost:3001/arrangementRequests/rejectGroup`, {
+        const response = await axios.post(`${this.backendURL}/arrangementRequests/rejectGroup`, {
           requestIds: groupRequests.map((req) => req._id), // Send all request IDs in the group
           reason: this.rejectionReason // Send the rejection reason
         })
 
-        console.log('Group requests rejected:', response.data)
 
         this.rejectionReason = '' // Clear the rejection reason
         this.showRejectModalGroup = false // Close the modal
@@ -535,14 +528,12 @@ export default {
       }
 
       try {
-        const response = await axios.post(`http://localhost:3001/arrangementRequests/approveAll`, {
+        const response = await axios.post(`${this.backendURL}/arrangementRequests/approveAll`, {
           managerId: this.manager_id
         })
 
-        console.log('Response from approveAll:', response.data)
 
         if (response.data.updatedRequests.modifiedCount > 0) {
-          console.log('All requests approved:', response.data)
           await this.fetchArrangementRequests()
           location.reload()
         } else {
@@ -566,13 +557,12 @@ export default {
       }
 
       try {
-        const response = await axios.post(`http://localhost:3001/arrangementRequests/rejectAll`, {
+        const response = await axios.post(`${this.backendURL}/arrangementRequests/rejectAll`, {
           reason: this.rejectionReason,
           managerId: this.manager_id // Ensure the managerId is being sent
         })
 
         if (response.data.updatedRequests.modifiedCount > 0) {
-          console.log('All requests rejected:', response.data)
           this.rejectionReason = '' // Clear the rejection reason
           this.showRejectModalAll = false // Close the modal
           await this.fetchArrangementRequests() // Refresh the request list

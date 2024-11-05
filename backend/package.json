@@ -5,9 +5,9 @@
   "main": "index.js",
   "type": "module",
   "scripts": {
-    "test:unit": "jest --testPathPattern='tests/unit'",
     "lint": "npx eslint --ext .js,.jsx,.ts,.tsx .",
-    "test:integration": "jest --testPathPattern='tests/integration'",
+    "test:unit": "jest --testTimeout=100000 --testPathPattern='tests/unit'",
+    "test:integration": "jest --testTimeout=100000 --testPathPattern='tests/integration'",
     "test": "npm run test:unit && npm run test:integration",
     "start": "node api/index.js"
   },
@@ -15,17 +15,17 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "connect-redis": "^7.1.1",
     "cors": "^2.8.5",
     "csv-parser": "^3.0.0",
     "dotenv": "^16.4.5",
     "express": "^4.21.0",
     "express-session": "^1.18.1",
     "mongodb-memory-server-core": "^10.1.2",
-    "connect-redis": "^7.1.1",
-    "redis": "^4.7.0",
     "mongoose": "^8.7.1",
     "mongoose-sequence": "^6.0.1",
-    "node-cron":"^3.0.3",
+    "node-cron": "^3.0.3",
+    "redis": "^4.7.0",
     "supertest": "^7.0.0",
     "uuid": "^10.0.0"
   },

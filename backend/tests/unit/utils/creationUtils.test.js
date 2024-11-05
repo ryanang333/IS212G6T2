@@ -7,10 +7,12 @@ import {
 } from '../../../api/utils/creationUtils'; // Adjust path to creationUtils
 import ArrangementRequest from '../../../api/models/arrangementRequestsModel';
 import { createAuditEntry } from '../../../api/controllers/requestAuditController';
+import { createNotification } from '../../../api/controllers/notificationController';
 import { checkIfDatesOverlap } from '../../../api/utils/dateChecker';
 
 jest.mock('../../../api/models/arrangementRequestsModel');
 jest.mock('../../../api/controllers/requestAuditController');
+jest.mock('../../../api/controllers/notificationController');
 jest.mock('../../../api/utils/dateChecker');
 
 describe('Creation Utils Test Suite', () => {
@@ -35,6 +37,7 @@ describe('Creation Utils Test Suite', () => {
             ArrangementRequest.insertMany.mockResolvedValue([{ request_date: '2023-11-01' }]);
             checkIfDatesOverlap.mockReturnValue(false);
             createAuditEntry.mockResolvedValue();
+            createNotification.mockResolvedValue();
     
             await createNewCEORequests(mockRequests, mockStaffId, mockManagerId);
     
@@ -56,6 +59,17 @@ describe('Creation Utils Test Suite', () => {
                 'N/A',
                 'Approved'
             );
+
+            expect(createNotification).toHaveBeenCalledWith({
+                changed_by: "12345",
+                created_at: "2023-11-01",
+                new_status: "Approved",
+                old_status: "N/A",
+                reason: "N/A",
+                receiver_id: "54321",
+                request_id: undefined,
+                request_type: "Staff_Action",
+            });
         });
     
         test("should create multiple CEO arrangement requests if there are no overlaps", async () => {
@@ -72,6 +86,7 @@ describe('Creation Utils Test Suite', () => {
             ]);
             checkIfDatesOverlap.mockReturnValue(false);
             createAuditEntry.mockResolvedValue();
+            createNotification.mockResolvedValue();
     
             await createNewCEORequests(mockRequests, mockStaffId, mockManagerId);
     
@@ -102,6 +117,28 @@ describe('Creation Utils Test Suite', () => {
                 'N/A',
                 'Approved'
             );
+
+            expect(createNotification).toHaveBeenNthCalledWith(1, {
+                changed_by: "12345",
+                created_at: "2023-11-01",
+                new_status: "Approved",
+                old_status: "N/A",
+                reason: "N/A",
+                receiver_id: "54321",
+                request_id: undefined,
+                request_type: "Staff_Action",
+            });
+            
+            expect(createNotification).toHaveBeenNthCalledWith(2, {
+                changed_by: "12345",
+                created_at: "2023-11-02",
+                new_status: "Approved",
+                old_status: "N/A",
+                reason: "N/A",
+                receiver_id: "54321",
+                request_id: undefined,
+                request_type: "Staff_Action",
+            });
         });
     
         test("should throw an error if insertMany fails for CEO", async () => {
@@ -120,6 +157,7 @@ describe('Creation Utils Test Suite', () => {
             expect(ArrangementRequest.insertMany).toHaveBeenCalledTimes(1);
             expect(createAuditEntry).not.toHaveBeenCalled();
     
+            expect(createNotification).not.toHaveBeenCalledWith()
         });
     
     });
@@ -140,6 +178,7 @@ describe('Creation Utils Test Suite', () => {
             ArrangementRequest.insertMany.mockResolvedValue([{ request_date: '2023-11-01' }]);
             checkIfDatesOverlap.mockReturnValue(false);
             createAuditEntry.mockResolvedValue();
+            createNotification.mockResolvedValue();
     
             await createNewRequests(mockRequests, mockStaffId, mockManagerId);
     
@@ -161,6 +200,17 @@ describe('Creation Utils Test Suite', () => {
                 'N/A',
                 'Pending'
             );
+
+            expect(createNotification).toHaveBeenCalledWith({
+                changed_by: "12345",
+                created_at: "2023-11-01",
+                new_status: "Pending",
+                old_status: "N/A",
+                reason: undefined,
+                receiver_id: "54321",
+                request_id: undefined,
+                request_type: "Staff_Action",
+            });
         });
     
         test("should create multiple arrangement requests if there are no overlaps", async () => {
@@ -177,7 +227,8 @@ describe('Creation Utils Test Suite', () => {
             ]);
             checkIfDatesOverlap.mockReturnValue(false);
             createAuditEntry.mockResolvedValue();
-    
+            createNotification.mockResolvedValue();
+
             await createNewRequests(mockRequests, mockStaffId, mockManagerId);
     
             expect(ArrangementRequest.insertMany).toHaveBeenCalledTimes(1);
@@ -207,6 +258,28 @@ describe('Creation Utils Test Suite', () => {
                 'N/A',
                 'Pending'
             );
+
+            expect(createNotification).toHaveBeenNthCalledWith(1, {
+                changed_by: "12345",
+                created_at: "2023-11-01",
+                new_status: "Pending",
+                old_status: "N/A",
+                reason: undefined,
+                receiver_id: "54321",
+                request_id: undefined,
+                request_type: "Staff_Action",
+            });
+            
+            expect(createNotification).toHaveBeenNthCalledWith(2, {
+                changed_by: "12345",
+                created_at: "2023-11-02",
+                new_status: "Pending",
+                old_status: "N/A",
+                reason: undefined,
+                receiver_id: "54321",
+                request_id: undefined,
+                request_type: "Staff_Action",
+            });
         });
     
         test("should throw an error if insertMany fails", async () => {
@@ -224,6 +297,7 @@ describe('Creation Utils Test Suite', () => {
     
             expect(ArrangementRequest.insertMany).toHaveBeenCalledTimes(1);
             expect(createAuditEntry).not.toHaveBeenCalled();
+            expect(createNotification).not.toHaveBeenCalled();
         });
     });
 
