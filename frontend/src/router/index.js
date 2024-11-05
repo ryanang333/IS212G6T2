@@ -51,7 +51,7 @@ const router = createRouter({
     {
       path: '/',
       name: 'home',
-      component: Hello,
+      component: Schedule,
       meta: { requiresAuth: true }
     },
     
