@@ -79,6 +79,7 @@ export default {
             startDate: '',
             endDate: '',
             filterStaffId: '',
+            backendURL: import.meta.env.VITE_BACKEND_ENDPOINT,
         };
     },
     
@@ -91,8 +92,6 @@ export default {
             return new Date(date).toLocaleDateString();
         },
         validateDates() {
-            console.log("Start Date:", this.startDate);
-            console.log("End Date:", this.endDate);
             if (this.startDate && this.endDate && new Date(this.startDate) > new Date(this.endDate)) {
                 alert('End date cannot be earlier than start date.');
             } else {
@@ -107,14 +106,13 @@ export default {
         },
         async fetchAuditLogs() {
             try {
-                const response = await axios.get(`http://localhost:3001/requestAudit`, {
+                const response = await axios.get(`${this.backendURL}/requestAudit`, {
                     params: {
                         startDate: this.startDate ? new Date(this.startDate).toISOString() : undefined,
                         endDate: this.endDate ? new Date(this.endDate).toISOString() : undefined,
                         staffId: this.filterStaffId || undefined,
                     },
                 });
-                console.log('Fetched audit logs:', response.data);
                 if (response.data.logs) {
                     this.auditLogs = response.data.logs.length > 0 ? response.data.logs : [];
                 } else {

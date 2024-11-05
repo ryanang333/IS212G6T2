@@ -19,7 +19,6 @@ const connectDB = async () => {
         mongoURI = process.env.MONGODB_URI_DEV;
         break;
     }
-
     await mongoose.connect(mongoURI);
     console.log("MongoDB connected successfully.");
   } catch (error) {

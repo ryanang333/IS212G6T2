@@ -8,7 +8,7 @@
           type="date"
           name="startDate" 
           id="startDate"
-          v-model="localData.startDate"
+          v-model="localData.date"
           @change="validateDayAndDate" 
           class="px-3 block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
         />
@@ -101,27 +101,7 @@ export default {
       localData: this.value || { id: null, date: null, numEvents: null, recurringInterval: null, time: null, reason: null }
     }
   },
-  methods: {
-    /**
-     * Not needed for now since we are just going to choose a starting date
-     * Ensures that user does not select Tuesday & clicks on a non-Tuesday starting date
-     * Can change this to somewhere else?
-     */
-    // validateDayAndDate() {
-    //   const selectedDay = this.localData.day;
-    //   const selectedDate = new Date(this.localData.startDate);
-    //   const daysOfWeek = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
-      
-    //   if (selectedDate && selectedDay) {
-    //     const dayOfWeek = daysOfWeek[selectedDate.getDay()];
-    //     if (dayOfWeek !== selectedDay) {
-    //       alert(`The selected date is a ${dayOfWeek}, but you selected ${selectedDay}. Please choose the correct date.`);
-    //       // Reset the date field if validation fails
-    //       this.localData.startDate = null;
-    //     }
-    //   }
-    // }
-  },
+  methods: {},
   watch: {
     /**
      * Watches for changes in localData and emits an input event to update the parent component.
@@ -129,6 +109,7 @@ export default {
      */
     localData: {
       handler(newValue) {
+        console.log('###new value => ', newValue);
         this.$emit('input', newValue)
       },
       deep: true

@@ -1,5 +1,6 @@
 import ArrangementRequest from "../models/arrangementRequestsModel.js";
 import { createAuditEntry } from "../controllers/requestAuditController.js";
+import { createNotification } from "../controllers/notificationController.js";
 import { checkIfDatesOverlap } from "../utils/dateChecker.js";
 
 export const REQUEST_STATUS_PENDING = "Pending";
@@ -10,52 +11,71 @@ export const REQUEST_STATUS_APPROVED = "Approved";
  * Approves arrangement request instantly if staff is CEO.
  * @param {string} staffId - The ID of the staff member.
  * @param {Array<Object>} arrangementRequests - The array of arrangement request objects.
+ * @param {string} managerId - The ID of the manager.
  * @returns {Promise<Array|boolean>} - A promise that resolves to an array of approved requests or false if not the CEO.
  */
-
 export const createNewCEORequests = async (arrangementRequests, staffId, managerId) => {
-    try {
-      const requests = arrangementRequests.map((req) => ({
-        date: new Date(req.date),
-      }));
-      const existingRequests = await findExistingRequests({
+  try {
+    const requests = arrangementRequests.map((req) => ({
+      date: new Date(req.date),
+    }));
+
+    const existingRequests = await findExistingRequests({
+      staff_id: staffId,
+      requestSlots: requests,
+    });
+
+    checkIfDatesOverlap(existingRequests, arrangementRequests);
+
+    const reqArr = await ArrangementRequest.insertMany(
+      arrangementRequests.map((req) => ({
         staff_id: staffId,
-        requestSlots: requests,
-      });
-  
-      checkIfDatesOverlap(existingRequests, arrangementRequests);
-  
-      const reqArr = await ArrangementRequest.insertMany(
-        arrangementRequests.map((req) => ({
-          staff_id: staffId,
-          request_date: new Date(req.date),
-          status: "Approved",
-          manager_id: managerId,
-          request_time: req.time,
-          group_id: req.group_id || null,
-          reason: req.reason,
-        }))
-      );
-  
-      if (reqArr.length > 0) {
-        try {
-          await createAuditEntry(
-            reqArr,
-            staffId,
-            REQUEST_STATUS_NONE,
-            REQUEST_STATUS_APPROVED
-          );
-        } catch (auditError) {
+        request_date: new Date(req.date),
+        status: "Approved",
+        manager_id: managerId,
+        request_time: req.time,
+        group_id: req.group_id || null,
+        reason: req.reason,
+        request_id: req._id
+      }))
+    );
+
+    if (reqArr.length > 0) {
+      const notificationPromises = reqArr.map(async (request) => {
+        const notificationData = {
+          request_id: request._id,
+          changed_by: staffId,
+          created_at: request.request_date,
+          request_type: "Staff_Action",
+          receiver_id: managerId,
+          old_status: REQUEST_STATUS_NONE,
+          new_status: REQUEST_STATUS_APPROVED,
+          reason: "N/A",
         };
-    };
-      
-    } catch (error) {
-      const msg = error.message.includes("Cannot apply - CEO")
-        ? error.message
-        : "Failed to create arrangement requests - CEO";
-      throw new Error(msg);
+
+        await createNotification(notificationData);
+      });
+
+      await Promise.all(notificationPromises);
+
+      try {
+        await createAuditEntry(
+          reqArr,
+          staffId,
+          REQUEST_STATUS_NONE,
+          REQUEST_STATUS_APPROVED
+        );
+      } catch (auditError) {
+      }
     }
-  };
+  } catch (error) {
+    const msg = error.message.includes("Cannot apply - CEO")
+      ? error.message
+      : "Failed to create arrangement requests - CEO";
+    throw new Error(msg);
+  }
+};
+
 
 /**
  * Creates new arrangement requests if there are no existing requests for the specified slots.
@@ -87,8 +107,25 @@ export const createNewRequests = async (arrangementRequests, staffId, managerId)
           reason: req.reason,
         }))
       );
-  
+
       if (reqArr.length > 0) {
+        const notificationPromises = reqArr.map(async (request) => {
+          const notificationData = {
+            request_id: request._id,
+            changed_by: staffId,
+            created_at: request.request_date,
+            request_type: "Staff_Action",
+            receiver_id: managerId,
+            old_status: REQUEST_STATUS_NONE,
+            new_status: REQUEST_STATUS_PENDING,
+            reason: request.reason,
+          };
+  
+          await createNotification(notificationData);
+        });
+  
+        await Promise.all(notificationPromises);
+  
         try {
           await createAuditEntry(
             reqArr,
@@ -97,8 +134,8 @@ export const createNewRequests = async (arrangementRequests, staffId, managerId)
             REQUEST_STATUS_PENDING
           );
         } catch (auditError) {
-        };
-      };
+        }
+      }
     } catch (error) {
       const msg = error.message.includes("Cannot apply")
         ? error.message
@@ -143,7 +180,6 @@ export const findExistingRequestsForPendingAndAccepted = async (staffId, weekSta
         });
         
     } catch (error) {
-        console.log(error)
         throw new Error("Failed to fetch existing requests (Ryan's Function)");
     }
 };
@@ -194,38 +230,4 @@ export const findExistingRequests = async ({ staff_id, requestSlots }) => {
     }
   };
 
-// export const approveIfCEO = async (staffId, arrangementRequests) => {
-  //   try {
-  //     if (staffId === 140001) { // Should replace this hardcoded value with smth else e.g. position?
-  //       // Instantly approve the request if the staff is CEO
-  //       const reqArr = await ArrangementRequest.insertMany(
-  //         arrangementRequests.map((req) => ({
-  //           staff_id: staffId,
-  //           request_date: new Date(req.date),
-  //           status: "Approved", // Instantly approve
-  //           manager_id: staffId, // Use staffId dynamically
-  //           request_time: req.time,
-  //           group_id: req.group_id || null,
-  //           reason: req.reason,
-  //         }))
-  //       );
-  
-  //       if (reqArr.length > 0) {
-  //         await createAuditEntry(
-  //           reqArr,
-  //           staffId,
-  //           REQUEST_STATUS_NONE,
-  //           REQUEST_STATUS_APPROVED
-  //         );
-  //       }
-        
-  //       return true; // Return success
-  //     }
-  //     return false; // Not CEO, no instant approval
-  
-  //   } catch (error) {
-  //     console.error("Error in approving CEO request: ", error);
-  //     throw new Error("Failed to approve request for CEO"); // Optional: You can throw a more descriptive error
-  //   }
-  // };
   

@@ -2,16 +2,15 @@
   <nav class="bg-gray-800 p-4">
     <ul class="flex space-x-4">
       <li>
-        <router-link to="/login" class="text-white hover:underline">LogOut</router-link>
-      </li>
-      <li>
         <router-link to="/apply" class="text-white hover:underline">Make Request</router-link>
       </li>
       <li>
         <router-link to="/myrequests" class="text-white hover:underline">My Requests</router-link>
       </li>
       <li><router-link to="/schedule" class="text-white hover:underline">Schedule</router-link></li>
-      <li><router-link to="/inbox" class="text-white hover:underline">Inbox</router-link></li>
+      <li>
+        <router-link to="/notifications" class="text-white hover:underline">Inbox</router-link>
+      </li>
 
       <li v-if="role === '1'">
         <router-link to="/audit-logs" class="text-white hover:underline">Records</router-link>
@@ -22,17 +21,29 @@
           >Staff Requests</router-link
         >
       </li>
+      <li>
+        <button @click="handleLogout" class="text-white hover:underline">Sign Out</button>
+      </li>
     </ul>
   </nav>
 </template>
 
 <script>
+import { getInStorage } from '../utils/localStorage.js';
 export default {
-  props: {
-    role: {
-      type: String,
-      required: true
+  data(){
+    return{
+      role: '',
     }
+  },
+  methods: {
+    handleLogout() {
+      localStorage.clear()
+      this.$router.push('/login')
+    }
+  },
+  mounted(){
+    this.role = getInStorage('role');
   }
 }
 </script>

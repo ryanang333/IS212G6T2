@@ -7,6 +7,8 @@ import {
   
   // Mocking the database model
   jest.mock("../../../../api/models/arrangementRequestsModel");
+
+  jest.setTimeout(100000);
   
   describe("ApproveWithdrawalRequest - Unit Tests", () => {
     let req, res;

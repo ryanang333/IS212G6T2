@@ -1,9 +1,9 @@
 import ArrangementRequest from "../models/arrangementRequestsModel.js";
 import { getStaffDetails, getStaffIdsByDept } from "./staffController.js";
+import { createNotification } from "./notificationController.js";
 import { createAuditEntry } from "./requestAuditController.js";
 import {
-  checkDatesValidity,
-  checkIfDatesOverlap,
+  checkDatesValidity
 } from "../utils/dateChecker.js";
 import * as responseUtils from "../utils/responseUtils.js";
 import { v4 as uuidv4 } from "uuid"; // Used to generate group_id
@@ -30,15 +30,10 @@ export const REQUEST_STATUS_WITHDRAWN = "Withdrawn";
 export const createTempArrangementRequests = async (req, res) => {
   try {
     const { staffId, arrangementRequests } = req.body;
-    // console.log("Received request body:", req.body);
-    // console.log("Staff ID:", staffId);
-    // console.log("Arrangement requests:", arrangementRequests);
 
     // Function 1 - Check Date
     const validationResponse = checkDatesValidity(arrangementRequests);
-    // console.log("Date validation response:", validationResponse);
     if (!validationResponse.isValid) {
-      // console.log("Invalid dates in arrangement request:", validationResponse);
       return responseUtils.handleBadRequest(
         res,
         "Arrangement request dates are invalid!"
@@ -47,16 +42,12 @@ export const createTempArrangementRequests = async (req, res) => {
 
     // Function 2 - Get Staff Details
     const staff = await getStaffDetails(staffId);
-    // console.log("Staff details fetched:", staff);
     if (!staff) {
-      // console.log("Staff not found:", staffId);
       return responseUtils.handleNotFound(res, "Staff does not exist!");
     }
 
     // Function 3 - CEO?
-    // console.log("Staff position:", staff.position);
     if (staff.position === "MD") {
-      // console.log("Staff is a CEO/MD, creating CEO requests...");
       await createNewCEORequests(
         arrangementRequests,
         staffId,
@@ -70,43 +61,35 @@ export const createTempArrangementRequests = async (req, res) => {
     }
 
     // Function 4 - Not CEO!
-    // console.log("Staff is not a CEO, creating regular requests...");
     const createdRequests = await createNewRequests(
       arrangementRequests,
       staff.staff_id,
       staff.reporting_manager
     );
-    // console.log("Created arrangement requests:", createdRequests);
 
     // Function 5 - More Than 2 WFH?
     const weeksWithTooManyRequests = await checkWFHRequestsPerWeek(
       arrangementRequests,
       staffId
     );
-    // console.log("Weeks with too many requests:", weeksWithTooManyRequests);
 
     let alertMessage = "Request created successfully!";
     if (weeksWithTooManyRequests.size > 0) {
       alertMessage = `Notice! You have more than 2 requests in the week(s) of [${[
         ...weeksWithTooManyRequests,
       ].join(", ")}]. Request will be processed and manager will be notified.`;
-      // console.log("Alert message due to WFH limit:", alertMessage);
     }
 
     // Done!
-    // console.log("Sending success response...");
     return responseUtils.handleCreatedResponse(
       res,
       createdRequests,
       alertMessage
     );
   } catch (error) {
-    // console.error("Error occurred:", error);
     if (error.message.includes("Cannot apply")) {
-      // console.log("Conflict error:", error.message);
       return responseUtils.handleConflict(res, error.message);
     }
-    console.log("Internal server error:", error.message);
     return responseUtils.handleInternalServerError(res, error.message);
   }
 };
@@ -577,6 +560,25 @@ export const approveStaffRequests = async (req, res) => {
         };
       };
     } 
+  
+    if (updatedRequests.modifiedCount > 0) {
+      for (const request of requests) {
+        try {
+          const notificationData = {
+            request_id: request._id,
+            changed_by: request.manager_id,
+            created_at: request.request_date,
+            request_type: "Manager_Action",
+            receiver_id: request.staff_id,
+            old_status: REQUEST_STATUS_PENDING,
+            new_status: REQUEST_STATUS_APPROVED,
+            reason: "N/A"
+          };
+          await createNotification(notificationData);
+        } catch (notificationError) {
+        }
+      }      
+    }    
 
     return responseUtils.handleSuccessResponse(
       res,
@@ -656,6 +658,27 @@ export const rejectStaffRequests = async (req, res) => {
       };
     } 
 
+
+    if (updatedRequests.modifiedCount > 0) {
+      for (const request of requests) {
+        const notificationData = {
+          request_id: request._id,
+          changed_by: request.manager_id,
+          created_at: request.request_date,
+          request_type: "Manager_Action",
+          receiver_id: request.staff_id,
+          old_status: REQUEST_STATUS_PENDING,
+          new_status: REQUEST_STATUS_REJECTED,
+          reason: reason
+        };
+        
+        try {
+          await createNotification(notificationData);
+        } catch (notificationError) {
+        }
+      }
+    }     
+
     return responseUtils.handleSuccessResponse(
       res,
       null,
@@ -731,6 +754,28 @@ export const cancelStaffRequests = async (req, res) => {
       };
     } 
 
+
+    if (updatedRequests.modifiedCount > 0) {
+      for (const request of requests) {
+        const notificationData = {
+          request_id: request._id,
+          changed_by: request.staff_id,
+          created_at: request.request_date,
+          request_type: "Staff_Action",
+          receiver_id: request.manager_id,
+          old_status: REQUEST_STATUS_PENDING,
+          new_status: REQUEST_STATUS_CANCELLED,
+          reason: "N/A"
+        };
+        
+        
+        try {
+          await createNotification(notificationData);
+        } catch (notificationError) {
+        }
+      }
+    }    
+
     return responseUtils.handleSuccessResponse(
       res,
       null,
@@ -784,6 +829,27 @@ export const ApproveWithdrawalRequest = async (req, res) => {
         };
       };
     } 
+
+    if (updatedRequests.modifiedCount > 0) {
+      for (const request of requests) {
+        const notificationData = {
+          request_id: request._id,
+          changed_by: request.manager_id,
+          created_at: request.request_date,
+          request_type: "Manager_Action",
+          receiver_id: request.staff_id,
+          old_status: REQUEST_STATUS_PENDING_WITHDRAWAL,
+          new_status: REQUEST_STATUS_WITHDRAWN,
+          reason: "N/A"
+        };
+
+        try {
+          await createNotification(notificationData);
+        } catch (notificationError) {
+        }
+      }
+    }
+    
     return responseUtils.handleSuccessResponse(
       res,
       null,
@@ -837,6 +903,27 @@ export const RejectWithdrawalRequest = async (req, res) => {
         };
       };
     } 
+
+
+    if (updatedRequests.modifiedCount > 0) {
+      for (const request of requests) {
+        const notificationData = {
+          request_id: request._id,
+          changed_by: request.manager_id,
+          created_at: request.request_date,
+          request_type: "Manager_Action",
+          receiver_id: request.staff_id,
+          old_status: REQUEST_STATUS_PENDING_WITHDRAWAL,
+          new_status: REQUEST_STATUS_APPROVED,
+          reason: "N/A"
+        };
+        
+        try {
+          await createNotification(notificationData);
+        } catch (notificationError) {
+        }
+      }
+    }    
 
     return responseUtils.handleSuccessResponse(
       res,
@@ -916,6 +1003,26 @@ export const withdrawStaffRequests = async (req, res) => {
       };
     } 
 
+    if (updatedRequests.modifiedCount > 0) {
+      for (const request of requests) {
+        const notificationData = {
+          request_id: request._id,
+          changed_by: request.staff_id,
+          created_at: request.request_date,
+          request_type: "Staff_Action",
+          receiver_id: request.manager_id,
+          old_status: REQUEST_STATUS_APPROVED,
+          new_status: REQUEST_STATUS_PENDING_WITHDRAWAL,
+          reason: reason
+        };
+        
+        try {
+          await createNotification(notificationData);
+        } catch (notificationError) {
+        }
+      }
+    }    
+
     return responseUtils.handleSuccessResponse(
       res,
       null,
@@ -979,6 +1086,28 @@ export const withdrawRequestsAsManager = async (req, res) => {
         };
       };
     } 
+
+
+    if (updatedRequests.modifiedCount > 0) {
+      for (const request of requests) {
+        const notificationData = {
+          request_id: request._id,
+          changed_by: request.manager_id,
+          created_at: request.request_date,
+          request_type: "Manager_Action",
+          receiver_id: request.staff_id,
+          old_status: REQUEST_STATUS_APPROVED,
+          new_status: REQUEST_STATUS_WITHDRAWN,
+          reason: reason
+        };
+      
+        
+        try {
+          await createNotification(notificationData);
+        } catch (notificationError) {
+        }
+      }
+    }    
 
     return responseUtils.handleSuccessResponse(
       res,
@@ -1044,24 +1173,21 @@ export const updateIndividualRequestStatus = async (req, res) => {
  * @async
  * @function autoRejectPendingRequests
  */
- export const autoRejectPendingRequests = async () => {
+export const autoRejectPendingRequests = async () => {
   try {
     const today = new Date();
     const rejectionDate = new Date(today);
-    rejectionDate.setDate(today.getDate() + 2); 
-    rejectionDate.setUTCHours(0, 0, 0, 0); 
-
+    rejectionDate.setUTCHours(16, 0, 0, 0); 
+    rejectionDate.setUTCDate(today.getUTCDate() + 1); 
     const pendingRequests = await ArrangementRequest.find({
       request_date: {$lte: rejectionDate},
       status: 'Pending'
     });
 
     if (pendingRequests.length === 0) {
-      console.log('No pending requests for auto-rejection.')
-      
+      return;
     }
 
-    
     const requestIds = pendingRequests.map(request => request._id);
 
     await ArrangementRequest.updateMany(
@@ -1069,16 +1195,14 @@ export const updateIndividualRequestStatus = async (req, res) => {
       {
         status: 'Rejected',
         manager_reason: 'Auto-rejected by system due to lack of manager action',
-        updated_at: new Date() 
       }
     );
-    console.log(`${pendingRequests.length} requests have been auto-rejected successfully.`);
-    
+
   } catch (error) {
-    console.error(error.message);
-    
+    console.error('Error auto-rejecting pending requests:', error);
   }
 };
+
 
 
 

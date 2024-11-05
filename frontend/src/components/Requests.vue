@@ -193,6 +193,7 @@ export default {
   },
   data() {
     return {
+      backendURL: import.meta.env.VITE_BACKEND_ENDPOINT,
       isOpenOptions: false,
       isWithdrawalModalOpen: false,
       modalData: {
@@ -287,7 +288,7 @@ export default {
         }
         try {
           const response = await axios.patch(
-            'http://localhost:3001/arrangementRequests/managerwithdrawal',
+            `${this.backendURL}/arrangementRequests/managerwithdrawal`,
             {
               requests: reqArray,
               reason: modalResponse.input
@@ -325,9 +326,8 @@ export default {
           return
         }
         try {
-          console.log(reqArray)
           const response = await axios.patch(
-            'http://localhost:3001/arrangementRequests/staffrejection',
+            `${this.backendURL}/arrangementRequests/staffrejection`,
             {
               requests: reqArray,
               reason: modalResponse.input
@@ -358,7 +358,7 @@ export default {
     async approveArrangementRequest(reqArray) {
       try {
         const response = await axios.patch(
-          'http://localhost:3001/arrangementRequests/staffapproval',
+          `${this.backendURL}/arrangementRequests/staffapproval`,
           {
             requests: reqArray
           }
@@ -395,7 +395,7 @@ export default {
         }
         try {
           const response = await axios.patch(
-            'http://localhost:3001/arrangementRequests/staffwithdrawal',
+            `${this.backendURL}/arrangementRequests/staffwithdrawal`,
             {
               requests: reqArray,
               reason: modalResponse.input
@@ -465,7 +465,7 @@ export default {
     async cancelArrangementRequests(reqArray) {
       try {
         const response = await axios.patch(
-          'http://localhost:3001/arrangementRequests/staffcancellation',
+          `${this.backendURL}/arrangementRequests/staffcancellation`,
           {
             requests: reqArray
           }
@@ -483,7 +483,7 @@ export default {
     async ApproveWithdrawalRequests(reqArray) {
       try {
         const response = await axios.patch(
-          'http://localhost:3001/arrangementRequests/approveWithdrawal',
+          `${this.backendURL}/arrangementRequests/approveWithdrawal`,
           {
             requests: reqArray,
           }
@@ -501,7 +501,7 @@ export default {
     async RejectWithdrawalRequests(reqArray) {
       try {
         const response = await axios.patch(
-          'http://localhost:3001/arrangementRequests/rejectWithdrawal',
+          `${this.backendURL}/arrangementRequests/rejectWithdrawal`,
           {
             requests: reqArray,
           }
@@ -604,12 +604,12 @@ export default {
       try {
         let response
         if (this.invokingPage === 'My Request') {
-          response = await axios.get('http://localhost:3001/arrangementRequests/staff', {
+          response = await axios.get(`${this.backendURL}/arrangementRequests/staff`, {
             params: { staff_id: this.staffId, status: this.status }
           })
         } else if (this.invokingPage === 'Staff Request') {
           response = await axios.get(
-            `http://localhost:3001/arrangementRequests?manager_id=${this.staffId}`
+            `${this.backendURL}/arrangementRequests?manager_id=${this.staffId}`
           )
         }
         let data = response.data.data
