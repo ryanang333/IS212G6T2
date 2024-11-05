@@ -28,7 +28,7 @@ const router = createRouter({
       path: '/schedule',
       name: 'schedule',
       component: Schedule,
-      meta: {requiresAuth: true, requiredRoles:[ROLES.HR_SENIOR_MGMT,ROLES.MGRS_DIRS,ROLES.STAFF]},
+      meta: {requiresAuth: true},
     },
     {
       path: '/arrangementrequests',
@@ -40,7 +40,7 @@ const router = createRouter({
       path: '/submittedview',
       name: 'submittedview',
       component: SubmittedView,
-      meta: { requiresAuth: true,requiredRoles:[ROLES.HR_SENIOR_MGMT,ROLES.MGRS_DIRS,ROLES.STAFF] },
+      meta: { requiresAuth: true },
     },
     {
       path: '/apply',
@@ -64,7 +64,7 @@ const router = createRouter({
       path: '/staffrequests',
       name: 'staffrequests',
       component: ViewStaffRequests,
-      meta: { requiresAuth: true, requiredRoles:[ROLE.MGRS_DIRS] }
+      meta: { requiresAuth: true, requiredRoles:[ROLES.MGRS_DIRS] }
     },
     {
       path: '/notifications',
