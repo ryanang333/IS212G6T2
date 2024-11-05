@@ -28,4 +28,8 @@ export const getInStorage = (key) => {
  */
 export const isAuthenticated = () => {
     return localStorage.getItem("staff_id") !== null;
+};
+export const getUserRole = () => {
+    const role = localStorage.getItem('role');
+    return role ? parseInt(role, 10) : null;
 }

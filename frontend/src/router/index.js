@@ -3,7 +3,7 @@ import ArrangementRequest from '../views/ArrangementRequests.vue'
 import SubmittedView from '../views/SubmittedView.vue'
 import ApplyArrangement from '../views/ApplyArrangement.vue'
 import Login from '../views/Login.vue'
-import { isAuthenticated } from '../utils/localStorage'
+import { isAuthenticated,getUserRole  } from '../utils/localStorage'
 import Schedule from '../views/Schedule.vue'
 import Hello from '../views/Hello.vue'
 
@@ -51,21 +51,45 @@ const router = createRouter({
       component: Hello,
       meta: { requiresAuth: true }
     },
-    // {
-    //   path: '/cancel',
-    //   name: 'cancel',
-    //   component: Cancel ,
-    //   meta: { requiresAuth: true },
-    // }
+    {
+      path: '/:catchAll(.*)', // Catch-all route for any unmatched routes
+      redirect: '/login' // Redirect to login
+    }
+
   ]
 })
 
 router.beforeEach((to, from, next) => {
-  if (to.meta.requiresAuth && !isAuthenticated()) {
-    next('/login')
+
+  // if (to.meta.requiresAuth && !isAuthenticated()) {
+  //   next('/login')
+  // } else {
+  //   next()
+  // }
+  if (to.meta.requiresAuth) {
+    if (!isAuthenticated()) {
+      // Redirect to login if not authenticated
+      next('/login');
+    } else if (to.meta.requiredRoles) {
+      // If the route has required roles, check if the user's role matches
+      const userRole = getUserRole(); // getUserRole should return the user's role (e.g., 1, 2, or 3)
+
+      if (to.meta.requiredRoles.includes(userRole)) {
+        // User has the correct role, allow access
+        next();
+      } else {
+        // User lacks the required role, redirect to login or an unauthorized page
+        next('/login'); // or use '/not-authorized' if you have a page for this
+      }
+    } else {
+      // No specific roles required, allow access
+      next();
+    }
   } else {
-    next()
+    // If no authentication is required, allow access
+    next();
   }
+  
 })
 
 export default router
