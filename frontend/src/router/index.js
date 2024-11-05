@@ -54,29 +54,34 @@ const router = createRouter({
       component: Schedule,
       meta: { requiresAuth: true }
     },
-    {
-      path: '/:catchAll(.*)', 
-      redirect: '/login' 
-    }
-      path: '/myrequests',
+    
+    { path: '/myrequests',
       name: 'myrequests',
-      component: ViewMyRequests
+      component: ViewMyRequests,
+      meta: { requiresAuth: true }
     },
     {
       path: '/staffrequests',
       name: 'staffrequests',
-      component: ViewStaffRequests
+      component: ViewStaffRequests,
+      meta: { requiresAuth: true, requiredRoles:[ROLE.MGRS_DIRS] }
     },
     {
       path: '/notifications',
       name: 'notifications',
-      component: NotificationInbox
+      component: NotificationInbox,
+      meta: { requiresAuth: true }
     },
     {
       path: '/audit-logs',
       name: 'audit-logs',
-      component: RequestAudit
-    }
+      component: RequestAudit,
+      meta: { requiresAuth: true,requiredRoles:[ROLES.HR_SENIOR_MGMT] }
+    },
+    {
+      path: '/:catchAll(.*)', 
+      redirect: '/login' 
+    },
   ]
 })
 
