@@ -3,7 +3,7 @@ import ArrangementRequest from '../views/ArrangementRequests.vue'
 import SubmittedView from '../views/SubmittedView.vue'
 import ApplyArrangement from '../views/ApplyArrangement.vue'
 import Login from '../views/Login.vue'
-import { isAuthenticated } from '../utils/localStorage'
+import { isAuthenticated,getUserRole  } from '../utils/localStorage'
 import Schedule from '../views/Schedule.vue'
 import Hello from '../views/Hello.vue'
 import NotificationInbox from '@/views/ViewMyNotifications.vue'
@@ -28,7 +28,7 @@ const router = createRouter({
       path: '/schedule',
       name: 'schedule',
       component: Schedule,
-      meta: {requiresAuth: true, requiredRoles:[ROLES.HR_SENIOR_MGMT,ROLES.MGRS_DIRS,ROLES.STAFF]},
+      meta: {requiresAuth: true},
     },
     {
       path: '/arrangementrequests',
@@ -40,7 +40,7 @@ const router = createRouter({
       path: '/submittedview',
       name: 'submittedview',
       component: SubmittedView,
-      meta: { requiresAuth: true,requiredRoles:[ROLES.HR_SENIOR_MGMT,ROLES.MGRS_DIRS,ROLES.STAFF] },
+      meta: { requiresAuth: true },
     },
     {
       path: '/apply',
@@ -54,35 +54,60 @@ const router = createRouter({
       component: Schedule,
       meta: { requiresAuth: true }
     },
-    {
-      path: '/myrequests',
+    
+    { path: '/myrequests',
       name: 'myrequests',
-      component: ViewMyRequests
+      component: ViewMyRequests,
+      meta: { requiresAuth: true }
     },
     {
       path: '/staffrequests',
       name: 'staffrequests',
-      component: ViewStaffRequests
+      component: ViewStaffRequests,
+      meta: { requiresAuth: true, requiredRoles:[ROLES.MGRS_DIRS] }
     },
     {
       path: '/notifications',
       name: 'notifications',
-      component: NotificationInbox
+      component: NotificationInbox,
+      meta: { requiresAuth: true }
     },
     {
       path: '/audit-logs',
       name: 'audit-logs',
-      component: RequestAudit
-    }
+      component: RequestAudit,
+      meta: { requiresAuth: true,requiredRoles:[ROLES.HR_SENIOR_MGMT] }
+    },
+    {
+      path: '/:catchAll(.*)', 
+      redirect: '/login' 
+    },
   ]
 })
 
 router.beforeEach((to, from, next) => {
-  if (to.meta.requiresAuth && !isAuthenticated()) {
-    next('/login')
+  // if (to.meta.requiresAuth && !isAuthenticated()) {
+  //   next('/login')
+  // } else {
+  //   next()
+  // }
+  if (to.meta.requiresAuth) {
+    if (!isAuthenticated()) {
+      next('/login');
+    } else if (to.meta.requiredRoles) {
+      const userRole = getUserRole(); 
+      if (to.meta.requiredRoles.includes(userRole)) {
+        next();
+      } else {
+        next('/login'); 
+      }
+    } else {
+      next();
+    }
   } else {
-    next()
+    next();
   }
+  
 })
 
 export default router
