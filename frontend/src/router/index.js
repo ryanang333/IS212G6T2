@@ -71,10 +71,6 @@ const router = createRouter({
     {
       path: '/audit-logs',
       name: 'audit-logs',
-<<<<<<< Updated upstream
-      component: RequestAudit
-    }
-=======
       component: RequestAudit,
       meta: { requiresAuth: true,requiredRoles:[ROLES.HR_SENIOR_MGMT] }
     },
@@ -82,15 +78,10 @@ const router = createRouter({
       path: '/:catchAll(.*)', 
       redirect: '/schedule' 
     },
->>>>>>> Stashed changes
   ]
 })
 
 router.beforeEach((to, from, next) => {
-<<<<<<< Updated upstream
-  if (to.meta.requiresAuth && !isAuthenticated()) {
-    next('/login')
-=======
   if (to.meta.requiresAuth) {
     if (!isAuthenticated()) {
       next('/login');
@@ -104,7 +95,6 @@ router.beforeEach((to, from, next) => {
     } else {
       next();
     }
->>>>>>> Stashed changes
   } else {
     next()
   }
