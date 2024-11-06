@@ -55,7 +55,6 @@ const staffSchema = new Schema(
   }
 );
 
-// virtuals for relationships
 staffSchema.virtual("manager", {
   ref: "Staff",
   localField: "reporting_manager",

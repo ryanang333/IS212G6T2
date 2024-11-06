@@ -5,7 +5,6 @@ import ApplyArrangement from '../views/ApplyArrangement.vue'
 import Login from '../views/Login.vue'
 import { isAuthenticated } from '../utils/localStorage'
 import Schedule from '../views/Schedule.vue'
-import Hello from '../views/Hello.vue'
 import NotificationInbox from '@/views/ViewMyNotifications.vue'
 import ViewMyRequests from '@/views/ViewMyRequests.vue' 
 import ViewStaffRequests from '@/views/ViewStaffRequests.vue' 
@@ -72,14 +71,40 @@ const router = createRouter({
     {
       path: '/audit-logs',
       name: 'audit-logs',
+<<<<<<< Updated upstream
       component: RequestAudit
     }
+=======
+      component: RequestAudit,
+      meta: { requiresAuth: true,requiredRoles:[ROLES.HR_SENIOR_MGMT] }
+    },
+    {
+      path: '/:catchAll(.*)', 
+      redirect: '/schedule' 
+    },
+>>>>>>> Stashed changes
   ]
 })
 
 router.beforeEach((to, from, next) => {
+<<<<<<< Updated upstream
   if (to.meta.requiresAuth && !isAuthenticated()) {
     next('/login')
+=======
+  if (to.meta.requiresAuth) {
+    if (!isAuthenticated()) {
+      next('/login');
+    } else if (to.meta.requiredRoles) {
+      const userRole = getUserRole(); 
+      if (to.meta.requiredRoles.includes(userRole)) {
+        next();
+      } else {
+        next('/login'); 
+      }
+    } else {
+      next();
+    }
+>>>>>>> Stashed changes
   } else {
     next()
   }
