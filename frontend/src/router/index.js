@@ -5,7 +5,6 @@ import ApplyArrangement from '../views/ApplyArrangement.vue'
 import Login from '../views/Login.vue'
 import { isAuthenticated,getUserRole  } from '../utils/localStorage'
 import Schedule from '../views/Schedule.vue'
-import Hello from '../views/Hello.vue'
 import NotificationInbox from '@/views/ViewMyNotifications.vue'
 import ViewMyRequests from '@/views/ViewMyRequests.vue' 
 import ViewStaffRequests from '@/views/ViewStaffRequests.vue' 
@@ -80,17 +79,12 @@ const router = createRouter({
     },
     {
       path: '/:catchAll(.*)', 
-      redirect: '/login' 
+      redirect: '/schedule' 
     },
   ]
 })
 
 router.beforeEach((to, from, next) => {
-  // if (to.meta.requiresAuth && !isAuthenticated()) {
-  //   next('/login')
-  // } else {
-  //   next()
-  // }
   if (to.meta.requiresAuth) {
     if (!isAuthenticated()) {
       next('/login');
