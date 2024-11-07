@@ -798,6 +798,7 @@ export const ApproveWithdrawalRequest = async (req, res) => {
       "Please provide valid requests to approve"
     );
   }
+  
   const cleanedRequestsId = extractIdsWithStatus(requests, "Pending Withdrawal");
 
   if (cleanedRequestsId.length == 0){
