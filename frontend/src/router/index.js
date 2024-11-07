@@ -45,7 +45,7 @@ const router = createRouter({
       path: '/apply',
       name: 'apply',
       component: ApplyArrangement,
-      meta: { requiresAuth: true,requiredRoles:[ROLES.STAFF] },
+      meta: { requiresAuth: true },
     },
     {
       path: '/',
@@ -79,29 +79,29 @@ const router = createRouter({
     },
     {
       path: '/:catchAll(.*)', 
-      redirect: '/schedule' 
+      // redirect: '/schedule'
+      redirect: '/'
     },
   ]
 })
 
+
 router.beforeEach((to, from, next) => {
-  if (to.meta.requiresAuth) {
-    if (!isAuthenticated()) {
-      next('/login');
-    } else if (to.meta.requiredRoles) {
-      const userRole = getUserRole(); 
-      if (to.meta.requiredRoles.includes(userRole)) {
-        next();
-      } else {
-        next('/login'); 
-      }
-    } else {
+  if (to.meta.requiresAuth && !isAuthenticated()) {
+    next('/login');
+  } else if (to.meta.requiredRoles) {
+    const userRole = getUserRole();
+    if (to.meta.requiredRoles.includes(userRole)) {
       next();
+    } else {
+      next('/schedule');
     }
+  } else if (to.matched.some(record => record.path === '/:catchAll(.*)')) {
+    next(isAuthenticated() ? '/schedule' : '/login');
   } else {
     next();
   }
-  
-})
+});
+
 
 export default router
