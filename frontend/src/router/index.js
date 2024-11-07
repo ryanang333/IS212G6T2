@@ -46,7 +46,7 @@ const router = createRouter({
       path: '/apply',
       name: 'apply',
       component: ApplyArrangement,
-      meta: { requiresAuth: true,requiredRoles:[ROLES.STAFF] },
+      meta: { requiresAuth: true },
     },
     {
       path: '/',
